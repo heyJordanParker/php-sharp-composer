@@ -1,0 +1,20 @@
+{
+    "name": "heyjordanparker/php-sharp-composer",
+    "description": "Autoloads PHP# .sharp files by Composer's PSR-4 rules.",
+    "type": "composer-plugin",
+    "license": "PHP-3.01",
+    "require": {
+        "composer-plugin-api": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpSharp\\Composer\\": "src/"
+        },
+        "files": [
+            "autoload.php"
+        ]
+    },
+    "extra": {
+        "class": "PhpSharp\\Composer\\Plugin"
+    }
+}
