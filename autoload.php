@@ -10,7 +10,11 @@ foreach (ClassLoader::getRegisteredLoaders() as $vendorDir => $loader) {
     }
 }
 
-spl_autoload_register(static function (string $class): void {
+$includeFile = Closure::bind(static function (string $file): void {
+    include $file;
+}, null, null);
+
+spl_autoload_register(static function (string $class) use ($includeFile): void {
     static $missing = [];
     if (isset($missing[$class])) {
         return;
@@ -38,7 +42,7 @@ spl_autoload_register(static function (string $class): void {
 
         foreach ($files as $file) {
             if (file_exists($file)) {
-                include $file;
+                $includeFile($file);
 
                 return;
             }

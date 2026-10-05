@@ -25,18 +25,24 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
 
     public function dumpClassMap(Event $event): void
     {
-        $composerDir = $event->getComposer()->getConfig()->get('vendor-dir') . '/composer';
+        $composer = $event->getComposer();
+        $composerDir = $composer->getConfig()->get('vendor-dir') . '/composer';
         $classMapFile = $composerDir . '/autoload_sharp.php';
         $filesystem = new Filesystem();
 
         $classes = [];
         if ($event->getFlags()['optimize']) {
+            $generator = $composer->getAutoloadGenerator();
+            $packageMap = $generator->buildPackageMap($composer->getInstallationManager(), $composer->getPackage(), $composer->getRepositoryManager()->getLocalRepository()->getCanonicalPackages());
+            $excluded = $generator->parseAutoloads($packageMap, $composer->getPackage())['exclude-from-classmap'];
+            $exclusion = $excluded === [] ? null : '{(' . implode('|', $excluded) . ')}';
+
             foreach (require $composerDir . '/autoload_psr4.php' as $namespace => $dirs) {
                 foreach (array_filter($dirs, 'is_dir') as $dir) {
                     $dir = rtrim($dir, '/');
                     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
                     foreach ($files as $file) {
-                        if ($file->getExtension() !== 'sharp') {
+                        if ($file->getExtension() !== 'sharp' || ($exclusion !== null && preg_match($exclusion, strtr($file->getRealPath(), '\\', '/')) === 1)) {
                             continue;
                         }
 
