@@ -11,9 +11,18 @@ foreach (ClassLoader::getRegisteredLoaders() as $vendorDir => $loader) {
 }
 
 spl_autoload_register(static function (string $class): void {
+    static $missing = [];
+    if (isset($missing[$class])) {
+        return;
+    }
+
     $path = strtr($class, '\\', DIRECTORY_SEPARATOR) . '.sharp';
 
     foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+        if ($loader->isClassMapAuthoritative()) {
+            continue;
+        }
+
         $files = [];
         $prefixes = $loader->getPrefixesPsr4();
         $namespace = $class;
@@ -35,4 +44,6 @@ spl_autoload_register(static function (string $class): void {
             }
         }
     }
+
+    $missing[$class] = true;
 });
