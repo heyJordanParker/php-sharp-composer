@@ -14,6 +14,7 @@ use Composer\Util\Filesystem;
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use SplFileInfo;
 
 final class Plugin implements PluginInterface, EventSubscriberInterface
 {
@@ -32,10 +33,16 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
         if ($event->getFlags()['optimize']) {
             foreach (require $composerDir . '/autoload_psr4.php' as $namespace => $dirs) {
                 foreach (array_filter($dirs, 'is_dir') as $dir) {
+                    $dir = rtrim($dir, '/');
                     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
                     foreach ($files as $file) {
-                        if ($file->getExtension() === 'sharp') {
-                            $classes[$namespace . strtr(substr($file->getPathname(), strlen($dir) + 1, -strlen('.sharp')), '/', '\\')] = $file->getPathname();
+                        if ($file->getExtension() !== 'sharp') {
+                            continue;
+                        }
+
+                        $class = $namespace . strtr(substr($file->getPathname(), strlen($dir) + 1, -strlen('.sharp')), '/', '\\');
+                        if ($class === self::declaredClass($file)) {
+                            $classes[$class] = $file->getPathname();
                         }
                     }
                 }
@@ -48,6 +55,15 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
             $entries .= '    ' . var_export($class, true) . ' => ' . $filesystem->findShortestPathCode($classMapFile, $path, false, true) . ",\n";
         }
         $filesystem->filePutContentsIfModified($classMapFile, "<?php\n\nreturn [\n$entries];\n");
+    }
+
+    private static function declaredClass(SplFileInfo $file): string
+    {
+        $namespace = preg_match('{^namespace\s+([\w.]+)\s*;}m', (string) file_get_contents($file->getPathname()), $match) === 1
+            ? strtr($match[1], '.', '\\') . '\\'
+            : '';
+
+        return $namespace . $file->getBasename('.sharp');
     }
 
     public function activate(Composer $composer, IOInterface $io): void
