@@ -3,6 +3,12 @@
     "description": "Autoloads PHP# .sharp files by Composer's PSR-4 rules.",
     "type": "composer-plugin",
     "license": "PHP-3.01",
+    "homepage": "https://github.com/heyJordanParker/php-sharp",
+    "support": {
+        "email": "help@jordan.md",
+        "issues": "https://github.com/heyJordanParker/php-sharp/issues",
+        "source": "https://github.com/heyJordanParker/php-sharp/tree/master/sharp/composer"
+    },
     "require": {
         "composer-plugin-api": "^2.0"
     },
