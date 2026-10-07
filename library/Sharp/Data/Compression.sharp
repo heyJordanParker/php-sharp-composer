@@ -1,0 +1,11 @@
+namespace Sharp.Data;
+
+import ValueError;
+
+public static class Compression
+{
+    public static string compress(string data) => gzcompress(data);
+
+    public static string uncompress(string data)
+        => gzuncompress(data) is string text ? text : throw new ValueError("Compression.uncompress: the data is not zlib-compressed");
+}

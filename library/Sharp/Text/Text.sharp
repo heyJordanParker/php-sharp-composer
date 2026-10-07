@@ -3,4 +3,6 @@ namespace Sharp.Text;
 public static class Text
 {
     public static extern string slug(string title);
+
+    public static string fromByte(int byte) => chr(byte);
 }

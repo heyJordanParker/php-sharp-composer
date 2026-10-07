@@ -1,0 +1,12 @@
+namespace Sharp.Text;
+
+public static class Html
+{
+    public static string escape(string text) => htmlspecialchars(text);
+
+    public static string unescape(string text) => htmlspecialchars_decode(text);
+
+    public static string decodeEntities(string text) => html_entity_decode(text);
+
+    public static string stripTags(string text) => strip_tags(text);
+}

@@ -1,0 +1,21 @@
+namespace Sharp.Net;
+
+public static class Url
+{
+    public static string encode(string text) => rawurlencode(text);
+
+    public static string encodeForm(string text) => urlencode(text);
+
+    public static string decode(string text) => urldecode(text);
+
+    public static string buildQuery(Map<string, Any?> values) => http_build_query(values);
+
+    public static bool isValid(string url) => filter_var(url, FILTER_VALIDATE_URL) is string;
+
+    public static Map<string, Any?> parseQuery(string query)
+    {
+        Map<string, Any?> values = [:];
+        parse_str(query, values);
+        return values;
+    }
+}

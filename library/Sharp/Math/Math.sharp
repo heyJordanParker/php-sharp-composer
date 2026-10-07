@@ -1,0 +1,16 @@
+namespace Sharp.Math;
+
+public static class Math
+{
+    public static float ceil(float x) => ceil(x);
+
+    public static float floor(float x) => floor(x);
+
+    public static float sqrt(float x) => sqrt(x);
+
+    public static float log(float x) => log(x);
+
+    public static float round(float x, int precision = 0) => round(x, precision);
+
+    public static float pow(float base, float exponent) => pow(base, exponent);
+}

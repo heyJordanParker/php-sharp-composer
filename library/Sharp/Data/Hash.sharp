@@ -1,0 +1,16 @@
+namespace Sharp.Data;
+
+public static class Hash
+{
+    public static string of(string algorithm, string data) => hash(algorithm, data);
+
+    public static string hmac(string algorithm, string data, string key) => hash_hmac(algorithm, data, key);
+
+    public static string md5(string data) => md5(data);
+
+    public static string sha1(string data) => sha1(data);
+
+    public static int crc32(string data) => crc32(data);
+
+    public static bool equals(string known, string given) => hash_equals(known, given);
+}

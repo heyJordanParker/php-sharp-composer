@@ -1,0 +1,11 @@
+namespace Sharp.Data;
+
+import ValueError;
+
+public static class Base64
+{
+    public static string encode(string data) => base64_encode(data);
+
+    public static string decode(string text)
+        => base64_decode(text, true) is string data ? data : throw new ValueError("Base64.decode: the text is not valid base64");
+}

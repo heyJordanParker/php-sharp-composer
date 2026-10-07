@@ -1,0 +1,12 @@
+namespace Sharp.IO;
+
+public static class Path
+{
+    public static string fileName(string path) => basename(path);
+
+    public static string directory(string path) => dirname(path);
+
+    public static string extension(string path) => pathinfo(path, PATHINFO_EXTENSION);
+
+    public static string fileNameWithoutExtension(string path) => pathinfo(path, PATHINFO_FILENAME);
+}

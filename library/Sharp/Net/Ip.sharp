@@ -1,0 +1,11 @@
+namespace Sharp.Net;
+
+import ValueError;
+
+public static class Ip
+{
+    public static bool isValid(string address) => filter_var(address, FILTER_VALIDATE_IP) is string;
+
+    public static string toBinary(string address)
+        => inet_pton(address) is string binary ? binary : throw new ValueError("Ip.toBinary: the address is not an IPv4 or IPv6 address");
+}

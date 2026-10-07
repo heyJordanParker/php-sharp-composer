@@ -1,0 +1,45 @@
+namespace Sharp.Text;
+
+import ValueError;
+
+public static class Regex
+{
+    public static bool matches(string pattern, string text)
+    {
+        const found = preg_match(pattern, text);
+        return found is int count ? count == 1 : throw Regex.lastError("matches");
+    }
+
+    public static List<string>? match(string pattern, string text)
+    {
+        List<string> groups = [];
+        const found = preg_match(pattern, text, groups);
+        return found is int count ? (count == 1 ? groups : null) : throw Regex.lastError("match");
+    }
+
+    public static List<List<string>> matchAll(string pattern, string text)
+    {
+        List<List<string>> sets = [];
+        const found = preg_match_all(pattern, text, sets, PREG_SET_ORDER);
+        return (found is int) ? sets : throw Regex.lastError("matchAll");
+    }
+
+    public static string replace(string pattern, string replacement, string text)
+        => preg_replace(pattern, replacement, text) ?? throw Regex.lastError("replace");
+
+    public static List<string> split(string pattern, string text)
+    {
+        const parts = preg_split(pattern, text);
+        return (parts is bool) ? throw Regex.lastError("split") : parts;
+    }
+
+    public static List<string> filter(string pattern, List<string> texts)
+    {
+        const kept = preg_grep(pattern, texts);
+        return (kept is bool) ? throw Regex.lastError("filter") : array_values(kept);
+    }
+
+    public static string escape(string text) => preg_quote(text, "/");
+
+    private static ValueError lastError(string method) => new ValueError(`Regex.${method}: the pattern failed: ${preg_last_error_msg()}`);
+}
