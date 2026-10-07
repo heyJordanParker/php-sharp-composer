@@ -1,5 +1,7 @@
 namespace Sharp.Math;
 
+import DivisionByZeroError;
+
 public static class Math
 {
     public static float ceil(float x) => ceil(x);
@@ -12,5 +14,8 @@ public static class Math
 
     public static float round(float x, int precision = 0) => round(x, precision);
 
-    public static float pow(float base, float exponent) => pow(base, exponent);
+    public static float pow(float base, float exponent)
+        => base == 0.0 && exponent < 0.0
+            ? throw new DivisionByZeroError("Math.pow: a base of 0 with a negative exponent divides by zero")
+            : base ** exponent;
 }

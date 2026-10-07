@@ -6,7 +6,7 @@ public static class PhpSerializer
 
     public static Any? unserialize(string text, List<string> allowedClasses = [])
     {
-        const value = unserialize(text, ["allowed_classes": allowedClasses]);
+        const value = @unserialize(text, ["allowed_classes": allowedClasses]);
         return (value is false) && text != "b:0;" ? null : value;
     }
 

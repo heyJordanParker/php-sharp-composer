@@ -1,8 +1,11 @@
 namespace Sharp.Text;
 
+import ValueError;
+
 public static class Text
 {
     public static extern string slug(string title);
 
-    public static string fromByte(int byte) => chr(byte);
+    public static string fromByte(int byte)
+        => byte >= 0 && byte <= 255 ? chr(byte) : throw new ValueError("Text.fromByte: the value is not a byte from 0 to 255");
 }

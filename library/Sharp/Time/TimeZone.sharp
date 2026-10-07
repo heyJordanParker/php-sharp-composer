@@ -2,5 +2,5 @@ namespace Sharp.Time;
 
 public static class TimeZone
 {
-    public static List<string> names() => timezone_identifiers_list();
+    public static List<string> names() => array_values(timezone_identifiers_list());
 }
