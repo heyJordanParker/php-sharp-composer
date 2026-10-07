@@ -6,7 +6,7 @@ public static class Binary
 {
     public static string pack(string format, Any? ...values) => pack(format, ...values);
 
-    public static Map<string, Any?> unpack(string format, string data)
+    public static Map<int|string, Any?> unpack(string format, string data)
     {
         const values = @unpack(format, data);
         return (values is false) ? throw new ValueError("Binary.unpack: the data does not fit the format") : values;

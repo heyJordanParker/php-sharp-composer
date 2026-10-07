@@ -12,9 +12,9 @@ public static class Url
 
     public static bool isValid(string url) => filter_var(url, FILTER_VALIDATE_URL) is string;
 
-    public static Map<string, Any?> parseQuery(string query)
+    public static Map<int|string, Any?> parseQuery(string query)
     {
-        Map<string, Any?> values = [:];
+        Map<int|string, Any?> values = [:];
         parse_str(query, values);
         return values;
     }
