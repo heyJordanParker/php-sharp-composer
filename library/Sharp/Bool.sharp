@@ -1,0 +1,7 @@
+namespace Sharp;
+
+public static class Bool
+{
+    [Replaces("filter_var")]
+    public static bool? tryParse(Any? value) => filter_var(value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+}

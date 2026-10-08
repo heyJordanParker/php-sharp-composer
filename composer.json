@@ -14,7 +14,8 @@
     },
     "autoload": {
         "psr-4": {
-            "PhpSharp\\Composer\\": "src/"
+            "PhpSharp\\Composer\\": "src/",
+            "Sharp\\": "library/Sharp/"
         },
         "files": [
             "autoload.php"

@@ -1,0 +1,18 @@
+namespace Sharp.Data;
+
+public static class PhpSerializer
+{
+    [Replaces("serialize")]
+    public static string serialize(Any? value) => serialize(value);
+
+    [Replaces("unserialize")]
+    public static Any? unserialize(string text, List<string> allowedClasses = [])
+    {
+        error_clear_last();
+        const value = @unserialize(text, ["allowed_classes": allowedClasses]);
+        return error_get_last() == null ? value : null;
+    }
+
+    [Replaces("var_export")]
+    public static string export(Any? value) => var_export(value, true);
+}

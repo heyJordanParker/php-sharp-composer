@@ -1,0 +1,11 @@
+namespace Sharp;
+
+import Attribute;
+
+[Attribute(Attribute.TARGET_METHOD)]
+public class Replaces
+{
+    public Replaces(string ...functions)
+    {
+    }
+}

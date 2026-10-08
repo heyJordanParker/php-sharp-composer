@@ -1,0 +1,16 @@
+namespace Sharp.Data;
+
+import ValueError;
+
+public static class Binary
+{
+    [Replaces("pack")]
+    public static string pack(string format, Any? ...values) => pack(format, ...values);
+
+    [Replaces("unpack")]
+    public static Map<int|string, Any?> unpack(string format, string data)
+    {
+        const values = @unpack(format, data);
+        return (values is false) ? throw new ValueError("Binary.unpack: the data does not fit the format") : values;
+    }
+}
