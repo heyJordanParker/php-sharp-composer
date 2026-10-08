@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Composer\Autoload\ClassLoader;
+use Composer\InstalledVersions;
 
 $library = [];
 foreach (ClassLoader::getRegisteredLoaders() as $vendorDir => $loader) {
@@ -24,7 +25,11 @@ $includeClass = static function (string $class, string $file) use ($includeFile)
         if (!function_exists('Sharp\Internal\requireNative')) {
             throw new Error('This project needs the PHP# engine, and this is plain PHP. Install php-sharp, or run the ghcr.io/heyjordanparker/php-sharp image.');
         }
-        \Sharp\Internal\requireNative(require __DIR__ . '/native.php');
+        $package = 'heyjordanparker/php-sharp-composer';
+        \Sharp\Internal\requireNative(
+            require __DIR__ . '/native.php',
+            InstalledVersions::isInstalled($package) ? InstalledVersions::getPrettyVersion($package) : 'unknown',
+        );
         $native = true;
     }
     $includeFile($file);
