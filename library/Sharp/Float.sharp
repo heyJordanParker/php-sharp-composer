@@ -1,0 +1,32 @@
+namespace Sharp;
+
+import ArithmeticError;
+import ValueError;
+
+public static class Float
+{
+    [Replaces("floatval")]
+    public static float parse(Any? value)
+    {
+        const number = Float.tryParse(value);
+        if (number is float) {
+            return number;
+        }
+        if (value is string text) {
+            if (Float.isNumber(text)) {
+                throw new ArithmeticError(`Float.parse: "${text}" is out of range for a float`);
+            }
+            throw new ValueError(`Float.parse: "${text}" is not a float`);
+        }
+        throw new ValueError(`Float.parse: ${get_debug_type(value)} is not a string`);
+    }
+
+    public static float? tryParse(Any? value)
+    {
+        const number = (value is string text) && Float.isNumber(text) ? floatval(text) : null;
+        return (number is float) && is_finite(number) ? number : null;
+    }
+
+    private static bool isNumber(string text)
+        => preg_match("/\\A[\\t-\\r ]*[+-]?([0-9]+(\\.[0-9]+)?|\\.[0-9]+)([eE][+-]?[0-9]+)?[\\t-\\r ]*\\z/", text) is int found && found == 1;
+}

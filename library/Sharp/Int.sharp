@@ -1,0 +1,36 @@
+namespace Sharp;
+
+import ArithmeticError;
+import ValueError;
+
+public static class Int
+{
+    [Replaces("intval")]
+    public static int parse(Any? value)
+    {
+        const number = Int.tryParse(value);
+        if (number is int) {
+            return number;
+        }
+        if (value is string text) {
+            if (Int.digits(text) is string) {
+                throw new ArithmeticError(`Int.parse: "${text}" is out of range for an int`);
+            }
+            throw new ValueError(`Int.parse: "${text}" is not an int`);
+        }
+        throw new ValueError(`Int.parse: ${get_debug_type(value)} is not a string`);
+    }
+
+    public static int? tryParse(Any? value)
+    {
+        const digits = value is string text ? Int.digits(text) : null;
+        return (digits is string) ? filter_var(digits, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) : null;
+    }
+
+    private static string? digits(string text)
+    {
+        let found = 0;
+        const digits = preg_replace("/\\A[\\t-\\r ]*([+-]?)0*([0-9]+)[\\t-\\r ]*\\z/", "$1$2", text, 1, found);
+        return found == 1 ? digits : null;
+    }
+}
