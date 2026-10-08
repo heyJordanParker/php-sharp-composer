@@ -2,5 +2,6 @@ namespace Sharp.Net;
 
 public static class Email
 {
+    [Replaces("filter_var")]
     public static bool isValid(string address) => filter_var(address, FILTER_VALIDATE_EMAIL) is string;
 }

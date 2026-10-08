@@ -4,8 +4,10 @@ import ValueError;
 
 public static class Hex
 {
+    [Replaces("bin2hex")]
     public static string encode(string data) => bin2hex(data);
 
+    [Replaces("hex2bin")]
     public static string decode(string text)
         => @hex2bin(text) is string data ? data : throw new ValueError("Hex.decode: the text is not hexadecimal with an even length");
 }

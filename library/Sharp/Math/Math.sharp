@@ -4,16 +4,22 @@ import DivisionByZeroError;
 
 public static class Math
 {
+    [Replaces("ceil")]
     public static float ceil(float x) => ceil(x);
 
+    [Replaces("floor")]
     public static float floor(float x) => floor(x);
 
+    [Replaces("sqrt")]
     public static float sqrt(float x) => sqrt(x);
 
+    [Replaces("log")]
     public static float log(float x) => log(x);
 
+    [Replaces("round")]
     public static float round(float x, int precision = 0) => round(x, precision);
 
+    [Replaces("pow")]
     public static float pow(float base, float exponent)
         => base == 0.0 && exponent < 0.0
             ? throw new DivisionByZeroError("Math.pow: a base of 0 with a negative exponent divides by zero")

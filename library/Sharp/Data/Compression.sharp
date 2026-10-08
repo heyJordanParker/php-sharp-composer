@@ -4,9 +4,11 @@ import ValueError;
 
 public static class Compression
 {
+    [Replaces("gzcompress")]
     public static string compress(string data)
         => gzcompress(data) is string compressed ? compressed : throw new ValueError("Compression.compress: zlib could not compress the data");
 
+    [Replaces("gzuncompress")]
     public static string uncompress(string data)
         => @gzuncompress(data) is string text ? text : throw new ValueError("Compression.uncompress: the data is not zlib-compressed");
 }

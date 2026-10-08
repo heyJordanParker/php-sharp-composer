@@ -4,12 +4,14 @@ import ValueError;
 
 public static class Regex
 {
+    [Replaces("preg_match")]
     public static bool matches(string pattern, string text)
     {
         const found = @preg_match(pattern, text);
         return found is int count ? count == 1 : throw Regex.lastError("matches");
     }
 
+    [Replaces("preg_match")]
     public static Map<int|string, string>? match(string pattern, string text)
     {
         Map<int|string, string> groups = [:];
@@ -17,6 +19,7 @@ public static class Regex
         return found is int count ? (count == 1 ? groups : null) : throw Regex.lastError("match");
     }
 
+    [Replaces("preg_match_all")]
     public static List<Map<int|string, string>> matchAll(string pattern, string text)
     {
         List<Map<int|string, string>> sets = [];
@@ -24,21 +27,25 @@ public static class Regex
         return (found is int) ? sets : throw Regex.lastError("matchAll");
     }
 
+    [Replaces("preg_replace")]
     public static string replace(string pattern, string replacement, string text)
         => @preg_replace(pattern, replacement, text) ?? throw Regex.lastError("replace");
 
+    [Replaces("preg_split")]
     public static List<string> split(string pattern, string text)
     {
         const parts = @preg_split(pattern, text);
         return (parts is bool) ? throw Regex.lastError("split") : parts;
     }
 
+    [Replaces("preg_grep")]
     public static List<string> filter(string pattern, List<string> texts)
     {
         const kept = @preg_grep(pattern, texts);
         return (kept is bool) ? throw Regex.lastError("filter") : array_values(kept);
     }
 
+    [Replaces("preg_quote")]
     public static string escape(string text) => preg_quote(text, "/");
 
     private static ValueError lastError(string method) => new ValueError(`Regex.${method}: the pattern failed: ${preg_last_error_msg()}`);

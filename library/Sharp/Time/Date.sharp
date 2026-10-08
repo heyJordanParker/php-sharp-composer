@@ -5,9 +5,11 @@ import DateTimeZone;
 
 public static class Date
 {
+    [Replaces("date", "gmdate")]
     public static string format(int timestamp, string pattern, string timeZone = "UTC")
         => new DateTimeImmutable(`@${timestamp}`).setTimezone(new DateTimeZone(timeZone)).format(pattern);
 
+    [Replaces("strtotime")]
     public static int? parse(string text)
         => date_create_immutable(text, new DateTimeZone("UTC")) is DateTimeImmutable date ? date.getTimestamp() : null;
 }
