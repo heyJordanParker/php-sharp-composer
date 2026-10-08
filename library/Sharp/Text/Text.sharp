@@ -2,6 +2,10 @@ namespace Sharp.Text;
 
 import ValueError;
 
+extern strtolower;
+extern strtoupper;
+extern ucfirst;
+
 public static class Text
 {
     public static extern string slug(string title);
