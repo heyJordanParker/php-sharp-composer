@@ -21,7 +21,7 @@ $requireEngine = static function (): void {
     $required = true;
 };
 
-if (!class_exists(PluginManager::class, false)) {
+if (function_exists('Sharp\Internal\requireNative') && !class_exists(PluginManager::class, false)) {
     $requireEngine();
 }
 
