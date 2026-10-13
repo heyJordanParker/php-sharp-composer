@@ -2,15 +2,11 @@ namespace Sharp.IO;
 
 public static class Path
 {
-    [Replaces("basename")]
-    public static string fileName(string path) => basename(path);
+    public static string fileName(string path) => global.basename(path);
 
-    [Replaces("dirname")]
-    public static string directory(string path) => dirname(path);
+    public static string directory(string path) => global.dirname(path);
 
-    [Replaces("pathinfo")]
-    public static string extension(string path) => pathinfo(path, PATHINFO_EXTENSION);
+    public static string extension(string path) => global.pathinfo(path, PATHINFO_EXTENSION);
 
-    [Replaces("pathinfo")]
-    public static string fileNameWithoutExtension(string path) => pathinfo(path, PATHINFO_FILENAME);
+    public static string fileNameWithoutExtension(string path) => global.pathinfo(path, PATHINFO_FILENAME);
 }

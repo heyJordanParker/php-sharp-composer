@@ -2,6 +2,5 @@ namespace Sharp.Json;
 
 public static class Json
 {
-    [Replaces("json_decode")]
-    public static Any? decode(string json) => json_decode(json, true, 512, JSON_THROW_ON_ERROR);
+    public static Any? decode(string json) => global.json_decode(json, true, 512, JSON_THROW_ON_ERROR);
 }

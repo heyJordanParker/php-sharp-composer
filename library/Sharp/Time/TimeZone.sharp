@@ -2,6 +2,5 @@ namespace Sharp.Time;
 
 public static class TimeZone
 {
-    [Replaces("timezone_identifiers_list")]
-    public static List<string> names() => array_values(timezone_identifiers_list());
+    public static List<string> names() => global.array_values(global.timezone_identifiers_list());
 }

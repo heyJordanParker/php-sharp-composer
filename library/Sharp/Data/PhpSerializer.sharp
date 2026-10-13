@@ -2,17 +2,14 @@ namespace Sharp.Data;
 
 public static class PhpSerializer
 {
-    [Replaces("serialize")]
-    public static string serialize(Any? value) => serialize(value);
+    public static string serialize(Any? value) => global.serialize(value);
 
-    [Replaces("unserialize")]
     public static Any? unserialize(string text, List<string> allowedClasses = [])
     {
-        error_clear_last();
-        const value = @unserialize(text, ["allowed_classes": allowedClasses]);
-        return error_get_last() == null ? value : null;
+        global.error_clear_last();
+        const value = @global.unserialize(text, ["allowed_classes": allowedClasses]);
+        return global.error_get_last() == null ? value : null;
     }
 
-    [Replaces("var_export")]
-    public static string export(Any? value) => var_export(value, true);
+    public static string export(Any? value) => global.var_export(value, true);
 }

@@ -2,15 +2,11 @@ namespace Sharp.Text;
 
 public static class Html
 {
-    [Replaces("htmlspecialchars")]
-    public static string escape(string text) => htmlspecialchars(text);
+    public static string escape(string text) => global.htmlspecialchars(text);
 
-    [Replaces("htmlspecialchars_decode")]
-    public static string unescape(string text) => htmlspecialchars_decode(text);
+    public static string unescape(string text) => global.htmlspecialchars_decode(text);
 
-    [Replaces("html_entity_decode")]
-    public static string decodeEntities(string text) => html_entity_decode(text);
+    public static string decodeEntities(string text) => global.html_entity_decode(text);
 
-    [Replaces("strip_tags")]
-    public static string stripTags(string text) => strip_tags(text);
+    public static string stripTags(string text) => global.strip_tags(text);
 }
