@@ -6,7 +6,7 @@ public static class Path
 
     public static string directory(string path) => global.dirname(path);
 
-    public static string extension(string path) => global.pathinfo(path, PATHINFO_EXTENSION);
+    public static string extension(string path) => global.pathinfo(path, global.PATHINFO_EXTENSION);
 
-    public static string fileNameWithoutExtension(string path) => global.pathinfo(path, PATHINFO_FILENAME);
+    public static string fileNameWithoutExtension(string path) => global.pathinfo(path, global.PATHINFO_FILENAME);
 }

@@ -10,7 +10,7 @@ public static class Url
 
     public static string buildQuery(Map<string, Any?> values) => global.http_build_query(values);
 
-    public static bool isValid(string url) => global.filter_var(url, FILTER_VALIDATE_URL) is string;
+    public static bool isValid(string url) => global.filter_var(url, global.FILTER_VALIDATE_URL) is string;
 
     public static Map<int|string, Any?> parseQuery(string query)
     {

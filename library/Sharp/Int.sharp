@@ -23,7 +23,7 @@ public static class Int
     public static int? tryParse(Any? value)
     {
         const digits = value is string text ? Int.digits(text) : null;
-        return (digits is string) ? global.filter_var(digits, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE) : null;
+        return (digits is string) ? global.filter_var(digits, global.FILTER_VALIDATE_INT, global.FILTER_NULL_ON_FAILURE) : null;
     }
 
     private static string? digits(string text)
