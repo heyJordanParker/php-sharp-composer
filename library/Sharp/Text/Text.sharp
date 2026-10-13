@@ -13,4 +13,10 @@ public static class Text
     [Replaces("chr")]
     public static string fromByte(int byte)
         => byte >= 0 && byte <= 255 ? chr(byte) : throw new ValueError("Text.fromByte: the value is not a byte from 0 to 255");
+
+    extension(string text)
+    {
+        [Replaces("trim")]
+        public string trim() => trim(text);
+    }
 }
