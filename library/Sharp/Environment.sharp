@@ -24,7 +24,7 @@ public foreign class Environment
         }
     }
 
-    public static string require(string name)
+    public string require(string name)
         => getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
 
     private static extern List<string> commandLine();
