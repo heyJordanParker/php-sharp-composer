@@ -1,21 +1,28 @@
 namespace Sharp;
 
-import Error;
+import RuntimeException;
 import ValueError;
 
 public foreign class Environment
 {
     public List<string> arguments { get; }
 
-    public string currentDirectory { get; }
-
     public Environment()
     {
         this.arguments = Environment.commandLine();
-        this.currentDirectory = getcwd() is string directory ? directory : throw new Error("Environment: the current directory cannot be read");
     }
 
     public string? variable(string name) => getenv(name) is string value ? value : null;
+
+    public string currentDirectory()
+        => getcwd() is string directory ? directory : throw new RuntimeException("Environment.currentDirectory: the current directory cannot be read");
+
+    public void changeDirectory(string path)
+    {
+        if (!@chdir(path)) {
+            throw new RuntimeException(`Environment.changeDirectory: the directory "${path}" cannot be entered`);
+        }
+    }
 
     public static string require(string name)
         => getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
