@@ -1,0 +1,15 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionClass;
+
+public static class ClassMembers
+{
+    extension<T>(Class<T> type)
+    {
+        public List<TAttribute> attributes<TAttribute>()
+            => new ReflectionClass(type)
+                .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
+                .map(attribute => attribute.newInstance());
+    }
+}
