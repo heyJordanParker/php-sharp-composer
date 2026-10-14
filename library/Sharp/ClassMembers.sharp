@@ -7,7 +7,7 @@ public static class ClassMembers
 {
     extension<T>(Class<T> type)
     {
-        public List<TAttribute> attributes<TAttribute>()
+        public List<TAttribute> attributes<TAttribute : Object>()
             => new ReflectionClass(type)
                 .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
                 .map(attribute => attribute.newInstance());
