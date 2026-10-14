@@ -18,6 +18,7 @@ $requireEngine = static function (): void {
     $version = InstalledVersions::isInstalled($package) ? InstalledVersions::getPrettyVersion($package) : 'unknown';
     ['fingerprint' => $fingerprint, 'bodies' => $bodies] = require __DIR__ . '/native.php';
     \Sharp\Internal\requireNative($fingerprint, $bodies, preg_replace('/^v(?=[0-9])/', '', $version));
+    \Sharp\Internal\readModule(__DIR__ . '/library/Sharp/Module.sharp');
     $required = true;
 };
 
