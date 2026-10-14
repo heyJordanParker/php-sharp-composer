@@ -2,21 +2,15 @@ namespace Sharp.Data;
 
 public static class Hash
 {
-    [Replaces("hash")]
-    public static string of(string algorithm, string data) => hash(algorithm, data);
+    public static string of(string algorithm, string data) => global.hash(algorithm, data);
 
-    [Replaces("hash_hmac")]
-    public static string hmac(string algorithm, string data, string key) => hash_hmac(algorithm, data, key);
+    public static string hmac(string algorithm, string data, string key) => global.hash_hmac(algorithm, data, key);
 
-    [Replaces("md5")]
-    public static string md5(string data) => md5(data);
+    public static string md5(string data) => global.md5(data);
 
-    [Replaces("sha1")]
-    public static string sha1(string data) => sha1(data);
+    public static string sha1(string data) => global.sha1(data);
 
-    [Replaces("crc32")]
-    public static int crc32(string data) => crc32(data);
+    public static int crc32(string data) => global.crc32(data);
 
-    [Replaces("hash_equals")]
-    public static bool equals(string known, string given) => hash_equals(known, given);
+    public static bool equals(string known, string given) => global.hash_equals(known, given);
 }

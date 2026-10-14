@@ -12,20 +12,20 @@ public foreign class Environment
         this.arguments = Environment.commandLine();
     }
 
-    public string? variable(string name) => getenv(name) is string value ? value : null;
+    public string? variable(string name) => global.getenv(name) is string value ? value : null;
 
     public string currentDirectory()
-        => getcwd() is string directory ? directory : throw new RuntimeException("Environment.currentDirectory: the current directory cannot be read");
+        => global.getcwd() is string directory ? directory : throw new RuntimeException("Environment.currentDirectory: the current directory cannot be read");
 
     public void changeDirectory(string path)
     {
-        if (!@chdir(path)) {
+        if (!@global.chdir(path)) {
             throw new RuntimeException(`Environment.changeDirectory: the directory "${path}" cannot be entered`);
         }
     }
 
     public string require(string name)
-        => getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
+        => global.getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
 
     private static extern List<string> commandLine();
 }
