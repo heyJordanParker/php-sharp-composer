@@ -1,0 +1,6 @@
+namespace Sharp;
+
+module
+{
+    singleton Environment = Environment;
+}
