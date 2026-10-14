@@ -1,0 +1,6 @@
+namespace Sharp;
+
+public interface Dispatcher
+{
+    void dispatch(Any emitted, List<Function<void(Any)>> listeners) uses Events;
+}
