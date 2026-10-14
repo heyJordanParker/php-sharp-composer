@@ -2,11 +2,11 @@ namespace Sharp;
 
 public class ImmediateDispatcher : Dispatcher
 {
-    public void dispatch(Any emitted, List<Function<void()>> listeners)
+    public void dispatch(Any emitted, List<Function<void(Any)>> listeners)
     {
         for (const listener of listeners)
         {
-            listener();
+            listener(emitted);
         }
     }
 }
