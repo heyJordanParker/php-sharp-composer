@@ -44,6 +44,14 @@ spl_autoload_register(static function (string $class) use ($includeFile, $classM
         return;
     }
 
+    // A PHP# interface's file also declares the trait of its default bodies, `HasDesign\Defaults`, spec section 22.
+    if (str_ends_with($class, '\\Defaults')) {
+        interface_exists(substr($class, 0, -strlen('\\Defaults')));
+        if (trait_exists($class, false)) {
+            return;
+        }
+    }
+
     if (isset($classMap[$class])) {
         $includeFile($classMap[$class]);
 
