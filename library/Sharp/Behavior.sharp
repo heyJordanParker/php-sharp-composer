@@ -1,0 +1,8 @@
+namespace Sharp;
+
+public interface Behavior<T>
+{
+    T get(T value);
+
+    T set(T value);
+}
