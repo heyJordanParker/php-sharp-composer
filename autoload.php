@@ -33,9 +33,12 @@ foreach (array_keys(ClassLoader::getRegisteredLoaders()) as $vendorDir) {
     }
 }
 
+// A file declares more than its own class: an interface's file declares the trait of its default bodies, spec section
+// 22, and an enum's file the class of each case that carries data. A name the file already read lacks, as the Defaults
+// trait of an interface without a default body, reads it no second time.
 $includeFile = Closure::bind(static function (string $file) use ($requireEngine): void {
     $requireEngine();
-    include $file;
+    include_once $file;
 }, null, null);
 
 $findFile = static function (string $class): ?string {
