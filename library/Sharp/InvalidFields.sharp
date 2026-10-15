@@ -1,0 +1,17 @@
+namespace Sharp;
+
+import ValueError;
+
+public class InvalidFields : ValueError
+{
+    public InvalidFields(public Map<string, string> fields { get; }) : super(InvalidFields.message(fields)) { }
+
+    private static string message(Map<string, string> fields)
+    {
+        let message = "";
+        for (const [path, problem] of fields) {
+            message = message == "" ? `${path}: ${problem}` : `${message}; ${path}: ${problem}`;
+        }
+        return message;
+    }
+}
