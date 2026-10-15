@@ -47,8 +47,9 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
                         }
 
                         $class = $namespace . strtr(substr($file->getPathname(), strlen($dir) + 1, -strlen('.sharp')), '/', '\\');
-                        if ($class === self::declaredClass($file)) {
-                            $classes[$class] = $file->getPathname();
+                        $declared = self::declaredClasses($file);
+                        if ($class === $declared[0]) {
+                            $classes += array_fill_keys($declared, $file->getPathname());
                         }
                     }
                 }
@@ -63,13 +64,28 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
         $filesystem->filePutContentsIfModified($classMapFile, "<?php\n\nreturn [\n$entries];\n");
     }
 
-    private static function declaredClass(SplFileInfo $file): string
+    /**
+     * The classes a .sharp file declares: the one its namespace and name give, then, when it is an enum with a case
+     * that carries data, the class each case runs as, named in the enum's namespace, as App\PaymentResult\Paid, or, when
+     * it is an interface, the trait of its default bodies, as App\HasDesign\Defaults, spec section 22. An interface
+     * without a default body has no such trait, and its entry finds the interface's file, which declares none.
+     *
+     * @return non-empty-list<string>
+     */
+    private static function declaredClasses(SplFileInfo $file): array
     {
-        $namespace = preg_match('{^namespace\s+([\w.]+)\s*;}m', (string) file_get_contents($file->getPathname()), $match) === 1
-            ? strtr($match[1], '.', '\\') . '\\'
-            : '';
+        $code = (string) file_get_contents($file->getPathname());
+        $namespace = preg_match('{^namespace\s+([\w.]+)\s*;}m', $code, $match) === 1 ? strtr($match[1], '.', '\\') . '\\' : '';
+        $class = $namespace . $file->getBasename('.sharp');
+        if (preg_match('{^(?:\w+\s+)*interface\s+' . preg_quote($file->getBasename('.sharp')) . '\b}m', $code) === 1) {
+            return [$class, "$class\\Defaults"];
+        }
+        preg_match_all('{^\s*case\s+(\w+)\s*(\(?)}m', $code, $cases);
+        if (!in_array('(', $cases[2], true)) {
+            return [$class];
+        }
 
-        return $namespace . $file->getBasename('.sharp');
+        return [$class, ...array_map(static fn (string $case): string => "$class\\$case", $cases[1])];
     }
 
     public function activate(Composer $composer, IOInterface $io): void

@@ -38,26 +38,7 @@ $includeFile = Closure::bind(static function (string $file) use ($requireEngine)
     include $file;
 }, null, null);
 
-spl_autoload_register(static function (string $class) use ($includeFile, $classMap): void {
-    static $missing = [];
-    if (isset($missing[$class])) {
-        return;
-    }
-
-    // A PHP# interface's file also declares the trait of its default bodies, `HasDesign\Defaults`, spec section 22.
-    if (str_ends_with($class, '\\Defaults')) {
-        interface_exists(substr($class, 0, -strlen('\\Defaults')));
-        if (trait_exists($class, false)) {
-            return;
-        }
-    }
-
-    if (isset($classMap[$class])) {
-        $includeFile($classMap[$class]);
-
-        return;
-    }
-
+$findFile = static function (string $class): ?string {
     $path = strtr($class, '\\', DIRECTORY_SEPARATOR) . '.sharp';
 
     foreach (ClassLoader::getRegisteredLoaders() as $loader) {
@@ -80,11 +61,35 @@ spl_autoload_register(static function (string $class) use ($includeFile, $classM
 
         foreach ($files as $file) {
             if (file_exists($file)) {
-                $includeFile($file);
-
-                return;
+                return $file;
             }
         }
+    }
+
+    return null;
+};
+
+spl_autoload_register(static function (string $class) use ($includeFile, $classMap, $findFile): void {
+    static $missing = [];
+    if (isset($missing[$class])) {
+        return;
+    }
+
+    if (isset($classMap[$class])) {
+        $includeFile($classMap[$class]);
+
+        return;
+    }
+
+    // A case of an enum that carries data runs as a class its enum's file declares, as App\PaymentResult\Paid in
+    // App/PaymentResult.sharp. That file is read only when no file has the class's own name and the enum is not
+    // loaded yet.
+    $enum = substr($class, 0, (int) strrpos($class, '\\'));
+    $file = $findFile($class) ?? ($enum !== '' && !class_exists($enum, false) ? $findFile($enum) : null);
+    if ($file !== null) {
+        $includeFile($file);
+
+        return;
     }
 
     $missing[$class] = true;

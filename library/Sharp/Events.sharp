@@ -1,0 +1,12 @@
+namespace Sharp;
+
+import NoDiscard;
+import Sharp.Internal;
+
+extern Internal.listen uses Events;
+
+public static class Events
+{
+    [NoDiscard]
+    public static Listening on<TEvent>(Function<void(TEvent)> listener) => Internal.listen(typeof(TEvent), listener);
+}

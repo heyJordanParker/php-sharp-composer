@@ -1,0 +1,9 @@
+namespace Sharp;
+
+import Attribute;
+
+[Attribute(Attribute.TARGET_PARAMETER | Attribute.TARGET_PROPERTY)]
+public class Key
+{
+    public Key(public string name { get; }) { }
+}
