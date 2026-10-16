@@ -1,0 +1,7 @@
+namespace Sharp;
+
+public enum Result<T, TError : Error>
+{
+    case Ok(T value);
+    case Err(TError error);
+}
