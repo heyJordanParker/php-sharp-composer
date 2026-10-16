@@ -12,5 +12,8 @@ public static class Text
     extension(string text)
     {
         public string trim() => global.trim(text);
+
+        // PHP reads a blank line as `[null]`, the one row whose field is no string.
+        public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];
     }
 }
