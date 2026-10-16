@@ -71,13 +71,17 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
      * it is an interface, the trait of its default bodies, as App\HasDesign\Defaults, spec section 22. An interface
      * without a default body has no such trait, and its entry finds the interface's file, which declares none.
      *
+     * A type line may start with attributes, as `[Attribute] public class Marker`, then a type's modifiers. An `extern`
+     * line declares no type, so `extern event Failed;` in Failed.sharp lists nothing.
+     *
      * @return list<string>
      */
     private static function declaredClasses(SplFileInfo $file): array
     {
         $code = (string) file_get_contents($file->getPathname());
         $name = $file->getBasename('.sharp');
-        if (preg_match('{^(?:\w+\s+)*(class|interface|enum|struct|event)\s+' . preg_quote($name) . '\b}m', $code, $type) !== 1) {
+        $typeLine = '{^(?:\[.*\]\s*)*(?:(?:public|private|protected|internal|abstract|final|sealed|static|readonly|foreign)\s+)*(class|interface|enum|struct|event)\s+' . preg_quote($name) . '\b}m';
+        if (preg_match($typeLine, $code, $type) !== 1) {
             return [];
         }
         $namespace = preg_match('{^namespace\s+([\w.]+)\s*;}m', $code, $match) === 1 ? strtr($match[1], '.', '\\') . '\\' : '';
