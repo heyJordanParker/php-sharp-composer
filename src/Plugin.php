@@ -48,7 +48,7 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
 
                         $class = $namespace . strtr(substr($file->getPathname(), strlen($dir) + 1, -strlen('.sharp')), '/', '\\');
                         $declared = self::declaredClasses($file);
-                        if ($class === $declared[0]) {
+                        if ($class === ($declared[0] ?? null)) {
                             $classes += array_fill_keys($declared, $file->getPathname());
                         }
                     }
@@ -65,23 +65,28 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
     }
 
     /**
-     * The classes a .sharp file declares: the one its namespace and name give, then, when it is an enum with a case
+     * The classes a .sharp file declares: none when it declares no type named like it, spec section 27, as a module's
+     * or an extern declaration's file, or else the one its namespace and name give, then, when it is an enum with a case
      * that carries data, the class each case runs as, named in the enum's namespace, as App\PaymentResult\Paid, or, when
      * it is an interface, the trait of its default bodies, as App\HasDesign\Defaults, spec section 22. An interface
      * without a default body has no such trait, and its entry finds the interface's file, which declares none.
      *
-     * @return non-empty-list<string>
+     * @return list<string>
      */
     private static function declaredClasses(SplFileInfo $file): array
     {
         $code = (string) file_get_contents($file->getPathname());
+        $name = $file->getBasename('.sharp');
+        if (preg_match('{^(?:\w+\s+)*(class|interface|enum|struct|event)\s+' . preg_quote($name) . '\b}m', $code, $type) !== 1) {
+            return [];
+        }
         $namespace = preg_match('{^namespace\s+([\w.]+)\s*;}m', $code, $match) === 1 ? strtr($match[1], '.', '\\') . '\\' : '';
-        $class = $namespace . $file->getBasename('.sharp');
-        if (preg_match('{^(?:\w+\s+)*interface\s+' . preg_quote($file->getBasename('.sharp')) . '\b}m', $code) === 1) {
+        $class = $namespace . $name;
+        if ($type[1] === 'interface') {
             return [$class, "$class\\Defaults"];
         }
         preg_match_all('{^\s*case\s+(\w+)\s*(\(?)}m', $code, $cases);
-        if (!in_array('(', $cases[2], true)) {
+        if ($type[1] !== 'enum' || !in_array('(', $cases[2], true)) {
             return [$class];
         }
 
