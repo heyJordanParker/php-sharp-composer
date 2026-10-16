@@ -1,0 +1,16 @@
+namespace Sharp.Net;
+
+// A message `Mail.send` sends, as .NET's MailMessage.
+public struct MailMessage
+{
+    public MailMessage(
+        public MailAddress from { get; },
+        public List<MailAddress> to { get; },
+        public string subject { get; },
+        public string textBody { get; },
+        public string? htmlBody = null { get; },
+        public List<MailAddress> cc = [] { get; },
+        public List<MailAddress> bcc = [] { get; },
+        public MailAddress? replyTo = null { get; },
+    ) { }
+}

@@ -1,0 +1,40 @@
+namespace Sharp;
+
+import RuntimeException;
+import Sharp.Net.MailAddress;
+import Sharp.Net.MailMessage;
+
+// Sends mail, as .NET's SmtpClient.Send, through PHP's mail(), which hands the message to the local mail program.
+public foreign class Mail
+{
+    public void send(MailMessage message)
+    {
+        List<string> headers = [`From: ${message.from.header}`, "MIME-Version: 1.0"];
+        if (message.cc.count() > 0) {
+            headers.add(`Cc: ${Mail.addresses(message.cc)}`);
+        }
+        if (message.bcc.count() > 0) {
+            headers.add(`Bcc: ${Mail.addresses(message.bcc)}`);
+        }
+        if (message.replyTo is MailAddress replyTo) {
+            headers.add(`Reply-To: ${replyTo.header}`);
+        }
+
+        let body = message.textBody;
+        if (message.htmlBody is string html) {
+            const boundary = global.bin2hex(global.random_bytes(16));
+            headers.add(`Content-Type: multipart/alternative; boundary="${boundary}"`);
+            body = `--${boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${message.textBody}\r\n`
+                + `--${boundary}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n${html}\r\n--${boundary}--\r\n`;
+        } else {
+            headers.add("Content-Type: text/plain; charset=UTF-8");
+        }
+
+        const subject = global.mb_encode_mimeheader(message.subject, "UTF-8", "B");
+        if (!global.mail(Mail.addresses(message.to), subject, body, global.implode("\r\n", headers))) {
+            throw new RuntimeException("Mail.send: the local mail program refused the message");
+        }
+    }
+
+    private static string addresses(List<MailAddress> list) => global.implode(", ", list.map(address => address.header));
+}

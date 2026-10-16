@@ -1,0 +1,15 @@
+namespace Sharp.Net;
+
+import Sharp.Time.Duration;
+
+// A request `Http.send` sends, as .NET's HttpRequestMessage.
+public struct HttpRequest
+{
+    public HttpRequest(
+        public HttpMethod method { get; },
+        public string url { get; },
+        public Map<string, string> headers = [:] { get; },
+        public string body = "" { get; },
+        public Duration? timeout = null { get; },
+    ) { }
+}

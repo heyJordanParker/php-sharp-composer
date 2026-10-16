@@ -1,0 +1,33 @@
+namespace Sharp;
+
+import RuntimeException;
+
+// Standard output, standard error and standard input, as .NET's Console. PHP# strings interpolate with `${}`, so no
+// member takes a format string.
+public foreign class Console
+{
+    // To standard output.
+    public void write(string text)
+    {
+        if (global.fwrite(global.STDOUT, text) != global.strlen(text)) {
+            throw new RuntimeException("Console.write: standard output is closed");
+        }
+    }
+
+    // To standard output, then a newline.
+    public void writeLine(string text)
+    {
+        this.write(text + "\n");
+    }
+
+    // To standard error.
+    public void writeError(string text)
+    {
+        if (global.fwrite(global.STDERR, text) != global.strlen(text)) {
+            throw new RuntimeException("Console.writeError: standard error is closed");
+        }
+    }
+
+    // One line of standard input without its line ending, null at the end of the input.
+    public string? readLine() => global.fgets(global.STDIN) is string line ? global.rtrim(line, "\r\n") : null;
+}

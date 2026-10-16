@@ -1,0 +1,60 @@
+namespace Sharp;
+
+import RuntimeException;
+import Sharp.Time.Duration;
+
+// This process and the programs it starts, as .NET's Environment.Exit and Process.RunAndCaptureText. A program runs
+// from an argument list, so no shell reads it.
+public foreign class Process
+{
+    // Ends the run, skipping every finally.
+    public void exit(int code)
+    {
+        global.exit(code);
+    }
+
+    // This process's id.
+    public int id() => global.getmypid() is int id ? id : throw new RuntimeException("Process.id: the process id cannot be read");
+
+    // Runs `program` with `arguments` and waits for it, with no input. A non-zero exit is a returned value.
+    public ProcessResult run(string program, List<string> arguments = [], Duration? timeout = null)
+    {
+        // The output goes to temporary files, so a program that writes a lot never waits on a full pipe.
+        const output = global.tmpfile();
+        if (output is bool) {
+            throw new RuntimeException("Process.run: no temporary file can be created");
+        }
+        const errorOutput = global.tmpfile();
+        if (errorOutput is bool) {
+            throw new RuntimeException("Process.run: no temporary file can be created");
+        }
+        Map<int, Any> pipes = [:];
+        const process = @global.proc_open([program, ...arguments], [0: ["file", "/dev/null", "r"], 1: output, 2: errorOutput], pipes);
+        if (process is bool) {
+            throw new RuntimeException(`Process.run: ${program} cannot start`);
+        }
+
+        // PHP reports the exit code once, to the first status read after the program ends, so the loop keeps that read.
+        const deadline = timeout is Duration limit ? Process.timestamp() + limit.nanoseconds : null;
+        let status = global.proc_get_status(process);
+        while (status.get("running") == true) {
+            if (deadline is int end && Process.timestamp() > end) {
+                global.proc_terminate(process);
+                global.proc_close(process);
+                throw new RuntimeException(`Process.run: ${program} ran past its timeout`);
+            }
+            global.usleep(1_000);
+            status = global.proc_get_status(process);
+        }
+        global.proc_close(process);
+        const exitCode = status.get("exitcode") is int code ? code : -1;
+        global.rewind(output);
+        global.rewind(errorOutput);
+        const written = global.stream_get_contents(output);
+        const writtenErrors = global.stream_get_contents(errorOutput);
+
+        return new ProcessResult(exitCode, written is string text ? text : "", writtenErrors is string errors ? errors : "");
+    }
+
+    private static int timestamp() => global.hrtime(true) is int nanoseconds ? nanoseconds : 0;
+}

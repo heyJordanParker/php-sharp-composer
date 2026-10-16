@@ -1,0 +1,38 @@
+namespace Sharp;
+
+import RuntimeException;
+import Sharp.Time.Duration;
+import ValueError;
+
+// The clock, as .NET's TimeProvider. A moment is an int of Unix seconds, as `Date.format` and `Date.parse` take it.
+public foreign class Clock
+{
+    // Unix seconds now.
+    public int now() => global.time();
+
+    // Monotonic nanoseconds, only for measuring.
+    public int timestamp()
+        => global.hrtime(true) is int nanoseconds ? nanoseconds : throw new RuntimeException("Clock.timestamp: the monotonic clock cannot be read");
+
+    // The time since a `timestamp()`.
+    public Duration elapsedSince(int start)
+    {
+        const elapsed = this.timestamp() - start;
+        if (elapsed < 0) {
+            throw new ValueError("Clock.elapsedSince: the start is later than now");
+        }
+
+        return new Duration(elapsed);
+    }
+
+    public void sleep(Duration duration)
+    {
+        if (duration.nanoseconds < 0) {
+            throw new ValueError("Clock.sleep: the duration is negative");
+        }
+        const microseconds = duration.nanoseconds / 1_000;
+        if (microseconds > 0) {
+            global.usleep(microseconds);
+        }
+    }
+}

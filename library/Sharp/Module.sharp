@@ -3,5 +3,12 @@ namespace Sharp;
 module
 {
     singleton Environment = Environment;
+    singleton Clock = Clock;
+    singleton Random = new Random();
+    singleton Console = Console;
+    singleton Process = Process;
+    singleton Files = Files;
+    singleton Http = Http;
+    singleton Mail = Mail;
     singleton Dispatcher = ImmediateDispatcher;
 }

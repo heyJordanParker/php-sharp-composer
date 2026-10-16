@@ -1,0 +1,76 @@
+namespace Sharp;
+
+import PDO;
+import PDOException;
+import PDOStatement;
+import RuntimeException;
+
+// A SQL database, as .NET's DbCommand and DbConnection.BeginTransaction, through PDO. A row is a
+// `Map<string, Any?>`, which a struct's `parse` turns into a typed value. A failing statement throws `PDOException`,
+// a `RuntimeException`.
+public foreign class Database
+{
+    private PDO connection;
+
+    // A PDO connection string, as "sqlite::memory:" or "pgsql:host=db;dbname=shop". A module sets it.
+    public Database(string connection, string? user = null, string? password = null)
+    {
+        try {
+            this.connection = new PDO(connection, user, password, [PDO.ATTR_ERRMODE: PDO.ERRMODE_EXCEPTION]);
+        } catch (PDOException failure) {
+            throw new RuntimeException(`Database: cannot connect: ${failure.getMessage()}`);
+        }
+    }
+
+    // Every row.
+    public List<Map<string, Any?>> query(string sql, List<Any?> parameters = [])
+    {
+        const statement = this.run("Database.query", sql, parameters);
+        List<Map<string, Any?>> rows = [];
+        while (Database.next(statement) is Map<string, Any?> row) {
+            rows.add(row);
+        }
+
+        return rows;
+    }
+
+    // The first row, null when there are none.
+    public Map<string, Any?>? queryFirst(string sql, List<Any?> parameters = [])
+        => Database.next(this.run("Database.queryFirst", sql, parameters));
+
+    // The first column of the first row, null when there are none.
+    public Any? scalar(string sql, List<Any?> parameters = [])
+        => this.run("Database.scalar", sql, parameters).fetch(PDO.FETCH_NUM) is List<Any?> row ? row[0] : null;
+
+    // The number of rows a change affected.
+    public int execute(string sql, List<Any?> parameters = []) => this.run("Database.execute", sql, parameters).rowCount();
+
+    public void beginTransaction()
+    {
+        this.connection.beginTransaction();
+    }
+
+    public void commit()
+    {
+        this.connection.commit();
+    }
+
+    public void rollback()
+    {
+        this.connection.rollBack();
+    }
+
+    // The statement's next row, null after the last.
+    private static Map<string, Any?>? next(PDOStatement statement)
+        => statement.fetch(PDO.FETCH_ASSOC) is Map<string, Any?> row ? row : null;
+
+    private PDOStatement run(string member, string sql, List<Any?> parameters)
+    {
+        if (this.connection.prepare(sql) is not PDOStatement statement) {
+            throw new RuntimeException(`${member}: the database cannot run "${sql}"`);
+        }
+        statement.execute(parameters);
+
+        return statement;
+    }
+}
