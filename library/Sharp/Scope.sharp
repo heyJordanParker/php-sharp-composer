@@ -6,5 +6,5 @@ extern Internal.runScoped;
 
 public static class Scope
 {
-    public static T run<T>(Function<T()> body) uses body => Internal.runScoped(body);
+    public static T run<T>(Function<T()> body) => Internal.runScoped(body);
 }
