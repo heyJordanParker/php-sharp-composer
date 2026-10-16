@@ -35,6 +35,8 @@ import Uri.InvalidUriException;
 import Uri.UriError;
 import Uri.UriException;
 import Uri.WhatWg.InvalidUrlException;
+import DateTimeImmutable;
+import DateTimeZone;
 
 extern global._ uses Environment;
 extern global.abs;
@@ -2309,3 +2311,5 @@ extern InvalidUrlException;
 extern ValueError;
 extern com_exception;
 extern mysqli_sql_exception;
+extern DateTimeImmutable;
+extern DateTimeZone;
