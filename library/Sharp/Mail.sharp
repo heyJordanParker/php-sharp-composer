@@ -1,6 +1,5 @@
 namespace Sharp;
 
-import RuntimeException;
 import Sharp.Net.MailAddress;
 import Sharp.Net.MailMessage;
 

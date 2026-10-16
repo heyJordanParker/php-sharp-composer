@@ -1,11 +1,8 @@
 namespace Sharp;
 
 import PDO;
-import PDOException;
 import PDOStatement;
-import RuntimeException;
 import Sharp.Time.Duration;
-import ValueError;
 
 // A key-value store in a SQLite file, as .NET's IDistributedCache over a table. Values are strings, which also cover
 // bytes, so a structured value goes through `Json`. A failing store throws `PDOException`, a `RuntimeException`.

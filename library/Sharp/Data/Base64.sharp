@@ -1,7 +1,5 @@
 namespace Sharp.Data;
 
-import ValueError;
-
 public static class Base64
 {
     public static string encode(string data) => global.base64_encode(data);

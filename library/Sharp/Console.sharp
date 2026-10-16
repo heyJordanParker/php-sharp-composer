@@ -1,7 +1,5 @@
 namespace Sharp;
 
-import RuntimeException;
-
 // Standard output, standard error and standard input, as .NET's Console. PHP# strings interpolate with `${}`, so no
 // member takes a format string.
 public foreign class Console

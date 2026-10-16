@@ -1,6 +1,5 @@
 namespace Sharp;
 
-import RuntimeException;
 import Sharp.Time.Duration;
 
 // This process and the programs it starts, as .NET's Environment.Exit and Process.RunAndCaptureText. A program runs

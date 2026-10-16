@@ -1,7 +1,5 @@
 namespace Sharp.Data;
 
-import ValueError;
-
 public static class Compression
 {
     public static string compress(string data)

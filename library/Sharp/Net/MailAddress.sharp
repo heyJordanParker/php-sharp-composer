@@ -1,7 +1,5 @@
 namespace Sharp.Net;
 
-import ValueError;
-
 // One mailbox, with an optional display name, as .NET's MailAddress.
 public struct MailAddress
 {

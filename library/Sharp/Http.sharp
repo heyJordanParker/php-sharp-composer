@@ -1,12 +1,10 @@
 namespace Sharp;
 
-import RuntimeException;
 import Sharp.Net.HttpMethod;
 import Sharp.Net.HttpRequest;
 import Sharp.Net.HttpResponse;
 import Sharp.Net.Url;
 import Sharp.Time.Duration;
-import ValueError;
 
 // HTTP requests, as .NET's HttpClient, through curl. A 404 or a 500 is a returned response.
 public foreign class Http

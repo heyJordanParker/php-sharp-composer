@@ -1,9 +1,7 @@
 namespace Sharp;
 
 import PDO;
-import PDOException;
 import PDOStatement;
-import RuntimeException;
 
 // A SQL database, as .NET's DbCommand and DbConnection.BeginTransaction, through PDO. A row is a
 // `Map<string, Any?>`, which a struct's `parse` turns into a typed value. A failing statement throws `PDOException`,
