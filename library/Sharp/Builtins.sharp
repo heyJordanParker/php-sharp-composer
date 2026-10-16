@@ -2272,7 +2272,6 @@ extern DateObjectError;
 extern DateRangeError;
 extern DivisionByZeroError;
 extern DomainException;
-extern Error;
 extern ErrorException;
 extern Exception;
 extern FFIException;
