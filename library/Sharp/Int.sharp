@@ -5,31 +5,31 @@ import ValueError;
 
 public static class Int
 {
-    public static int parse(Any? value)
+    public static int parse(string text)
     {
-        const number = Int.tryParse(value);
+        const number = Int.tryParse(text);
         if (number is int) {
             return number;
         }
-        if (value is string text) {
-            if (Int.digits(text) is string) {
-                throw new ArithmeticError(`Int.parse: "${text}" is out of range for an int`);
-            }
-            throw new ValueError(`Int.parse: "${text}" is not an int`);
+        if (Int.digits(text) is string) {
+            throw new ArithmeticError(`Int.parse: "${text}" is out of range for an int`);
         }
-        throw new ValueError(`Int.parse: ${global.get_debug_type(value)} is not a string`);
+        if (Int.digits(global.trim(text)) is string) {
+            throw new ValueError(`Int.parse: "${text}" is not an int: remove its spaces with Text.trim() first`);
+        }
+        throw new ValueError(`Int.parse: "${text}" is not an int`);
     }
 
-    public static int? tryParse(Any? value)
+    public static int? tryParse(string text)
     {
-        const digits = value is string text ? Int.digits(text) : null;
+        const digits = Int.digits(text);
         return (digits is string) ? global.filter_var(digits, global.FILTER_VALIDATE_INT, global.FILTER_NULL_ON_FAILURE) : null;
     }
 
     private static string? digits(string text)
     {
         let found = 0;
-        const digits = global.preg_replace("/\\A[\\t-\\r ]*([+-]?)0*([0-9]+)[\\t-\\r ]*\\z/", "$1$2", text, 1, found);
+        const digits = global.preg_replace("/\\A([+-]?)0*([0-9]+)\\z/", "$1$2", text, 1, found);
         return found == 1 ? digits : null;
     }
 }
