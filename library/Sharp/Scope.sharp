@@ -1,0 +1,10 @@
+namespace Sharp;
+
+import Sharp.Internal;
+
+extern Internal.runScoped;
+
+public static class Scope
+{
+    public static T run<T>(Function<T()> body) => Internal.runScoped(body);
+}

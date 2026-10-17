@@ -1,0 +1,10 @@
+namespace Sharp.Net;
+
+// What a server answered, as .NET's HttpResponseMessage. A 404 or a 500 is a response, not an exception.
+public struct HttpResponse
+{
+    public HttpResponse(public int status { get; }, public Map<string, List<string>> headers { get; }, public string body { get; }) { }
+
+    // Whether the status is 2xx.
+    public bool successful => this.status >= 200 && this.status < 300;
+}

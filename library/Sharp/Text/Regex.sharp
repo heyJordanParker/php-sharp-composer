@@ -1,7 +1,5 @@
 namespace Sharp.Text;
 
-import ValueError;
-
 public static class Regex
 {
     public static bool matches(string pattern, string text)

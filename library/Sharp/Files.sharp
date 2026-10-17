@@ -1,0 +1,140 @@
+namespace Sharp;
+
+// Whole files and folders, as .NET's File and Directory. A missing file is a returned null.
+public foreign class Files
+{
+    // null when the file doesn't exist.
+    public string? read(string path)
+    {
+        Files.local(path, "Files.read");
+        if (!global.is_file(path)) {
+            return null;
+        }
+
+        return @global.file_get_contents(path) is string contents ? contents : throw new RuntimeException(`Files.read: "${path}" cannot be read`);
+    }
+
+    // The lines without their endings, null when the file doesn't exist.
+    public List<string>? readLines(string path)
+    {
+        if (this.read(path) is not string contents) {
+            return null;
+        }
+
+        if (contents == "") {
+            return [];
+        }
+
+        return global.preg_split("/\\r\\n|\\n|\\r/", global.rtrim(contents, "\r\n")) is List<string> lines ? lines : [];
+    }
+
+    // The lines without their endings, read one at a time as a loop reaches them, so a file of any size streams
+    // through. null when the file doesn't exist.
+    public Iterable<string>? readLinesLazily(string path)
+    {
+        Files.local(path, "Files.readLinesLazily");
+
+        return global.is_file(path) ? Files.lines(path) : null;
+    }
+
+    // Replaces the file.
+    public void write(string path, string contents) => Files.put(path, contents, 0, "Files.write");
+
+    // Adds to the end of the file.
+    public void append(string path, string contents) => Files.put(path, contents, global.FILE_APPEND, "Files.append");
+
+    public bool exists(string path) => global.is_file(path);
+
+    public bool isDirectory(string path) => global.is_dir(path);
+
+    // A missing file is not an error.
+    public void delete(string path)
+    {
+        if (global.is_file(path) && !@global.unlink(path)) {
+            throw new RuntimeException(`Files.delete: "${path}" cannot be deleted`);
+        }
+    }
+
+    public void copy(string from, string to)
+    {
+        if (!@global.copy(from, to)) {
+            throw new RuntimeException(`Files.copy: "${from}" cannot be copied to "${to}"`);
+        }
+    }
+
+    public void move(string from, string to)
+    {
+        if (!@global.rename(from, to)) {
+            throw new RuntimeException(`Files.move: "${from}" cannot be moved to "${to}"`);
+        }
+    }
+
+    // Entry names without . and .., null when the folder doesn't exist.
+    public List<string>? list(string directory)
+    {
+        if (!global.is_dir(directory)) {
+            return null;
+        }
+        if (@global.scandir(directory) is not List<string> entries) {
+            throw new RuntimeException(`Files.list: "${directory}" cannot be read`);
+        }
+
+        return entries.filter(entry => entry != "." && entry != "..");
+    }
+
+    // Creates the parents too. An existing folder is not an error.
+    public void createDirectory(string path)
+    {
+        if (!global.is_dir(path) && !@global.mkdir(path, 0o777, true)) {
+            throw new RuntimeException(`Files.createDirectory: "${path}" cannot be created`);
+        }
+    }
+
+    public void deleteDirectory(string path)
+    {
+        if (!@global.rmdir(path)) {
+            throw new RuntimeException(`Files.deleteDirectory: "${path}" cannot be deleted`);
+        }
+    }
+
+    // Bytes, null when the file is missing.
+    public int? size(string path) => global.is_file(path) && @global.filesize(path) is int size ? size : null;
+
+    // A Unix timestamp, null when the file is missing.
+    public int? lastModified(string path) => global.file_exists(path) && @global.filemtime(path) is int time ? time : null;
+
+    // A new empty file's path.
+    public string temporaryFile()
+        => @global.tempnam(global.sys_get_temp_dir(), "sharp") is string path ? path : throw new RuntimeException("Files.temporaryFile: no temporary file can be created");
+
+    private static Iterable<string> lines(string path)
+    {
+        const handle = @global.fopen(path, "r");
+        if (handle is bool) {
+            throw new RuntimeException(`Files.readLinesLazily: "${path}" cannot be read`);
+        }
+        try {
+            while (global.fgets(handle) is string line) {
+                yield global.rtrim(line, "\r\n");
+            }
+        } finally {
+            global.fclose(handle);
+        }
+    }
+
+    private static void put(string path, string contents, int flags, string member)
+    {
+        Files.local(path, member);
+        if (@global.file_put_contents(path, contents, flags) == false) {
+            throw new RuntimeException(`${member}: "${path}" cannot be written`);
+        }
+    }
+
+    // A path names a file on this disk, never a URL that PHP's stream wrappers would fetch.
+    private static void local(string path, string member)
+    {
+        if (global.preg_match("~^[a-z][a-z0-9+.-]*://~i", path) == 1) {
+            throw new ValueError(`${member}: "${path}" is a URL, and Files reads only files`);
+        }
+    }
+}

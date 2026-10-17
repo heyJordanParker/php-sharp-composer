@@ -1,0 +1,47 @@
+namespace Sharp;
+
+import SplFileObject;
+
+// Standard output, standard error and standard input, as .NET's Console. PHP# strings interpolate with `${}`, so no
+// member takes a format string. Every host has PHP's `php://` streams, a web server's included, where standard output
+// is the response.
+public foreign class Console
+{
+    // Standard input, opened by the first read, so each read takes the next line of the one stream.
+    private SplFileObject? input = null;
+
+    // To standard output.
+    public void write(string text)
+    {
+        Console.put("php://output", text, "write", "standard output");
+    }
+
+    // To standard output, then a newline.
+    public void writeLine(string text)
+    {
+        this.write(text + "\n");
+    }
+
+    // To standard error.
+    public void writeError(string text)
+    {
+        Console.put("php://stderr", text, "writeError", "standard error");
+    }
+
+    // One line of standard input without its line ending, null at the end of the input.
+    public string? readLine()
+    {
+        const input = this.input ??= new SplFileObject("php://stdin", "r");
+        // A line holds its line ending, so only the end of the input reads as "".
+        const line = input.fgets();
+
+        return line == "" ? null : global.rtrim(line, "\r\n");
+    }
+
+    private static void put(string stream, string text, string member, string name)
+    {
+        if (global.file_put_contents(stream, text) != global.strlen(text)) {
+            throw new RuntimeException(`Console.${member}: ${name} is closed`);
+        }
+    }
+}
