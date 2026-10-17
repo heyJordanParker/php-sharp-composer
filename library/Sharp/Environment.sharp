@@ -11,6 +11,8 @@ public foreign class Environment
 
     public string? variable(string name) => global.getenv(name) is string value ? value : null;
 
+    public Map<string, string> variables() => global.getenv();
+
     // Sets the variable for this process and the programs it starts.
     public void setVariable(string name, string value)
     {
