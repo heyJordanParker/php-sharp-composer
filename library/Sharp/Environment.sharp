@@ -1,8 +1,5 @@
 namespace Sharp;
 
-import RuntimeException;
-import ValueError;
-
 public foreign class Environment
 {
     public List<string> arguments { get; }
@@ -13,6 +10,17 @@ public foreign class Environment
     }
 
     public string? variable(string name) => global.getenv(name) is string value ? value : null;
+
+    // Sets the variable for this process and the programs it starts.
+    public void setVariable(string name, string value)
+    {
+        if (name == "" || global.str_contains(name, "=")) {
+            throw new ValueError(`Environment.setVariable: the name "${name}" holds "=" or is empty`);
+        }
+        if (!global.putenv(`${name}=${value}`)) {
+            throw new RuntimeException(`Environment.setVariable: the variable "${name}" cannot be set`);
+        }
+    }
 
     public string currentDirectory()
         => global.getcwd() is string directory ? directory : throw new RuntimeException("Environment.currentDirectory: the current directory cannot be read");

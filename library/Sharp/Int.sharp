@@ -1,8 +1,5 @@
 namespace Sharp;
 
-import ArithmeticError;
-import ValueError;
-
 public static class Int
 {
     public const int MAX = global.PHP_INT_MAX;

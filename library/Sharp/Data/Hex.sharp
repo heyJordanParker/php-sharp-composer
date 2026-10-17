@@ -1,7 +1,5 @@
 namespace Sharp.Data;
 
-import ValueError;
-
 public static class Hex
 {
     public static string encode(string data) => global.bin2hex(data);

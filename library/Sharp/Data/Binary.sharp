@@ -1,7 +1,5 @@
 namespace Sharp.Data;
 
-import ValueError;
-
 public static class Binary
 {
     public static string pack(string format, Any? ...values) => global.pack(format, ...values);

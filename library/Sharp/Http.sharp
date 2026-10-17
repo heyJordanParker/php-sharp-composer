@@ -1,0 +1,63 @@
+namespace Sharp;
+
+import Sharp.Net.HttpMethod;
+import Sharp.Net.HttpRequest;
+import Sharp.Net.HttpResponse;
+import Sharp.Net.Url;
+import Sharp.Time.Duration;
+
+// HTTP requests, as .NET's HttpClient, through curl. A 404 or a 500 is a returned response.
+public foreign class Http
+{
+    // A GET.
+    public HttpResponse get(string url) => this.send(new HttpRequest(HttpMethod.Get, url));
+
+    public HttpResponse send(HttpRequest request)
+    {
+        if (!Url.isValid(request.url)) {
+            throw new ValueError(`Http.send: "${request.url}" is not a valid URL`);
+        }
+        List<string> headers = [];
+        for (const [name, value] of request.headers) {
+            headers.add(`${name}: ${value}`);
+        }
+        const handle = global.curl_init(request.url);
+        global.curl_setopt(handle, global.CURLOPT_CUSTOMREQUEST, request.method.value);
+        global.curl_setopt(handle, global.CURLOPT_NOBODY, request.method == HttpMethod.Head);
+        global.curl_setopt(handle, global.CURLOPT_HTTPHEADER, headers);
+        global.curl_setopt(handle, global.CURLOPT_RETURNTRANSFER, true);
+        global.curl_setopt(handle, global.CURLOPT_HEADER, true);
+        if (request.body != "") {
+            global.curl_setopt(handle, global.CURLOPT_POSTFIELDS, request.body);
+        }
+        if (request.timeout is Duration timeout) {
+            global.curl_setopt(handle, global.CURLOPT_TIMEOUT_MS, timeout.nanoseconds / 1_000_000);
+        }
+
+        if (global.curl_exec(handle) is not string response) {
+            throw new RuntimeException(`Http.send: ${request.url} failed: ${global.curl_error(handle)}`);
+        }
+        const status = global.curl_getinfo(handle, global.CURLINFO_RESPONSE_CODE);
+        const headerSize = global.curl_getinfo(handle, global.CURLINFO_HEADER_SIZE);
+        if (status is not int code || headerSize is not int size) {
+            throw new RuntimeException(`Http.send: ${request.url} gave no status`);
+        }
+
+        return new HttpResponse(code, Http.headers(global.substr(response, 0, size)), global.substr(response, size));
+    }
+
+    // The header lines of a response, each name lowercased, with every value it was sent with.
+    private static Map<string, List<string>> headers(string text)
+    {
+        Map<string, List<string>> headers = [:];
+        for (const line of global.explode("\r\n", text)) {
+            const parts = global.explode(":", line, 2);
+            if (parts.count() == 2) {
+                const name = global.strtolower(global.trim(parts[0]));
+                headers[name] = [...(headers.get(name) ?? []), global.trim(parts[1])];
+            }
+        }
+
+        return headers;
+    }
+}

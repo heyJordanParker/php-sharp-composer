@@ -1,0 +1,19 @@
+namespace Sharp.Net;
+
+// One mailbox, with an optional display name, as .NET's MailAddress.
+public struct MailAddress
+{
+    public MailAddress(public string address { get; }, public string? name { get; } = null)
+    {
+        if (!Email.isValid(address)) {
+            throw new ValueError(`MailAddress: "${address}" is not a valid address`);
+        }
+        // A line break in the name would start a mail header of its own, as `Bcc:`.
+        if (name is string written && global.strpbrk(written, "\r\n") is string) {
+            throw new ValueError(`MailAddress: the name of "${address}" holds a line break`);
+        }
+    }
+
+    // The address as a mail header writes it, as `Ann <ann@example.com>`.
+    public string header => this.name is string name ? `${global.addcslashes(name, "\"\\")} <${this.address}>` : this.address;
+}
