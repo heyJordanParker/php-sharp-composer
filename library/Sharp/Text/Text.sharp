@@ -21,10 +21,18 @@ public static class Text
 
         public bool endsWith(string suffix) => global.str_ends_with(text, suffix);
 
-        public string replace(string old, string @new) => global.str_replace(old, @new, text);
+        public string replace(string old, string @new)
+            => old == ""
+                ? throw new ValueError("`replace` needs text to replace, and it is empty.")
+                : global.str_replace(old, @new, text);
 
-        public List<string> split(string delimiter)
-            => delimiter == "" ? throw new ValueError("Text.split: the delimiter is empty") : global.explode(delimiter, text);
+        // A limit of 0 gives every part, and a positive one at most that many, the last holding the rest, as Kotlin's.
+        public List<string> split(string delimiter, int limit = 0)
+            => delimiter == ""
+                ? throw new ValueError("`split` needs a delimiter, and it is empty.")
+                : limit < 0
+                    ? throw new ValueError("`split` takes a limit of 0 or more, and it is negative.")
+                    : global.explode(delimiter, text, limit == 0 ? global.PHP_INT_MAX : limit);
 
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];
