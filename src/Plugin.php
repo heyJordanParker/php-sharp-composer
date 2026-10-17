@@ -25,6 +25,12 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
 
     public function dumpClassMap(Event $event): void
     {
+        // `composer run-script post-autoload-dump` runs the event with no flags and dumps no autoloader, so the class map
+        // stays as the last dump wrote it.
+        if (!array_key_exists('optimize', $event->getFlags())) {
+            return;
+        }
+
         $composer = $event->getComposer();
         $composerDir = $composer->getConfig()->get('vendor-dir') . '/composer';
         $classMapFile = $composerDir . '/autoload_sharp.php';

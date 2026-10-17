@@ -18,10 +18,16 @@ $requireEngine = static function (): void {
     $version = InstalledVersions::isInstalled($package) ? InstalledVersions::getPrettyVersion($package) : 'unknown';
     ['fingerprint' => $fingerprint, 'bodies' => $bodies] = require __DIR__ . '/native.php';
     \Sharp\Internal\requireNative($fingerprint, $bodies, preg_replace('/^v(?=[0-9])/', '', $version));
-    \Sharp\Internal\readModule(__DIR__ . '/library/Sharp/Module.sharp');
     $required = true;
 };
 
+// The container reads the library's module at its first lookup, so naming it reads nothing yet. Composer's own process
+// names it too, where a script reaches a PHP# class through the PHP file mago compile writes beside it, which Composer's
+// loader includes without this one. An engine without the function is older than the library, which requireNative
+// refuses.
+if (function_exists('Sharp\Internal\readModule')) {
+    \Sharp\Internal\readModule(__DIR__ . '/library/Sharp/Module.sharp');
+}
 if (function_exists('Sharp\Internal\requireNative') && !class_exists(PluginManager::class, false)) {
     $requireEngine();
 }
