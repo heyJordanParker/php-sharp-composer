@@ -5,6 +5,10 @@ import ValueError;
 
 public static class Int
 {
+    public const int MAX = global.PHP_INT_MAX;
+
+    public const int MIN = global.PHP_INT_MIN;
+
     public static int parse(string text)
     {
         const number = Int.tryParse(text);
