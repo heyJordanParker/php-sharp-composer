@@ -8,5 +8,5 @@ public static class Compression
         => global.gzcompress(data) is string compressed ? compressed : throw new ValueError("Compression.compress: zlib could not compress the data");
 
     public static string uncompress(string data)
-        => @global.gzuncompress(data) is string text ? text : throw new ValueError("Compression.uncompress: the data is not zlib-compressed");
+        => global.gzuncompress(data) is string text ? text : throw new ValueError("Compression.uncompress: the data is not zlib-compressed");
 }

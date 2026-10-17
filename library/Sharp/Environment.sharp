@@ -19,7 +19,7 @@ public foreign class Environment
 
     public void changeDirectory(string path)
     {
-        if (!@global.chdir(path)) {
+        if (!global.chdir(path)) {
             throw new RuntimeException(`Environment.changeDirectory: the directory "${path}" cannot be entered`);
         }
     }

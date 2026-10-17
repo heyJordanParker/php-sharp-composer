@@ -7,7 +7,7 @@ public static class PhpSerializer
     public static Any? unserialize(string text, List<string> allowedClasses = [])
     {
         global.error_clear_last();
-        const value = @global.unserialize(text, ["allowed_classes": allowedClasses]);
+        const value = global.unserialize(text, ["allowed_classes": allowedClasses]);
         return global.error_get_last() == null ? value : null;
     }
 
