@@ -7,7 +7,7 @@ import Sharp.Time.Duration;
 public foreign class Process
 {
     // Ends the run, skipping every finally.
-    public void exit(int code)
+    public never exit(int code)
     {
         global.exit(code);
     }
