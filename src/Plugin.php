@@ -25,13 +25,26 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
 
     public function dumpClassMap(Event $event): void
     {
+        $composer = $event->getComposer();
+        // Composer runs on any engine, so a library the engine was not built for is an error line, and Composer goes on.
+        // An update runs the new version's plugin here, which Composer's own autoloader can't: it skips the new
+        // version's autoload.php, whose files identifier stays the same.
+        if (function_exists('Sharp\Internal\requireNative')) {
+            ['fingerprint' => $fingerprint, 'bodies' => $bodies] = require dirname(__DIR__) . '/native.php';
+            $installed = $composer->getRepositoryManager()->getLocalRepository()->findPackage('heyjordanparker/php-sharp-composer', '*');
+            try {
+                \Sharp\Internal\requireNative($fingerprint, $bodies, $installed?->getPrettyVersion() ?? '');
+            } catch (\Error $refusal) {
+                $event->getIO()->writeError('<error>' . $refusal->getMessage() . '</error>');
+            }
+        }
+
         // `composer run-script post-autoload-dump` runs the event with no flags and dumps no autoloader, so the class map
         // stays as the last dump wrote it.
         if (!array_key_exists('optimize', $event->getFlags())) {
             return;
         }
 
-        $composer = $event->getComposer();
         $composerDir = $composer->getConfig()->get('vendor-dir') . '/composer';
         $classMapFile = $composerDir . '/autoload_sharp.php';
         $filesystem = new Filesystem();

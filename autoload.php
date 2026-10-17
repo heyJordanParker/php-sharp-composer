@@ -15,25 +15,21 @@ $requireEngine = static function (): void {
         throw new Error('This project needs the PHP# engine, and this is plain PHP. Install php-sharp, or run the ghcr.io/heyjordanparker/php-sharp image.');
     }
     $package = 'heyjordanparker/php-sharp-composer';
-    $version = InstalledVersions::isInstalled($package) ? InstalledVersions::getPrettyVersion($package) : 'unknown';
+    $version = InstalledVersions::isInstalled($package) ? (string) InstalledVersions::getPrettyVersion($package) : '';
     ['fingerprint' => $fingerprint, 'bodies' => $bodies] = require __DIR__ . '/native.php';
-    \Sharp\Internal\requireNative($fingerprint, $bodies, preg_replace('/^v(?=[0-9])/', '', $version));
+    \Sharp\Internal\requireNative($fingerprint, $bodies, $version);
     $required = true;
 };
 
 // The container reads the library's module at its first lookup, so naming it reads nothing yet. Composer's own process
 // names it too, where a script reaches a PHP# class through the PHP file mago compile writes beside it, which Composer's
 // loader includes without this one. An engine without the function is older than the library, which requireNative
-// refuses. Composer's process runs on any engine, and once requireNative refuses, the engine refuses each .sharp file.
+// refuses. Composer's process runs on any engine: there, each compiled file's native fingerprint refuses PHP# code.
 if (function_exists('Sharp\Internal\readModule')) {
     \Sharp\Internal\readModule(__DIR__ . '/library/Sharp/Module.sharp');
 }
-if (function_exists('Sharp\Internal\requireNative')) {
-    try {
-        $requireEngine();
-    } catch (Error $refusal) {
-        class_exists(PluginManager::class, false) || throw $refusal;
-    }
+if (function_exists('Sharp\Internal\requireNative') && !class_exists(PluginManager::class, false)) {
+    $requireEngine();
 }
 
 $classMap = [];
