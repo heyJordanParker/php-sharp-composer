@@ -2312,3 +2312,6 @@ extern com_exception;
 extern mysqli_sql_exception;
 extern DateTimeImmutable;
 extern DateTimeZone;
+extern DateTimeImmutable.__construct uses Clock;
+extern DateTimeImmutable.createFromFormat uses Clock;
+extern DateTimeImmutable.modify uses Clock;

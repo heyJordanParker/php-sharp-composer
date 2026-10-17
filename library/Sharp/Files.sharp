@@ -28,6 +28,15 @@ public foreign class Files
         return global.preg_split("/\\r\\n|\\n|\\r/", global.rtrim(contents, "\r\n")) is List<string> lines ? lines : [];
     }
 
+    // The lines without their endings, read one at a time as a loop reaches them, so a file of any size streams
+    // through. null when the file doesn't exist.
+    public Iterable<string>? readLinesLazily(string path)
+    {
+        Files.local(path, "Files.readLinesLazily");
+
+        return global.is_file(path) ? Files.lines(path) : null;
+    }
+
     // Replaces the file.
     public void write(string path, string contents) => Files.put(path, contents, 0, "Files.write");
 
@@ -97,6 +106,21 @@ public foreign class Files
     // A new empty file's path.
     public string temporaryFile()
         => @global.tempnam(global.sys_get_temp_dir(), "sharp") is string path ? path : throw new RuntimeException("Files.temporaryFile: no temporary file can be created");
+
+    private static Iterable<string> lines(string path)
+    {
+        const handle = @global.fopen(path, "r");
+        if (handle is bool) {
+            throw new RuntimeException(`Files.readLinesLazily: "${path}" cannot be read`);
+        }
+        try {
+            while (global.fgets(handle) is string line) {
+                yield global.rtrim(line, "\r\n");
+            }
+        } finally {
+            global.fclose(handle);
+        }
+    }
 
     private static void put(string path, string contents, int flags, string member)
     {
