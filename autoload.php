@@ -24,12 +24,16 @@ $requireEngine = static function (): void {
 // The container reads the library's module at its first lookup, so naming it reads nothing yet. Composer's own process
 // names it too, where a script reaches a PHP# class through the PHP file mago compile writes beside it, which Composer's
 // loader includes without this one. An engine without the function is older than the library, which requireNative
-// refuses.
+// refuses. Composer's process runs on any engine, and once requireNative refuses, the engine refuses each .sharp file.
 if (function_exists('Sharp\Internal\readModule')) {
     \Sharp\Internal\readModule(__DIR__ . '/library/Sharp/Module.sharp');
 }
-if (function_exists('Sharp\Internal\requireNative') && !class_exists(PluginManager::class, false)) {
-    $requireEngine();
+if (function_exists('Sharp\Internal\requireNative')) {
+    try {
+        $requireEngine();
+    } catch (Error $refusal) {
+        class_exists(PluginManager::class, false) || throw $refusal;
+    }
 }
 
 $classMap = [];
