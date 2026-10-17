@@ -6,9 +6,12 @@ import Sharp.Time.Duration;
 // from an argument list, so no shell reads it.
 public foreign class Process
 {
-    // Ends the run, skipping every finally.
+    // Ends the run with `code`, from 0 to 254, skipping every finally. PHP keeps 255 for its own fatal errors.
     public void exit(int code)
     {
+        if (code < 0 || code > 254) {
+            throw new ValueError(`Process.exit: the code ${code} is not from 0 to 254`);
+        }
         global.exit(code);
     }
 
