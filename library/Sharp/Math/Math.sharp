@@ -16,4 +16,8 @@ public static class Math
         => base == 0.0 && exponent < 0.0
             ? throw new DivisionByZeroError("Math.pow: a base of 0 with a negative exponent divides by zero")
             : base ** exponent;
+
+    public static int max(int first, int ...rest) => global.max([first, ...rest]);
+
+    public static int min(int first, int ...rest) => global.min([first, ...rest]);
 }
