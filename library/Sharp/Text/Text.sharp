@@ -11,6 +11,21 @@ public static class Text
     {
         public string trim() => global.trim(text);
 
+        public bool contains(string other) => global.str_contains(text, other);
+
+        public string lowercase() => global.mb_strtolower(text, "UTF-8");
+
+        public string uppercase() => global.mb_strtoupper(text, "UTF-8");
+
+        public bool startsWith(string prefix) => global.str_starts_with(text, prefix);
+
+        public bool endsWith(string suffix) => global.str_ends_with(text, suffix);
+
+        public string replace(string old, string @new) => global.str_replace(old, @new, text);
+
+        public List<string> split(string delimiter)
+            => delimiter == "" ? throw new ValueError("Text.split: the delimiter is empty") : global.explode(delimiter, text);
+
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];
     }
