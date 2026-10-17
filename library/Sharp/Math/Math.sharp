@@ -1,7 +1,5 @@
 namespace Sharp.Math;
 
-import DivisionByZeroError;
-
 public static class Math
 {
     public static float ceil(float x) => global.ceil(x);

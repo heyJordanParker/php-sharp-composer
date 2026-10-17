@@ -1,0 +1,69 @@
+namespace Sharp;
+
+import PDO;
+import PDOStatement;
+import Sharp.Time.Duration;
+
+// A key-value store in a SQLite file, as .NET's IDistributedCache over a table. Values are strings, which also cover
+// bytes, so a structured value goes through `Json`. A failing store throws `PDOException`, a `RuntimeException`.
+public foreign class Cache
+{
+    private PDO store;
+
+    // The SQLite file. A module sets it.
+    public Cache(string path)
+    {
+        try {
+            this.store = new PDO(`sqlite:${path}`, null, null, [PDO.ATTR_ERRMODE: PDO.ERRMODE_EXCEPTION]);
+        } catch (PDOException failure) {
+            throw new RuntimeException(`Cache: "${path}" cannot be opened: ${failure.getMessage()}`);
+        }
+        this.store.exec("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value BLOB NOT NULL, expires INTEGER)");
+    }
+
+    // null on a miss or an expired entry.
+    public string? get(string key)
+    {
+        const found = this.run("Cache.get", key, "SELECT value FROM cache WHERE key = ? AND (expires IS NULL OR expires > ?)", [global.time()]);
+
+        return found.fetchColumn() is string value ? value : null;
+    }
+
+    public void set(string key, string value, Duration? expiresAfter = null)
+    {
+        const expires = expiresAfter is Duration after ? global.time() + after.seconds : null;
+        this.run("Cache.set", key, "REPLACE INTO cache (key, value, expires) VALUES (?, ?, ?)", [value, expires]);
+    }
+
+    // A missing key is not an error.
+    public void remove(string key)
+    {
+        this.run("Cache.remove", key, "DELETE FROM cache WHERE key = ?");
+    }
+
+    // The cached value, or else the one `create` gives, which the cache keeps. Each call has the effects of `create`.
+    public string getOrCreate(string key, Function<string()> create, Duration? expiresAfter = null)
+    {
+        if (this.get(key) is string value) {
+            return value;
+        }
+        const created = create();
+        this.set(key, created, expiresAfter);
+
+        return created;
+    }
+
+    // Runs `sql` for `member` with the key, then `rest`, as its parameters.
+    private PDOStatement run(string member, string key, string sql, List<Any?> rest = [])
+    {
+        if (key == "") {
+            throw new ValueError(`${member}: the key is empty`);
+        }
+        if (this.store.prepare(sql) is not PDOStatement statement) {
+            throw new RuntimeException(`${member}: the store cannot run "${sql}"`);
+        }
+        statement.execute([key, ...rest]);
+
+        return statement;
+    }
+}

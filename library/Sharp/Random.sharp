@@ -1,0 +1,43 @@
+namespace Sharp;
+
+import Random.Engine.Mt19937;
+import Random.Randomizer;
+
+// Random values, as .NET's System.Random, through PHP's Randomizer. Seeded for a fake in tests, secure without a seed.
+public foreign class Random
+{
+    private Randomizer randomizer;
+
+    public Random(int? seed = null)
+    {
+        this.randomizer = seed is int value ? new Randomizer(new Mt19937(value)) : new Randomizer();
+    }
+
+    // min ≤ n < max, and min when they are equal.
+    public int nextInt(int min, int max)
+    {
+        if (max < min) {
+            throw new ValueError(`Random.nextInt: max ${max} is less than min ${min}`);
+        }
+
+        return max == min ? min : this.randomizer.getInt(min, max - 1);
+    }
+
+    // 0.0 ≤ n < 1.0.
+    public float nextFloat() => this.randomizer.nextFloat();
+
+    public string nextBytes(int length)
+    {
+        if (length < 1) {
+            throw new ValueError(`Random.nextBytes: the length ${length} is less than 1`);
+        }
+
+        return this.randomizer.getBytes(length);
+    }
+
+    // A new list in random order.
+    public List<T> shuffle<T>(List<T> items) => this.randomizer.shuffleArray(items);
+
+    // One random element, null for an empty list.
+    public T? pick<T>(List<T> items) => items.count() == 0 ? null : items[this.randomizer.getInt(0, items.count() - 1)];
+}

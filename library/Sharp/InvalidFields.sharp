@@ -1,7 +1,5 @@
 namespace Sharp;
 
-import ValueError;
-
 public class InvalidFields : ValueError
 {
     public InvalidFields(public Map<string, string> fields { get; }) : super(InvalidFields.describe(fields)) { }

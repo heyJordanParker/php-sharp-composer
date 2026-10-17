@@ -1,7 +1,5 @@
 namespace Sharp.Net;
 
-import ValueError;
-
 public static class Ip
 {
     public static bool isValid(string address) => global.filter_var(address, global.FILTER_VALIDATE_IP) is string;

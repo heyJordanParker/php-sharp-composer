@@ -1,0 +1,14 @@
+namespace Sharp.Time;
+
+// A length of time in nanoseconds, as .NET's TimeSpan. `Clock`, `Process`, `Http` and `Cache` take it.
+public struct Duration
+{
+    public Duration(public int nanoseconds { get; }) { }
+
+    public static Duration ofSeconds(int seconds) => new Duration(seconds * 1_000_000_000);
+
+    public static Duration ofMilliseconds(int milliseconds) => new Duration(milliseconds * 1_000_000);
+
+    // Whole seconds.
+    public int seconds => this.nanoseconds / 1_000_000_000;
+}

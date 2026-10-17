@@ -1,0 +1,26 @@
+namespace Sharp.Net;
+
+import Sharp.Time.Duration;
+
+// A request `Http.send` sends, as .NET's HttpRequestMessage. A line break in a header's name or value would start a
+// header of its own, so it is refused.
+public struct HttpRequest
+{
+    public HttpRequest(
+        public HttpMethod method { get; },
+        public string url { get; },
+        public Map<string, string> headers = [:] { get; },
+        public string body = "" { get; },
+        public Duration? timeout = null { get; },
+    )
+    {
+        for (const [name, value] of headers) {
+            if (global.strpbrk(name, "\r\n") is string) {
+                throw new ValueError("HttpRequest: a header name holds a line break");
+            }
+            if (global.strpbrk(value, "\r\n") is string) {
+                throw new ValueError(`HttpRequest: the value of the header "${name}" holds a line break`);
+            }
+        }
+    }
+}
