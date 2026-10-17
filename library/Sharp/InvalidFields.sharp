@@ -2,9 +2,9 @@ namespace Sharp;
 
 public class InvalidFields : ValueError
 {
-    public InvalidFields(public Map<string, string> fields { get; }) : super(InvalidFields.message(fields)) { }
+    public InvalidFields(public Map<string, string> fields { get; }) : super(InvalidFields.describe(fields)) { }
 
-    private static string message(Map<string, string> fields)
+    private static string describe(Map<string, string> fields)
     {
         let message = "";
         for (const [path, problem] of fields) {
