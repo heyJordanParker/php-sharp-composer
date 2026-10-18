@@ -51,7 +51,7 @@ public foreign class Http
     {
         Map<string, List<string>> headers = [:];
         for (const line of global.explode("\r\n", text)) {
-            const parts = global.explode(":", line, 2);
+            const parts = line.split(":", 2);
             if (parts.count() == 2) {
                 const name = global.strtolower(global.trim(parts[0]));
                 headers[name] = [...(headers.get(name) ?? []), global.trim(parts[1])];
