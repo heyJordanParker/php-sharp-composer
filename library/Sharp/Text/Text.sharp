@@ -37,4 +37,9 @@ public static class Text
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];
     }
+
+    extension(List<string> parts)
+    {
+        public string join(string separator) => global.implode(separator, parts);
+    }
 }
