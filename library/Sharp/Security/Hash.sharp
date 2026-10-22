@@ -4,8 +4,6 @@ public static class Hash
 {
     public static string of(string algorithm, string data) => global.hash(algorithm, data);
 
-    public static string hmac(string algorithm, string data, string key) => global.hash_hmac(algorithm, data, key);
-
     public static string md5(string data) => global.md5(data);
 
     public static string sha1(string data) => global.sha1(data);

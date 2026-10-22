@@ -1,7 +1,55 @@
 namespace Sharp.Net;
 
-public static class Url
+// An absolute URL, split into its parts as RFC 3986 names them, as .NET's Uri and Java's URI. Each part keeps its
+// percent-encoding, and `decode` reads one.
+public struct Url
 {
+    public Url(
+        public string scheme { get; },
+        public string host { get; },
+        public int? port { get; } = null,
+        public string path { get; } = "",
+        public string? query { get; } = null,
+        public string? fragment { get; } = null,
+        public string? user { get; } = null,
+        public string? password { get; } = null,
+    ) { }
+
+    public static Url parse(string text)
+        => Url.tryParse(text) ?? throw new ValueError(`\`Url.parse\` reads an absolute URL, such as "https://example.com/path", and "${text}" is not one.`);
+
+    public static Url? tryParse(string text)
+    {
+        if (!Url.isValid(text) || global.parse_url(text) is not Map<string, int|string> parts) {
+            return null;
+        }
+
+        return new Url(
+            Url.part(parts, "scheme") ?? "",
+            Url.part(parts, "host") ?? "",
+            parts.get("port") is int port ? port : null,
+            Url.part(parts, "path") ?? "",
+            Url.part(parts, "query"),
+            Url.part(parts, "fragment"),
+            Url.part(parts, "user"),
+            Url.part(parts, "pass"),
+        );
+    }
+
+    private static string? part(Map<string, int|string> parts, string name) => parts.get(name) is string text ? text : null;
+
+    public Map<int|string, Any?> queryValues() => Url.parseQuery(this.query ?? "");
+
+    public string toString()
+    {
+        const credentials = this.user is string user ? user + (this.password is string password ? ":" + password : "") + "@" : "";
+        const port = this.port is int number ? `:${number}` : "";
+        const query = this.query is string pairs ? "?" + pairs : "";
+        const fragment = this.fragment is string anchor ? "#" + anchor : "";
+
+        return `${this.scheme}://${credentials}${this.host}${port}${this.path}${query}${fragment}`;
+    }
+
     public static string encode(string text) => global.rawurlencode(text);
 
     public static string encodeForm(string text) => global.urlencode(text);
