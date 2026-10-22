@@ -1,10 +1,16 @@
 namespace Sharp.Time;
 
-// The clock, as .NET's TimeProvider. A moment is an int of Unix seconds, as `Date.format` and `Date.parse` take it.
+import DateTimeImmutable;
+
+// The clock, as .NET's TimeProvider and Kotlin's Clock.
 public foreign class Clock
 {
-    // Unix seconds now.
-    public int now() => global.time();
+    public Instant now()
+    {
+        const now = new DateTimeImmutable("now");
+
+        return new Instant(now.getTimestamp(), Int.parse(now.format("u")) * 1_000);
+    }
 
     // Monotonic nanoseconds, only for measuring.
     public int timestamp()

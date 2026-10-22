@@ -1,0 +1,62 @@
+namespace Sharp.Time;
+
+// An instant as the clocks of a time zone show it, as JavaScript's Temporal.ZonedDateTime and Java's ZonedDateTime.
+public struct DateTime
+{
+    public DateTime(public Instant instant { get; }, public TimeZone zone { get; }) { }
+
+    public Duration offset => this.zone.offsetAt(this.instant);
+
+    public Date date => Date.ofEpochDay(this.localSeconds.floorDiv(86400));
+
+    public int hour => this.localSeconds.mod(86400) / 3600;
+
+    public int minute => this.localSeconds.mod(3600) / 60;
+
+    public int second => this.localSeconds.mod(60);
+
+    public int nanosecond => this.instant.nanosecond;
+
+    public DateTime plus(Duration duration) => new DateTime(this.instant.plus(duration), this.zone);
+
+    public DateTime minus(Duration duration) => new DateTime(this.instant.minus(duration), this.zone);
+
+    public DateTime inZone(TimeZone zone) => new DateTime(this.instant, zone);
+
+    // ISO-8601 with the offset, then the zone's name, as RFC 9557 and Temporal write it: "2026-10-22T21:30:00+03:00[Europe/Sofia]".
+    public string toString()
+    {
+        const minutes = this.offset.minutes;
+        const offset = global.sprintf("%s%02d:%02d", minutes < 0 ? "-" : "+", minutes.abs() / 60, minutes.abs() % 60);
+
+        return `${this.localText()}${offset}[${this.zone.name}]`;
+    }
+
+    public static DateTime parse(string text)
+        => DateTime.tryParse(text) ?? throw new ValueError(`\`DateTime.parse\` reads ISO-8601 with an offset and a zone, such as "2026-10-22T21:30:00+03:00[Europe/Sofia]", and "${text}" is not.`);
+
+    // Null when the offset is not the zone's offset at that instant, as Temporal rejects it.
+    public static DateTime? tryParse(string text)
+    {
+        if (global.strrpos(text, "[") is not int open || !global.str_ends_with(text, "]")) {
+            return null;
+        }
+        const instantText = global.substr(text, 0, open);
+        if (Instant.tryParse(instantText) is not Instant instant || TimeZone.tryOf(global.substr(text, open + 1, -1)) is not TimeZone zone) {
+            return null;
+        }
+        const parsed = new DateTime(instant, zone);
+
+        return parsed.offset.seconds == Instant.offsetSeconds(instantText) ? parsed : null;
+    }
+
+    // The date and the time of day, as "2026-10-22T21:30:00" or "2026-10-22T21:30:00.250".
+    internal string localText()
+    {
+        const time = global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second);
+
+        return `${this.date.toString()}T${time}${Duration.fractionOf(this.nanosecond)}`;
+    }
+
+    private int localSeconds => this.instant.epochSeconds + this.offset.seconds;
+}

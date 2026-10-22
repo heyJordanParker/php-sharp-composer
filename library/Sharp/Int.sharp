@@ -46,6 +46,22 @@ public static class Int
                 ? throw new ValueError("`clamp` needs a minimum no larger than its maximum, and the minimum is larger.")
                 : value < min ? min : value > max ? max : value;
 
+        // The quotient rounded down, as Kotlin's floorDiv and Java's Math.floorDiv: -7.floorDiv(2) is -4.
+        public int floorDiv(int divisor)
+        {
+            const quotient = value / divisor;
+
+            return value % divisor != 0 && (value < 0) != (divisor < 0) ? quotient - 1 : quotient;
+        }
+
+        // The remainder with the divisor's sign, as Kotlin's mod and Java's Math.floorMod: -7.mod(2) is 1.
+        public int mod(int divisor)
+        {
+            const remainder = value % divisor;
+
+            return remainder != 0 && (remainder < 0) != (divisor < 0) ? remainder + divisor : remainder;
+        }
+
         public string format(string thousandsSeparator = ",")
         {
             const digits = global.strrev(global.ltrim(global.strval(value), "-"));

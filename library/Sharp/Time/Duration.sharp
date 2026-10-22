@@ -1,14 +1,94 @@
 namespace Sharp.Time;
 
-// A length of time in nanoseconds, as .NET's TimeSpan. `Clock`, `Process`, `Http` and `Cache` take it.
+// A length of time in nanoseconds, as Kotlin's Duration and .NET's TimeSpan. `Clock`, `Process`, `Http` and `Cache` take it.
 public struct Duration
 {
     public Duration(public int nanoseconds { get; }) { }
 
-    public static Duration ofSeconds(int seconds) => new Duration(seconds * 1_000_000_000);
+    public static Duration zero => new Duration(0);
 
     public static Duration ofMilliseconds(int milliseconds) => new Duration(milliseconds * 1_000_000);
 
-    // Whole seconds.
+    public static Duration ofSeconds(int seconds) => new Duration(seconds * 1_000_000_000);
+
+    public static Duration ofMinutes(int minutes) => new Duration(minutes * 60_000_000_000);
+
+    public static Duration ofHours(int hours) => new Duration(hours * 3_600_000_000_000);
+
+    public static Duration ofDays(int days) => new Duration(days * 86_400_000_000_000);
+
+    // Each whole unit, toward zero.
+    public int milliseconds => this.nanoseconds / 1_000_000;
+
     public int seconds => this.nanoseconds / 1_000_000_000;
+
+    public int minutes => this.nanoseconds / 60_000_000_000;
+
+    public int hours => this.nanoseconds / 3_600_000_000_000;
+
+    public int days => this.nanoseconds / 86_400_000_000_000;
+
+    public bool isNegative => this.nanoseconds < 0;
+
+    public Duration plus(Duration other) => new Duration(this.nanoseconds + other.nanoseconds);
+
+    public Duration minus(Duration other) => new Duration(this.nanoseconds - other.nanoseconds);
+
+    public Duration times(int factor) => new Duration(this.nanoseconds * factor);
+
+    public Duration negated() => new Duration(-this.nanoseconds);
+
+    // ISO-8601 in hours, minutes and seconds, as Kotlin's toIsoString: "PT1H30M", "PT0.5S", "-PT5S", "PT0S".
+    public string toString()
+    {
+        if (this.nanoseconds == 0) {
+            return "PT0S";
+        }
+        const sign = this.nanoseconds < 0 ? "-" : "";
+        const length = this.nanoseconds < 0 ? this.negated() : this;
+        const hours = length.hours;
+        const minutes = length.minutes - hours * 60;
+        const seconds = length.seconds - length.minutes * 60;
+        const fraction = length.nanoseconds - length.seconds * 1_000_000_000;
+        const hourPart = hours == 0 ? "" : `${hours}H`;
+        const minutePart = minutes == 0 ? "" : `${minutes}M`;
+        const secondPart = seconds == 0 && fraction == 0 ? "" : `${seconds}${Duration.fractionOf(fraction)}S`;
+
+        return `${sign}PT${hourPart}${minutePart}${secondPart}`;
+    }
+
+    public static Duration parse(string text)
+        => Duration.tryParse(text) ?? throw new ValueError(`\`Duration.parse\` reads ISO-8601, such as "PT1H30M", and "${text}" is not.`);
+
+    // ISO-8601 days, hours, minutes and seconds, as Kotlin's parseIsoString. A day is 24 hours.
+    public static Duration? tryParse(string text)
+    {
+        Map<int|string, string> found = [:];
+        const pattern = "/\\A(-?)P(?:([0-9]+)D)?(?:T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)(?:\\.([0-9]{1,9}))?S)?)?\\z/";
+        if (global.preg_match(pattern, text, found) != 1 || global.str_ends_with(text, "P") || global.str_ends_with(text, "T")) {
+            return null;
+        }
+        const length = Duration.ofDays(Duration.number(found, 2))
+            .plus(Duration.ofHours(Duration.number(found, 3)))
+            .plus(Duration.ofMinutes(Duration.number(found, 4)))
+            .plus(Duration.ofSeconds(Duration.number(found, 5)))
+            .plus(new Duration(Duration.fractionNanoseconds(found[6] ?? "")));
+
+        return global.str_starts_with(text, "-") ? length.negated() : length;
+    }
+
+    // A fraction of a second in nanoseconds, as text after its point in groups of 3 digits: "", ".500", ".000001".
+    internal static string fractionOf(int nanoseconds)
+    {
+        if (nanoseconds == 0) {
+            return "";
+        }
+        const digits = global.sprintf("%09d", nanoseconds);
+
+        return "." + (nanoseconds % 1_000_000 == 0 ? global.substr(digits, 0, 3) : nanoseconds % 1_000 == 0 ? global.substr(digits, 0, 6) : digits);
+    }
+
+    internal static int fractionNanoseconds(string digits) => digits == "" ? 0 : Int.parse(global.str_pad(digits, 9, "0"));
+
+    private static int number(Map<int|string, string> found, int group) => Int.tryParse(found[group] ?? "") ?? 0;
 }

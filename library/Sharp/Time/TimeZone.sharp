@@ -1,6 +1,55 @@
 namespace Sharp.Time;
 
-public static class TimeZone
+import DateTimeImmutable;
+import DateTimeZone;
+
+// A region's rules for its clocks, named as the IANA time zone database names it, such as "Europe/Sofia".
+public struct TimeZone
 {
+    public TimeZone(public string name { get; })
+    {
+        if (TimeZone.find(name) == null) {
+            throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one.`);
+        }
+    }
+
+    public static TimeZone utc => new TimeZone("UTC");
+
     public static List<string> names() => global.array_values(global.timezone_identifiers_list());
+
+    public static TimeZone? tryOf(string name) => TimeZone.find(name) == null ? null : new TimeZone(name);
+
+    // How far the zone's clocks are ahead of UTC at `instant`.
+    public Duration offsetAt(Instant instant)
+        => Duration.ofSeconds(TimeZone.find(this.name)?.getOffset(DateTimeImmutable.createFromTimestamp(instant.epochSeconds)) ?? 0);
+
+    public string toString() => this.name;
+
+    // The instant the zone's clocks show `localSeconds`, counted from 1970-01-01T00:00:00 on those clocks, as Java's
+    // ZonedDateTime.of resolves it: the earlier instant when the clocks show it twice, and the time the gap's length
+    // later when they skip it.
+    internal Instant instantAt(int localSeconds)
+    {
+        const before = this.offsetAt(new Instant(localSeconds - 86400)).seconds;
+        const after = this.offsetAt(new Instant(localSeconds + 86400)).seconds;
+        const early = Math.max(before, after);
+        const late = Math.min(before, after);
+        if (this.offsetAt(new Instant(localSeconds - early)).seconds == early) {
+            return new Instant(localSeconds - early);
+        }
+        if (this.offsetAt(new Instant(localSeconds - late)).seconds == late) {
+            return new Instant(localSeconds - late);
+        }
+
+        return new Instant(localSeconds - before);
+    }
+
+    private static DateTimeZone? find(string name)
+    {
+        try {
+            return new DateTimeZone(name);
+        } catch (Exception) {
+            return null;
+        }
+    }
 }
