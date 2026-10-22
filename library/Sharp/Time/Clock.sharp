@@ -1,6 +1,4 @@
-namespace Sharp;
-
-import Sharp.Time.Duration;
+namespace Sharp.Time;
 
 // The clock, as .NET's TimeProvider. A moment is an int of Unix seconds, as `Date.format` and `Date.parse` take it.
 public foreign class Clock

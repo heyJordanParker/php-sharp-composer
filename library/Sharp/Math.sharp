@@ -1,4 +1,4 @@
-namespace Sharp.Math;
+namespace Sharp;
 
 public static class Math
 {

@@ -12,7 +12,7 @@ public static class Float
             throw new ArithmeticError(`Float.parse: "${text}" is out of range for a float`);
         }
         if (Float.isNumber(global.trim(text))) {
-            throw new ValueError(`Float.parse: "${text}" is not a float: remove its spaces with Text.trim() first`);
+            throw new ValueError(`Float.parse: "${text}" is not a float: remove its spaces with trim() first`);
         }
         throw new ValueError(`Float.parse: "${text}" is not a float`);
     }

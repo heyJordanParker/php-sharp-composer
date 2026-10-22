@@ -1,4 +1,4 @@
-namespace Sharp;
+namespace Sharp.IO;
 
 import SplFileObject;
 

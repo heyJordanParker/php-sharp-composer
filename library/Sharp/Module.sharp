@@ -1,5 +1,13 @@
 namespace Sharp;
 
+import Sharp.IO.Console;
+import Sharp.IO.Files;
+import Sharp.Net.Http;
+import Sharp.Net.Mail;
+import Sharp.System.Environment;
+import Sharp.System.Process;
+import Sharp.Time.Clock;
+
 module
 {
     singleton Environment = Environment;

@@ -24,7 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace Sharp;
+namespace Sharp.Internal;
 
 import FFI.Exception as FFIException;
 import FFI.ParserException;
@@ -2310,6 +2310,10 @@ extern InvalidUrlException;
 extern ValueError;
 extern com_exception;
 extern mysqli_sql_exception;
+extern Attribute;
+extern Countable;
+extern JsonSerializable;
+extern Throwable;
 extern DateTimeImmutable;
 extern DateTimeZone;
 extern DateTimeImmutable.__construct uses Clock;

@@ -1,4 +1,4 @@
-namespace Sharp;
+namespace Sharp.IO;
 
 // Whole files and folders, as .NET's File and Directory. A missing file is a returned null.
 public foreign class Files

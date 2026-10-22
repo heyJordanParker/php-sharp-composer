@@ -1,4 +1,4 @@
-namespace Sharp;
+namespace Sharp.Data;
 
 import PDO;
 import PDOStatement;

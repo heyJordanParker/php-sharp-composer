@@ -16,7 +16,7 @@ public static class Int
             throw new ArithmeticError(`Int.parse: "${text}" is out of range for an int`);
         }
         if (Int.digits(global.trim(text)) is string) {
-            throw new ValueError(`Int.parse: "${text}" is not an int: remove its spaces with Text.trim() first`);
+            throw new ValueError(`Int.parse: "${text}" is not an int: remove its spaces with trim() first`);
         }
         throw new ValueError(`Int.parse: "${text}" is not an int`);
     }
@@ -32,5 +32,12 @@ public static class Int
         let found = 0;
         const digits = global.preg_replace("/\\A([+-]?)0*([0-9]+)\\z/", "$1$2", text, 1, found);
         return found == 1 ? digits : null;
+    }
+
+    extension(int value)
+    {
+        // The string of the one byte `value`, from 0 to 255, as Kotlin's `Int.toByte()` gives it.
+        public string toByteString()
+            => value >= 0 && value <= 255 ? global.chr(value) : throw new ValueError("`toByteString` needs a byte from 0 to 255, and the value is outside it.");
     }
 }

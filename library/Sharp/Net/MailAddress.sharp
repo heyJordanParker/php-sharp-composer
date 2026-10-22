@@ -5,7 +5,7 @@ public struct MailAddress
 {
     public MailAddress(public string address { get; }, public string? name { get; } = null)
     {
-        if (!Email.isValid(address)) {
+        if (!MailAddress.isValid(address)) {
             throw new ValueError(`MailAddress: "${address}" is not a valid address`);
         }
         // A line break in the name would start a mail header of its own, as `Bcc:`.
@@ -13,6 +13,9 @@ public struct MailAddress
             throw new ValueError(`MailAddress: the name of "${address}" holds a line break`);
         }
     }
+
+    // Whether `address` is one mailbox's address, as .NET's MailAddress.TryCreate tells.
+    public static bool isValid(string address) => global.filter_var(address, global.FILTER_VALIDATE_EMAIL) is string;
 
     // The address as a mail header writes it, as `Ann <ann@example.com>`.
     public string header => this.name is string name ? `${global.addcslashes(name, "\"\\")} <${this.address}>` : this.address;

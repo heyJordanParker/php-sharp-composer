@@ -1,7 +1,4 @@
-namespace Sharp;
-
-import Sharp.Net.MailAddress;
-import Sharp.Net.MailMessage;
+namespace Sharp.Net;
 
 // Sends mail, as .NET's SmtpClient.Send, through PHP's mail(), which hands the message to the local mail program.
 public foreign class Mail

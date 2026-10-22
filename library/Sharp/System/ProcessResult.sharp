@@ -1,4 +1,4 @@
-namespace Sharp;
+namespace Sharp.System;
 
 // What a program `Process.run` started gave back. A non-zero exit is a value, as .NET's RunAndCaptureText returns it.
 public struct ProcessResult

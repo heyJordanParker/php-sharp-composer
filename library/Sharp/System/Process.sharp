@@ -1,4 +1,4 @@
-namespace Sharp;
+namespace Sharp.System;
 
 import Sharp.Time.Duration;
 

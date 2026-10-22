@@ -1,4 +1,4 @@
-namespace Sharp.Data;
+namespace Sharp.Security;
 
 public static class Hash
 {

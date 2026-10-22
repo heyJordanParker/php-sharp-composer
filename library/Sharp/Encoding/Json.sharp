@@ -1,0 +1,10 @@
+namespace Sharp.Encoding;
+
+import Sharp.Internal.EncodedAsJson;
+
+public static class Json
+{
+    public static Any? decode(string json) => global.json_decode(json, true, 512, global.JSON_THROW_ON_ERROR);
+
+    public static string encode([EncodedAsJson] Any? value) => global.json_encode(value, global.JSON_THROW_ON_ERROR | global.JSON_PRESERVE_ZERO_FRACTION | global.JSON_UNESCAPED_SLASHES | global.JSON_UNESCAPED_UNICODE);
+}
