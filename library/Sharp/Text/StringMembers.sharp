@@ -8,17 +8,63 @@ public static class StringMembers
     {
         public string slug() => StringMembers.slugOf(text);
 
-        public string trim() => global.trim(text);
+        public int length() => global.mb_strlen(text, "UTF-8");
+
+        public string substring(int start, int? end = null)
+        {
+            const stop = end ?? text.length();
+            if (start < 0 || stop < start || stop > text.length()) {
+                throw new OutOfRangeException("`substring` takes a range inside the text, and the range is outside it.");
+            }
+            return global.mb_substr(text, start, stop - start, "UTF-8");
+        }
+
+        public int? indexOf(string other, int from = 0)
+            => from < 0 || from > text.length()
+                ? throw new OutOfRangeException("`indexOf` starts inside the text, and the start is outside it.")
+                : global.mb_strpos(text, other, from, "UTF-8") is int index ? index : null;
+
+        public int? lastIndexOf(string other) => global.mb_strrpos(text, other, 0, "UTF-8") is int index ? index : null;
 
         public bool contains(string other) => global.str_contains(text, other);
+
+        public bool startsWith(string prefix) => global.str_starts_with(text, prefix);
+
+        public bool endsWith(string suffix) => global.str_ends_with(text, suffix);
+
+        public string trim() => global.mb_trim(text);
+
+        public string trimStart() => global.mb_ltrim(text);
+
+        public string trimEnd() => global.mb_rtrim(text);
+
+        public string removePrefix(string prefix) => global.str_starts_with(text, prefix) ? global.substr(text, global.strlen(prefix)) : text;
+
+        public string removeSuffix(string suffix)
+            => suffix != "" && global.str_ends_with(text, suffix) ? global.substr(text, 0, -global.strlen(suffix)) : text;
+
+        public string padStart(int length, string padding = " ")
+            => padding == ""
+                ? throw new ValueError("`padStart` needs text to pad with, and it is empty.")
+                : global.mb_str_pad(text, length, padding, global.STR_PAD_LEFT, "UTF-8");
+
+        public string padEnd(int length, string padding = " ")
+            => padding == ""
+                ? throw new ValueError("`padEnd` needs text to pad with, and it is empty.")
+                : global.mb_str_pad(text, length, padding, global.STR_PAD_RIGHT, "UTF-8");
 
         public string lowercase() => global.mb_strtolower(text, "UTF-8");
 
         public string uppercase() => global.mb_strtoupper(text, "UTF-8");
 
-        public bool startsWith(string prefix) => global.str_starts_with(text, prefix);
+        public string capitalized() => global.mb_ucfirst(text, "UTF-8");
 
-        public bool endsWith(string suffix) => global.str_ends_with(text, suffix);
+        public string decapitalized() => global.mb_lcfirst(text, "UTF-8");
+
+        public string repeat(int times)
+            => times < 0
+                ? throw new ValueError("`repeat` takes a count of 0 or more, and it is negative.")
+                : global.str_repeat(text, times);
 
         public string replace(string old, string @new)
             => old == ""
@@ -32,6 +78,14 @@ public static class StringMembers
                 : limit < 0
                     ? throw new ValueError("`split` takes a limit of 0 or more, and it is negative.")
                     : global.explode(delimiter, text, limit == 0 ? global.PHP_INT_MAX : limit);
+
+        public List<string> lines() => global.preg_split("/\\r\\n|\\n|\\r/", text) as List<string> ?? [text];
+
+        public List<string> characters() => global.mb_str_split(text, 1, "UTF-8");
+
+        public List<int> codePoints()
+            => text.characters().map(
+                (string character) => global.mb_ord(character, "UTF-8") as int ?? throw new ValueError("`codePoints` reads UTF-8 text, and the text is not."));
 
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];

@@ -1,0 +1,30 @@
+namespace Sharp;
+
+public static class ListMembers
+{
+    extension<T>(List<T> items)
+    {
+        public List<T> reversed() => global.array_reverse(items);
+
+        public List<T> distinct() => global.array_values(global.array_unique(items, global.SORT_REGULAR));
+
+        public List<T> slice(int start, int? end = null)
+        {
+            const stop = end ?? items.count();
+            if (start < 0 || stop < start || stop > items.count()) {
+                throw new OutOfRangeException("`slice` takes a range inside the list, and the range is outside it.");
+            }
+            return global.array_slice(items, start, stop - start);
+        }
+
+        public List<List<T>> chunked(int size)
+            => size < 1
+                ? throw new ValueError("`chunked` takes a size of 1 or more, and it is smaller.")
+                : global.array_chunk(items, size);
+
+        public bool all(Function<bool(T)> predicate) => !items.any((T item) => !predicate(item));
+
+        public TResult fold<TResult>(TResult initial, Function<TResult(TResult, T)> operation)
+            => global.array_reduce(items, operation, initial);
+    }
+}

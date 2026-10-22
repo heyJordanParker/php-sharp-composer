@@ -36,6 +36,26 @@ public static class Int
 
     extension(int value)
     {
+        public int abs()
+            => value == Int.MIN
+                ? throw new ArithmeticError("`abs` of the smallest int is larger than the largest int.")
+                : global.abs(value);
+
+        public int clamp(int min, int max)
+            => min > max
+                ? throw new ValueError("`clamp` needs a minimum no larger than its maximum, and the minimum is larger.")
+                : value < min ? min : value > max ? max : value;
+
+        public string format(string thousandsSeparator = ",")
+        {
+            const digits = global.strrev(global.ltrim(global.strval(value), "-"));
+            const grouped = global.strrev(global.implode(global.strrev(thousandsSeparator), global.str_split(digits, 3)));
+            return value < 0 ? "-" + grouped : grouped;
+        }
+
+        public string toHex()
+            => value == Int.MIN ? "-8000000000000000" : value < 0 ? "-" + global.dechex(-value) : global.dechex(value);
+
         // The string of the one byte `value`, from 0 to 255, as Kotlin's `Int.toByte()` gives it.
         public string toByteString()
             => value >= 0 && value <= 255 ? global.chr(value) : throw new ValueError("`toByteString` needs a byte from 0 to 255, and the value is outside it.");

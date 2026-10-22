@@ -25,4 +25,25 @@ public static class Float
 
     private static bool isNumber(string text)
         => global.preg_match("/\\A[+-]?([0-9]+(\\.[0-9]+)?|\\.[0-9]+)([eE][+-]?[0-9]+)?\\z/", text) is int found && found == 1;
+
+    extension(float value)
+    {
+        public float abs() => global.abs(value);
+
+        public float clamp(float min, float max)
+            => min > max
+                ? throw new ValueError("`clamp` needs a minimum no larger than its maximum, and the minimum is larger.")
+                : value < min ? min : value > max ? max : value;
+
+        public float round(int decimals = 0) => global.round(value, decimals);
+
+        public float floor() => global.floor(value);
+
+        public float ceil() => global.ceil(value);
+
+        public bool isFinite() => global.is_finite(value);
+
+        public string format(int decimals = 0, string decimalSeparator = ".", string thousandsSeparator = ",")
+            => global.number_format(value, decimals, decimalSeparator, thousandsSeparator);
+    }
 }
