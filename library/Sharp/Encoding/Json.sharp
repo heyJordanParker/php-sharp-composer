@@ -1,10 +1,25 @@
 namespace Sharp.Encoding;
 
 import Sharp.Internal.EncodedAsJson;
+import Sharp.Internal.ParsesTypeArgument;
 
 public static class Json
 {
-    public static Any? decode(string json) => global.json_decode(json, true, 512, global.JSON_THROW_ON_ERROR);
+    // The value JSON text holds, an object as a `Map`. It throws `JsonException` on text that is no JSON.
+    public static Any? parse(string json) => global.json_decode(json, true, 512, global.JSON_THROW_ON_ERROR);
+
+    // The struct or PHP# class `T` that JSON text holds, read by `T.parse`, which throws one error that lists every bad
+    // field (spec section 10).
+    [ParsesTypeArgument]
+    public static T decode<T>(string json)
+    {
+        const value = Json.parse(json);
+        if (!global.is_array(value) && !global.is_object(value)) {
+            throw new ValueError("Json.decode: the JSON text holds no object, and a struct or a class is read from one");
+        }
+
+        return T.parse(value);
+    }
 
     public static string encode([EncodedAsJson] Any? value) => global.json_encode(value, global.JSON_THROW_ON_ERROR | global.JSON_PRESERVE_ZERO_FRACTION | global.JSON_UNESCAPED_SLASHES | global.JSON_UNESCAPED_UNICODE);
 }

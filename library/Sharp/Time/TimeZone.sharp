@@ -1,16 +1,17 @@
 namespace Sharp.Time;
 
+import DateInvalidTimeZoneException;
 import DateTimeImmutable;
 import DateTimeZone;
 
 // A region's rules for its clocks, named as the IANA time zone database names it, such as "Europe/Sofia".
 public struct TimeZone
 {
+    private DateTimeZone rules;
+
     public TimeZone(public string name { get; })
     {
-        if (TimeZone.find(name) == null) {
-            throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one.`);
-        }
+        this.rules = TimeZone.find(name) ?? throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one.`);
     }
 
     public static TimeZone utc => new TimeZone("UTC");
@@ -20,8 +21,7 @@ public struct TimeZone
     public static TimeZone? tryOf(string name) => TimeZone.find(name) == null ? null : new TimeZone(name);
 
     // How far the zone's clocks are ahead of UTC at `instant`.
-    public Duration offsetAt(Instant instant)
-        => Duration.ofSeconds(TimeZone.find(this.name)?.getOffset(DateTimeImmutable.createFromTimestamp(instant.epochSeconds)) ?? 0);
+    public Duration offsetAt(Instant instant) => Duration.ofSeconds(this.rules.getOffset(DateTimeImmutable.createFromTimestamp(instant.epochSeconds)));
 
     public string toString() => this.name;
 
@@ -44,11 +44,12 @@ public struct TimeZone
         return new Instant(localSeconds - before);
     }
 
+    // The database's rules for the zone `name`, or null for a name the database lacks.
     private static DateTimeZone? find(string name)
     {
         try {
             return new DateTimeZone(name);
-        } catch (Exception) {
+        } catch (DateInvalidTimeZoneException) {
             return null;
         }
     }

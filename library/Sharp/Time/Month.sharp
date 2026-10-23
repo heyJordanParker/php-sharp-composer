@@ -1,0 +1,34 @@
+namespace Sharp.Time;
+
+// A month of the year, numbered from January, as Java's Month.
+public enum Month : int
+{
+    case January = 1;
+    case February = 2;
+    case March = 3;
+    case April = 4;
+    case May = 5;
+    case June = 6;
+    case July = 7;
+    case August = 8;
+    case September = 9;
+    case October = 10;
+    case November = 11;
+    case December = 12;
+
+    // The English name, as "January".
+    public string toString() => match (this) {
+        Month.January => "January",
+        Month.February => "February",
+        Month.March => "March",
+        Month.April => "April",
+        Month.May => "May",
+        Month.June => "June",
+        Month.July => "July",
+        Month.August => "August",
+        Month.September => "September",
+        Month.October => "October",
+        Month.November => "November",
+        Month.December => "December",
+    };
+}

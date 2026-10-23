@@ -1,0 +1,17 @@
+namespace Sharp.Encoding;
+
+// PHP's serialized text, which a cache or a queue a plain PHP library runs holds: it keeps each object's class, and a
+// `Map` and a `Set` as themselves.
+public static class Serialized
+{
+    public static string encode(Any? value) => global.serialize(value);
+
+    // null for text it cannot read, or with data after the value. An object of a class `allowedClasses` leaves out
+    // comes back incomplete. A class is named as PHP# writes it, as `Shop.Crate`.
+    public static Any? decode(string text, List<string> allowedClasses = [])
+    {
+        global.error_clear_last();
+        const value = global.unserialize(text, ["allowed_classes": allowedClasses.map(name => global.strtr(name, ".", "\\"))]);
+        return global.error_get_last() == null ? value : null;
+    }
+}

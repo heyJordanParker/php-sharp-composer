@@ -1,0 +1,7 @@
+namespace Sharp.Encoding;
+
+// A value as the PHP code that writes it, as a plain PHP library's generated config file holds it.
+public static class PhpLiteral
+{
+    public static string of(Any? value) => global.var_export(value, true);
+}

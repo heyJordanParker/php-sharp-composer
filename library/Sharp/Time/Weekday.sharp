@@ -1,0 +1,24 @@
+namespace Sharp.Time;
+
+// A day of the week, numbered from Monday as ISO-8601 numbers it, as Java's DayOfWeek.
+public enum Weekday : int
+{
+    case Monday = 1;
+    case Tuesday = 2;
+    case Wednesday = 3;
+    case Thursday = 4;
+    case Friday = 5;
+    case Saturday = 6;
+    case Sunday = 7;
+
+    // The English name, as "Monday".
+    public string toString() => match (this) {
+        Weekday.Monday => "Monday",
+        Weekday.Tuesday => "Tuesday",
+        Weekday.Wednesday => "Wednesday",
+        Weekday.Thursday => "Thursday",
+        Weekday.Friday => "Friday",
+        Weekday.Saturday => "Saturday",
+        Weekday.Sunday => "Sunday",
+    };
+}

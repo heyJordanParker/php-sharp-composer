@@ -37,6 +37,16 @@ public struct Instant
     // ISO-8601 in UTC, as "2026-10-22T18:30:00Z", with the fraction of a second in groups of 3 digits when it has one.
     public string toString() => this.inZone(TimeZone.utc).localText() + "Z";
 
+    // The HTTP date of RFC 9110, which a `Date`, `Expires` or `Last-Modified` header holds: "Thu, 22 Oct 2026 18:30:00 GMT".
+    public string toHttpDate()
+    {
+        const utc = this.inZone(TimeZone.utc);
+        const weekday = global.substr(utc.weekday.toString(), 0, 3);
+        const month = global.substr(utc.monthOfYear.toString(), 0, 3);
+
+        return global.sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT", weekday, utc.date.day, month, utc.date.year, utc.hour, utc.minute, utc.second);
+    }
+
     public static Instant parse(string text)
         => Instant.tryParse(text) ?? throw new ValueError(`\`Instant.parse\` reads ISO-8601 with an offset, such as "2026-10-22T18:30:00Z", and "${text}" is not.`);
 

@@ -2,11 +2,15 @@ namespace Sharp;
 
 import NoDiscard;
 import Sharp.Internal;
+import Sharp.Internal.EffectOfEmit;
+import Sharp.Internal.StartsListener;
 
 extern Internal.listen uses Events;
 
+[EffectOfEmit]
 public static class Events
 {
     [NoDiscard]
+    [StartsListener]
     public static Listening on<TEvent>(Function<void(TEvent)> listener) => Internal.listen(typeof(TEvent), listener);
 }

@@ -27,6 +27,14 @@ public struct Date
     // The days since 1970-01-01.
     public int epochDay => Date.daysFromCivil(this.year, this.month, this.day);
 
+    // 1970-01-01 was a Thursday.
+    public Weekday weekday => Weekday.from((this.epochDay + 3).mod(7) + 1);
+
+    public Month monthOfYear => Month.from(this.month);
+
+    // The days of the date's month, 28 to 31.
+    public int lengthOfMonth => Date.daysInMonth(this.year, this.month);
+
     public Date plusDays(int days) => Date.ofEpochDay(this.epochDay + days);
 
     // The same day `months` later, or the month's last day when it is shorter, as Kotlin's and Java's plusMonths.

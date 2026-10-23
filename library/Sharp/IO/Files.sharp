@@ -1,5 +1,7 @@
 namespace Sharp.IO;
 
+import Sharp.Time.Instant;
+
 // Whole files and folders, as .NET's File and Directory. A missing file is a returned null.
 public foreign class Files
 {
@@ -100,8 +102,8 @@ public foreign class Files
     // Bytes, null when the file is missing.
     public int? size(string path) => global.is_file(path) && global.filesize(path) is int size ? size : null;
 
-    // A Unix timestamp, null when the file is missing.
-    public int? lastModified(string path) => global.file_exists(path) && global.filemtime(path) is int time ? time : null;
+    // The time the file last changed, null when the file is missing.
+    public Instant? lastModified(string path) => global.file_exists(path) && global.filemtime(path) is int time ? new Instant(time) : null;
 
     // A new empty file's path.
     public string temporaryFile()

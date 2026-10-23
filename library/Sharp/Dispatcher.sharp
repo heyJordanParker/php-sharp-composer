@@ -1,6 +1,10 @@
 namespace Sharp;
 
+import Sharp.Internal.AcceptsAnyEffect;
+
 public interface Dispatcher
 {
+    // The engine calls it with the listeners of every event, and each `emit` carries the listeners' effects.
+    [AcceptsAnyEffect]
     void dispatch(Any emitted, List<Function<void(Any)>> listeners) uses Events;
 }

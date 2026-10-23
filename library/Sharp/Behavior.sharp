@@ -1,8 +1,15 @@
 namespace Sharp;
 
+import Sharp.Internal.AcceptsAnyEffect;
+import Sharp.Internal.PropertyBehavior;
+
+// `get` and `set` run as the accessors of each property that names the behavior, which carries their effects.
+[PropertyBehavior]
 public interface Behavior<T>
 {
+    [AcceptsAnyEffect]
     T get(T value);
 
+    [AcceptsAnyEffect]
     T set(T value);
 }

@@ -1,5 +1,7 @@
 namespace Sharp;
 
+import Sharp.Internal.LeanFunction;
+
 public static class Math
 {
     public static float sqrt(float x) => global.sqrt(x);
@@ -11,7 +13,9 @@ public static class Math
             ? throw new DivisionByZeroError("Math.pow: a base of 0 with a negative exponent divides by zero")
             : base ** exponent;
 
+    [LeanFunction("max")]
     public static int max(int first, int ...rest) => global.max([first, ...rest]);
 
+    [LeanFunction("min")]
     public static int min(int first, int ...rest) => global.min([first, ...rest]);
 }

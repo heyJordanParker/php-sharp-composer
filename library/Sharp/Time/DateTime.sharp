@@ -17,6 +17,10 @@ public struct DateTime
 
     public int nanosecond => this.instant.nanosecond;
 
+    public Weekday weekday => this.date.weekday;
+
+    public Month monthOfYear => this.date.monthOfYear;
+
     public DateTime plus(Duration duration) => new DateTime(this.instant.plus(duration), this.zone);
 
     public DateTime minus(Duration duration) => new DateTime(this.instant.minus(duration), this.zone);
@@ -24,12 +28,39 @@ public struct DateTime
     public DateTime inZone(TimeZone zone) => new DateTime(this.instant, zone);
 
     // ISO-8601 with the offset, then the zone's name, as RFC 9557 and Temporal write it: "2026-10-22T21:30:00+03:00[Europe/Sofia]".
-    public string toString()
-    {
-        const minutes = this.offset.minutes;
-        const offset = global.sprintf("%s%02d:%02d", minutes < 0 ? "-" : "+", minutes.abs() / 60, minutes.abs() % 60);
+    public string toString() => `${this.toOffsetString()}[${this.zone.name}]`;
 
-        return `${this.localText()}${offset}[${this.zone.name}]`;
+    // ISO-8601 with the offset and no zone, as RFC 3339 and PHP's date("c") write it: "2026-10-22T21:30:00+03:00".
+    public string toOffsetString() => `${this.localText()}${this.offsetText()}`;
+
+    // The date and the time of day on the zone's clocks, as a SQL DATETIME column holds them: "2026-10-22 21:30:00".
+    public string toSqlString()
+        => `${this.date.toString()} ${global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second)}`;
+
+    // The date and time of day `text` writes on the clocks of `zone`, with a space or a "T" between them, as a SQL
+    // DATETIME column or an HTML datetime-local input gives them: "2026-10-22 21:30:00", "2026-10-22T21:30" or
+    // "2026-10-22T21:30:00.250". A time the clocks show twice is the earlier instant, and one they skip is the time the
+    // gap's length later, as Java's ZonedDateTime.of resolves them.
+    public static DateTime parseLocal(string text, TimeZone zone)
+        => DateTime.tryParseLocal(text, zone) ?? throw new ValueError(`\`DateTime.parseLocal\` reads a date and a time of day, such as "2026-10-22 21:30:00", and "${text}" is not.`);
+
+    public static DateTime? tryParseLocal(string text, TimeZone zone)
+    {
+        Map<int|string, string> found = [:];
+        const pattern = "/\\A([0-9]{4}-[0-9]{2}-[0-9]{2})[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\\.([0-9]{1,9}))?)?\\z/";
+        if (global.preg_match(pattern, text, found) != 1 || Date.tryParse(found[1] ?? "") is not Date date) {
+            return null;
+        }
+        const hour = Int.parse(found[2] ?? "");
+        const minute = Int.parse(found[3] ?? "");
+        const second = (found[4] ?? "") == "" ? 0 : Int.parse(found[4] ?? "");
+        if (hour > 23 || minute > 59 || second > 59) {
+            return null;
+        }
+        const nanosecond = Duration.fractionNanoseconds(found[5] ?? "");
+        const at = zone.instantAt(date.epochDay * 86400 + hour * 3600 + minute * 60 + second);
+
+        return new DateTime(new Instant(at.epochSeconds, nanosecond), zone);
     }
 
     public static DateTime parse(string text)
@@ -56,6 +87,14 @@ public struct DateTime
         const time = global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second);
 
         return `${this.date.toString()}T${time}${Duration.fractionOf(this.nanosecond)}`;
+    }
+
+    // The offset as ISO-8601 writes it, as "+03:00".
+    private string offsetText()
+    {
+        const minutes = this.offset.minutes;
+
+        return global.sprintf("%s%02d:%02d", minutes < 0 ? "-" : "+", minutes.abs() / 60, minutes.abs() % 60);
     }
 
     private int localSeconds => this.instant.epochSeconds + this.offset.seconds;
