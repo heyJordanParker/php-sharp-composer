@@ -32,16 +32,12 @@ public struct Instant
     public static int operator <=>(Instant a, Instant b)
         => a.epochSeconds == b.epochSeconds ? a.nanosecond <=> b.nanosecond : a.epochSeconds <=> b.epochSeconds;
 
-    public bool isBefore(Instant other) => this < other;
-
-    public bool isAfter(Instant other) => this > other;
-
     public DateTime inZone(TimeZone zone) => new DateTime(this, zone);
 
     // A plain PHP date at the same instant, in UTC, for a plain PHP library that takes a `DateTimeInterface`. A PHP date
     // holds microseconds, so the nanoseconds below them are left out.
     public DateTimeImmutable toPhpDateTime()
-        => DateTimeImmutable.createFromTimestamp(this.epochSeconds).setTimezone(TimeZone.utc.rules).setMicrosecond(this.nanosecond / 1_000);
+        => DateTimeImmutable.createFromTimestamp(this.epochSeconds).setTimezone(TimeZone.utc.rules()).setMicrosecond(this.nanosecond / 1_000);
 
     // ISO-8601 in UTC, as "2026-10-22T18:30:00Z", with the fraction of a second in groups of 3 digits when it has one.
     public string toString() => this.inZone(TimeZone.utc).localText() + "Z";

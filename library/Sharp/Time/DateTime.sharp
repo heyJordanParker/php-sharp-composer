@@ -30,7 +30,7 @@ public struct DateTime
     public DateTime inZone(TimeZone zone) => new DateTime(this.instant, zone);
 
     // A plain PHP date at the same instant, in the zone, to the microsecond, as `Instant.toPhpDateTime` gives one.
-    public DateTimeImmutable toPhpDateTime() => this.instant.toPhpDateTime().setTimezone(this.zone.rules);
+    public DateTimeImmutable toPhpDateTime() => this.instant.toPhpDateTime().setTimezone(this.zone.rules());
 
     // By the instant, then by the zone's name, so it gives 0 exactly when `==` is true, as Java's ZonedDateTime.compareTo.
     public static int operator <=>(DateTime a, DateTime b)
@@ -43,8 +43,7 @@ public struct DateTime
     public string toOffsetString() => `${this.localText()}${this.offsetText()}`;
 
     // The date and the time of day on the zone's clocks, as a SQL DATETIME column holds them: "2026-10-22 21:30:00".
-    public string toSqlString()
-        => `${this.date.toString()} ${global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second)}`;
+    public string toSqlString() => this.clockText(" ");
 
     // The date and time of day `text` writes on the clocks of `zone`, with a space or a "T" between them, as a SQL
     // DATETIME column or an HTML datetime-local input gives them: "2026-10-22 21:30:00", "2026-10-22T21:30" or
@@ -91,11 +90,16 @@ public struct DateTime
     }
 
     // The date and the time of day, as "2026-10-22T21:30:00" or "2026-10-22T21:30:00.250".
-    internal string localText()
-    {
-        const time = global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second);
+    internal string localText() => `${this.clockText("T")}${Duration.fractionOf(this.nanosecond)}`;
 
-        return `${this.date.toString()}T${time}${Duration.fractionOf(this.nanosecond)}`;
+    // The date, `between`, and the time of day to the second, from one read of the zone's clocks, since each read of
+    // `offset` asks the zone's rules again.
+    private string clockText(string between)
+    {
+        const seconds = this.localSeconds;
+        const time = global.sprintf("%02d:%02d:%02d", seconds.mod(86400) / 3600, seconds.mod(3600) / 60, seconds.mod(60));
+
+        return `${Date.ofEpochDay(seconds.floorDiv(86400)).toString()}${between}${time}`;
     }
 
     // The offset as ISO-8601 writes it, as "+03:00".

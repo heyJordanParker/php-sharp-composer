@@ -11,17 +11,16 @@ public static class DateTimeInterfaceMembers
         // The instant, to the microsecond a PHP date holds.
         public Instant toInstant() => new Instant(value.getTimestamp(), Int.parse(value.format("u")) * 1_000);
 
-        // The instant in the value's zone. A zone that is only an offset, such as "+03:00", has no rules for its
-        // clocks, so it throws `ValueError`, except "+00:00", which is UTC's.
+        // The instant in the value's zone. An offset, such as "+03:00", or an abbreviation, such as "EEST", has no rules
+        // for its clocks, so it throws `ValueError`, except at offset 0, which is UTC's.
         public DateTime toDateTime()
         {
-            const rules = value.getTimezone();
-            // PHP gives a location for a zone of the database, and false for an offset or an abbreviation such as "EEST".
-            if (rules.getLocation() is not bool) {
-                return new DateTime(value.toInstant(), new TimeZone(rules.getName()));
+            const name = value.getTimezone().getName();
+            if (TimeZone.tryOf(name) is TimeZone zone) {
+                return new DateTime(value.toInstant(), zone);
             }
             if (value.getOffset() != 0) {
-                throw new ValueError(`\`toDateTime\` needs a zone from the time zone database, such as "Europe/Sofia", and "${rules.getName()}" is only an offset. \`toInstant()\` keeps the instant without a zone.`);
+                throw new ValueError(`\`toDateTime\` needs a zone such as "Europe/Sofia", and "${name}" is an offset or an abbreviation, not a zone of the time zone database. \`toInstant()\` keeps the instant without a zone.`);
             }
 
             return new DateTime(value.toInstant(), TimeZone.utc);

@@ -52,10 +52,6 @@ public struct Date
     // By year, then month, then day, which is the order of the days since 1970-01-01.
     public static int operator <=>(Date a, Date b) => a.epochDay <=> b.epochDay;
 
-    public bool isBefore(Date other) => this < other;
-
-    public bool isAfter(Date other) => this > other;
-
     // The first moment of the day in `zone`, which is later than midnight on a day whose clocks skip midnight.
     public DateTime atStartOfDay(TimeZone zone) => zone.instantAt(this.epochDay * 86400).inZone(zone);
 
