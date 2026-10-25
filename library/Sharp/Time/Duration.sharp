@@ -30,6 +30,8 @@ public struct Duration
 
     public bool isNegative => this.nanoseconds < 0;
 
+    public static int operator <=>(Duration a, Duration b) => a.nanoseconds <=> b.nanoseconds;
+
     public Duration plus(Duration other) => new Duration(this.nanoseconds + other.nanoseconds);
 
     public Duration minus(Duration other) => new Duration(this.nanoseconds - other.nanoseconds);

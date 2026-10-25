@@ -1,27 +1,28 @@
 namespace Sharp.Time;
 
-import DateInvalidTimeZoneException;
 import DateTimeImmutable;
 import DateTimeZone;
 
-// A region's rules for its clocks, named as the IANA time zone database names it, such as "Europe/Sofia".
+// A region's rules for its clocks, named exactly as the IANA time zone database names it, such as "Europe/Sofia", or
+// by one of its older names, such as "Europe/Kiev", as Java's ZoneId.of takes them. The name is the zone's one field,
+// so two zones of one name are `==`.
 public struct TimeZone
 {
-    private DateTimeZone rules;
-
     public TimeZone(public string name { get; })
     {
-        this.rules = TimeZone.find(name) ?? throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one.`);
+        if (!TimeZone.databaseNames.contains(name)) {
+            throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one. \`TimeZone.tryOf\` gives null for it instead.`);
+        }
     }
 
     public static TimeZone utc => new TimeZone("UTC");
 
     public static List<string> names() => global.array_values(global.timezone_identifiers_list());
 
-    public static TimeZone? tryOf(string name) => TimeZone.find(name) == null ? null : new TimeZone(name);
+    public static TimeZone? tryOf(string name) => TimeZone.databaseNames.contains(name) ? new TimeZone(name) : null;
 
     // How far the zone's clocks are ahead of UTC at `instant`.
-    public Duration offsetAt(Instant instant) => Duration.ofSeconds(this.rules.getOffset(DateTimeImmutable.createFromTimestamp(instant.epochSeconds)));
+    public Duration offsetAt(Instant instant) => Duration.ofSeconds(this.rules().getOffset(DateTimeImmutable.createFromTimestamp(instant.epochSeconds)));
 
     public string toString() => this.name;
 
@@ -44,13 +45,21 @@ public struct TimeZone
         return new Instant(localSeconds - before);
     }
 
-    // The database's rules for the zone `name`, or null for a name the database lacks.
-    private static DateTimeZone? find(string name)
+    // The database's rules for the zone, one `DateTimeZone` per name while the app runs, so a zone stores only its name.
+    internal DateTimeZone rules()
     {
-        try {
-            return new DateTimeZone(name);
-        } catch (DateInvalidTimeZoneException) {
-            return null;
+        if (TimeZone.rulesByName.get(this.name) is DateTimeZone kept) {
+            return kept;
         }
+        const made = new DateTimeZone(this.name);
+        TimeZone.rulesByName[this.name] = made;
+
+        return made;
     }
+
+    private static Map<string, DateTimeZone> rulesByName = [:];
+
+    // Every name the database has, its older names included, read once while the app runs, since a read takes about
+    // 100 µs. PHP's `DateTimeZone` also takes an offset, an abbreviation and any case of a name, so it can't check one.
+    private static Set<string> databaseNames = global.array_values(global.timezone_identifiers_list(DateTimeZone.ALL_WITH_BC)).toSet();
 }

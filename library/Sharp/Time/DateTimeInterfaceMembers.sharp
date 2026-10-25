@@ -1,0 +1,29 @@
+namespace Sharp.Time;
+
+import DateTimeInterface;
+
+// A plain PHP date, such as the Carbon a Laravel model gives, as an `Instant` or a `DateTime`, as kotlinx-datetime's
+// toKotlinInstant. `Instant.toPhpDateTime` and `DateTime.toPhpDateTime` cross back. None of them reads the clock.
+public static class DateTimeInterfaceMembers
+{
+    extension(DateTimeInterface value)
+    {
+        // The instant, to the microsecond a PHP date holds.
+        public Instant toInstant() => new Instant(value.getTimestamp(), Int.parse(value.format("u")) * 1_000);
+
+        // The instant in the value's zone. An offset, such as "+03:00", or an abbreviation, such as "EEST", has no rules
+        // for its clocks, so it throws `ValueError`, except at offset 0, which is UTC's.
+        public DateTime toDateTime()
+        {
+            const name = value.getTimezone().getName();
+            if (TimeZone.tryOf(name) is TimeZone zone) {
+                return new DateTime(value.toInstant(), zone);
+            }
+            if (value.getOffset() != 0) {
+                throw new ValueError(`\`toDateTime\` needs a zone such as "Europe/Sofia", and "${name}" is an offset or an abbreviation, not a zone of the time zone database. \`toInstant()\` keeps the instant without a zone.`);
+            }
+
+            return new DateTime(value.toInstant(), TimeZone.utc);
+        }
+    }
+}

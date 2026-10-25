@@ -36,6 +36,7 @@ import Uri.UriError;
 import Uri.UriException;
 import Uri.WhatWg.InvalidUrlException;
 import DateTimeImmutable;
+import DateTimeInterface;
 import DateTimeZone;
 
 extern global._ uses Environment;
@@ -2315,6 +2316,7 @@ extern Countable;
 extern JsonSerializable;
 extern Throwable;
 extern DateTimeImmutable;
+extern DateTimeInterface;
 extern DateTimeZone;
 extern DateTimeImmutable.__construct uses Clock;
 extern DateTimeImmutable.createFromFormat uses Clock;
