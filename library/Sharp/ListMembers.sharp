@@ -1,9 +1,73 @@
 namespace Sharp;
 
+import Sharp.Internal;
+import Sharp.Internal.ComparedByEquality;
+
+extern Internal.add;
+extern Internal.insert;
+extern Internal.remove;
+extern Internal.removeAt;
+extern Internal.removeLast;
+extern Internal.clear;
+extern Internal.get;
+extern Internal.contains;
+extern Internal.indexOf;
+extern Internal.nonEmpty;
+extern Internal.entries;
+extern Internal.toSet;
+extern Internal.filter;
+extern Internal.map;
+extern Internal.flatMap;
+extern Internal.sumOf;
+extern Internal.first;
+extern Internal.any;
+extern Internal.groupBy;
+extern Internal.associateBy;
+extern Internal.sortedBy;
+
+// The members of a `List`, spec section 12. A member that changes the list takes it by `ref`, spec section 26.
 public static class ListMembers
 {
     extension<T>(List<T> items)
     {
+        public int count() => global.count(items);
+
+        public bool isEmpty() => global.count(items) == 0;
+
+        public bool isNotEmpty() => global.count(items) != 0;
+
+        public T? getOrNull(int index) => Internal.get(items, index);
+
+        public bool contains([ComparedByEquality] T value) => Internal.contains(items, value);
+
+        public int? indexOf([ComparedByEquality] T value) => Internal.indexOf(items, value);
+
+        public T last() => global.array_last(Internal.nonEmpty(items));
+
+        public List<T> toList() => items;
+
+        public Set<T> toSet() => Internal.toSet(items);
+
+        public Map<int, T> entries() => Internal.entries(items);
+
+        public List<T> filter(Function<bool(T)> predicate) => Internal.filter(items, predicate);
+
+        public List<TResult> map<TResult>(Function<TResult(T)> transform) => Internal.map(items, transform);
+
+        public List<TResult> flatMap<TResult>(Function<Iterable<TResult>(T)> transform) => Internal.flatMap(items, transform);
+
+        public TResult sumOf<TResult : int|float>(Function<TResult(T)> selector) => Internal.sumOf(items, selector);
+
+        public T first(Function<bool(T)> predicate) => Internal.first(items, predicate);
+
+        public bool any(Function<bool(T)> predicate) => Internal.any(items, predicate);
+
+        public Map<TKey, List<T>> groupBy<TKey>(Function<TKey(T)> key) => Internal.groupBy(items, key);
+
+        public Map<TKey, T> associateBy<TKey>(Function<TKey(T)> key) => Internal.associateBy(items, key);
+
+        public List<T> sortedBy<TKey>(Function<TKey(T)> selector) => Internal.sortedBy(items, selector);
+
         public List<T> reversed() => global.array_reverse(items);
 
         public List<T> distinct() => global.array_values(global.array_unique(items, global.SORT_REGULAR));
@@ -26,5 +90,29 @@ public static class ListMembers
 
         public TResult fold<TResult>(TResult initial, Function<TResult(TResult, T)> operation)
             => global.array_reduce(items, operation, initial);
+    }
+
+    extension<T>(ref List<T> list)
+    {
+        public void add(T value) => Internal.add(list, value);
+
+        public void insert(int index, T value) => Internal.insert(list, index, value);
+
+        public bool remove([ComparedByEquality] T value) => Internal.remove(list, value);
+
+        public T removeAt(int index) => Internal.removeAt(list, index);
+
+        public T removeFirst() => Internal.removeAt(list, 0);
+
+        public T removeLast() => Internal.removeLast(list);
+
+        public void clear() => Internal.clear(list);
+    }
+
+    extension(List<int> numbers)
+    {
+        public int max() => global.max(Internal.nonEmpty(numbers));
+
+        public int min() => global.min(Internal.nonEmpty(numbers));
     }
 }
