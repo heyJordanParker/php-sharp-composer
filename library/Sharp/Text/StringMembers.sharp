@@ -32,6 +32,9 @@ public static class StringMembers
 
         public bool endsWith(string suffix) => global.str_ends_with(text, suffix);
 
+        // -1, 0 or 1 in byte order, the order `<` puts strings in, so "10" is before "9" and "Zebra" before "apple".
+        public int compareTo(string other) => text <=> other;
+
         public string trim() => global.mb_trim(text);
 
         public string trimStart() => global.mb_ltrim(text);

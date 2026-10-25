@@ -1,20 +1,28 @@
 namespace Sharp.Time;
 
 import DateTimeImmutable;
+import Sharp.Time.DateTimeInterfaceMembers;
 
 // The clock, as .NET's TimeProvider and Kotlin's Clock.
 public foreign class Clock
 {
-    public Instant now()
-    {
-        const now = new DateTimeImmutable("now");
+    // The instant a fixed clock reads, and null for the real clock.
+    private Instant? fixedAt = null;
 
-        return new Instant(now.getTimestamp(), Int.parse(now.format("u")) * 1_000);
+    // A clock for tests whose `now()` is always `at`, as Java's Clock.fixed. It measures no time, and `sleep` returns at
+    // once. A test module binds it where the app's module binds the real one.
+    public Clock.fixed(Instant at) : this()
+    {
+        this.fixedAt = at;
     }
 
-    // Monotonic nanoseconds, only for measuring.
+    public Instant now() => this.fixedAt ?? new DateTimeImmutable("now").toInstant();
+
+    // Monotonic nanoseconds, only for measuring. A fixed clock's timestamp is always 0.
     public int timestamp()
-        => global.hrtime(true) is int nanoseconds ? nanoseconds : throw new RuntimeException("Clock.timestamp: the monotonic clock cannot be read");
+        => this.fixedAt != null
+            ? 0
+            : global.hrtime(true) is int nanoseconds ? nanoseconds : throw new RuntimeException("Clock.timestamp: the monotonic clock cannot be read");
 
     // The time since a `timestamp()`.
     public Duration elapsedSince(int start)
@@ -33,7 +41,7 @@ public foreign class Clock
             throw new ValueError("Clock.sleep: the duration is negative");
         }
         const microseconds = duration.nanoseconds / 1_000;
-        if (microseconds > 0) {
+        if (microseconds > 0 && this.fixedAt == null) {
             global.usleep(microseconds);
         }
     }

@@ -4,14 +4,15 @@ import DateInvalidTimeZoneException;
 import DateTimeImmutable;
 import DateTimeZone;
 
-// A region's rules for its clocks, named as the IANA time zone database names it, such as "Europe/Sofia".
+// A region's rules for its clocks, named as the IANA time zone database names it, such as "Europe/Sofia". The name is
+// the zone's one field, so two zones of one name are `==`.
 public struct TimeZone
 {
-    private DateTimeZone rules;
-
     public TimeZone(public string name { get; })
     {
-        this.rules = TimeZone.find(name) ?? throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one.`);
+        if (TimeZone.find(name) == null) {
+            throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one.`);
+        }
     }
 
     public static TimeZone utc => new TimeZone("UTC");
@@ -43,6 +44,9 @@ public struct TimeZone
 
         return new Instant(localSeconds - before);
     }
+
+    // The database's rules for the zone, which the constructor found.
+    internal DateTimeZone rules => new DateTimeZone(this.name);
 
     // The database's rules for the zone `name`, or null for a name the database lacks.
     private static DateTimeZone? find(string name)

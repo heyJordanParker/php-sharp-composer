@@ -1,5 +1,7 @@
 namespace Sharp.Time;
 
+import DateTimeImmutable;
+
 // An instant as the clocks of a time zone show it, as JavaScript's Temporal.ZonedDateTime and Java's ZonedDateTime.
 public struct DateTime
 {
@@ -26,6 +28,13 @@ public struct DateTime
     public DateTime minus(Duration duration) => new DateTime(this.instant.minus(duration), this.zone);
 
     public DateTime inZone(TimeZone zone) => new DateTime(this.instant, zone);
+
+    // A plain PHP date at the same instant, in the zone, to the microsecond, as `Instant.toPhpDateTime` gives one.
+    public DateTimeImmutable toPhpDateTime() => this.instant.toPhpDateTime().setTimezone(this.zone.rules);
+
+    // By the instant, then by the zone's name, so it gives 0 exactly when `==` is true, as Java's ZonedDateTime.compareTo.
+    public static int operator <=>(DateTime a, DateTime b)
+        => a.instant == b.instant ? a.zone.name <=> b.zone.name : a.instant <=> b.instant;
 
     // ISO-8601 with the offset, then the zone's name, as RFC 9557 and Temporal write it: "2026-10-22T21:30:00+03:00[Europe/Sofia]".
     public string toString() => `${this.toOffsetString()}[${this.zone.name}]`;
