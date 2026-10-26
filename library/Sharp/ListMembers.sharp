@@ -5,6 +5,7 @@ import Sharp.Internal.ComparedByEquality;
 
 extern Internal.add;
 extern Internal.insert;
+extern Internal.set;
 extern Internal.remove;
 extern Internal.removeAt;
 extern Internal.removeLast;
@@ -97,6 +98,10 @@ public static class ListMembers
         public void add(T value) => Internal.add(list, value);
 
         public void insert(int index, T value) => Internal.insert(list, index, value);
+
+        // `list[i] = v` runs it, as Kotlin's runs `operator fun set`, and it gives the element it replaced, as Kotlin's
+        // does.
+        public T set(int index, T value) => Internal.set(list, index, value);
 
         public bool remove([ComparedByEquality] T value) => Internal.remove(list, value);
 
