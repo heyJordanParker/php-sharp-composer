@@ -1,0 +1,55 @@
+namespace Sharp;
+
+import Sharp.Internal;
+import Sharp.Internal.ComparedByEquality;
+
+extern Internal.containsKey;
+extern Internal.removeKey;
+extern Internal.keys;
+extern Internal.values;
+extern Internal.pairs;
+extern Internal.filterEntries;
+
+// The members of a `Map`, spec section 12. A member that changes the map takes it by `ref`, spec section 26.
+public static class MapMembers
+{
+    extension<TKey, TValue>(Map<TKey, TValue> map)
+    {
+        public int count() => global.count(map);
+
+        public bool isEmpty() => global.count(map) == 0;
+
+        public bool isNotEmpty() => global.count(map) != 0;
+
+        public TValue? get([ComparedByEquality] TKey key) => Internal.get(map, key);
+
+        public bool has([ComparedByEquality] TKey key) => Internal.containsKey(map, key);
+
+        public List<TKey> keys() => Internal.keys(map);
+
+        public List<TValue> values() => Internal.values(map);
+
+        public List<[TKey, TValue]> toList() => Internal.pairs(map);
+
+        public Map<TKey, TValue> filter(Function<bool(TValue)> predicate) => Internal.filterEntries(map, predicate);
+
+        public List<TResult> map<TResult>(Function<TResult(TValue)> transform) => Internal.map(map, transform);
+
+        public TResult sumOf<TResult : int|float>(Function<TResult(TValue)> selector) => Internal.sumOf(map, selector);
+
+        public TValue first(Function<bool(TValue)> predicate) => Internal.first(map, predicate);
+
+        public bool any(Function<bool(TValue)> predicate) => Internal.any(map, predicate);
+
+        public Map<TGroup, List<TValue>> groupBy<TGroup>(Function<TGroup(TValue)> key) => Internal.groupBy(map, key);
+
+        public Map<TGroup, TValue> associateBy<TGroup>(Function<TGroup(TValue)> key) => Internal.associateBy(map, key);
+
+        public List<TValue> sortedBy<TOrder>(Function<TOrder(TValue)> selector) => Internal.sortedBy(map, selector);
+    }
+
+    extension<TKey, TValue>(ref Map<TKey, TValue> map)
+    {
+        public bool remove([ComparedByEquality] TKey key) => Internal.removeKey(map, key);
+    }
+}

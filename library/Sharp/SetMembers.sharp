@@ -1,0 +1,46 @@
+namespace Sharp;
+
+import Sharp.Internal;
+import Sharp.Internal.ComparedByEquality;
+
+extern Internal.addKey;
+extern Internal.filterElements;
+
+// The members of a `Set`, spec section 12. A member that changes the set takes it by `ref`, spec section 26. A `Set`'s
+// elements are its table's keys, which the functions a `Map` shares find, remove and list.
+public static class SetMembers
+{
+    extension<T>(Set<T> set)
+    {
+        public int count() => global.count(set);
+
+        public bool isEmpty() => global.count(set) == 0;
+
+        public bool isNotEmpty() => global.count(set) != 0;
+
+        public bool contains([ComparedByEquality] T value) => Internal.containsKey(set, value);
+
+        public List<T> toList() => Internal.keys(set);
+
+        public Set<T> filter(Function<bool(T)> predicate) => Internal.filterElements(set, predicate);
+
+        public List<TResult> map<TResult>(Function<TResult(T)> transform) => Internal.map(set, transform);
+
+        public TResult sumOf<TResult : int|float>(Function<TResult(T)> selector) => Internal.sumOf(set, selector);
+
+        public T first(Function<bool(T)> predicate) => Internal.first(set, predicate);
+
+        public bool any(Function<bool(T)> predicate) => Internal.any(set, predicate);
+
+        public List<T> sortedBy<TKey>(Function<TKey(T)> selector) => Internal.sortedBy(set, selector);
+    }
+
+    extension<T>(ref Set<T> set)
+    {
+        public bool add([ComparedByEquality] T value) => Internal.addKey(set, value);
+
+        public bool remove([ComparedByEquality] T value) => Internal.removeKey(set, value);
+
+        public void clear() => Internal.clear(set);
+    }
+}
