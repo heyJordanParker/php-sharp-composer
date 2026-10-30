@@ -1,0 +1,19 @@
+namespace Sharp;
+
+import Sharp.Internal.Sequence;
+
+// The lazy operations of an `Iterable`, spec section 12, which read nothing until `toList()` or a loop reads the result.
+// Only a value typed `Iterable` has them: a `List`, a `Map` or a `Set` has its own members.
+public static class IterableMembers
+{
+    extension<T>(Iterable<T> items)
+    {
+        public Iterable<T> filter(Function<bool(T)> predicate) => Sequence.from(items).filter(predicate);
+
+        public Iterable<TResult> map<TResult>(Function<TResult(T)> transform) => Sequence.from(items).map(transform);
+
+        public Iterable<T> take(int count) => Sequence.from(items).take(count);
+
+        public List<T> toList() => Sequence.from(items).toList();
+    }
+}

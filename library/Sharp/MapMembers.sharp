@@ -7,6 +7,7 @@ import Sharp.Internal.ComparedByOrder;
 extern Internal.size;
 extern Internal.containsKey;
 extern Internal.removeKey;
+extern Internal.put;
 extern Internal.keys;
 extern Internal.values;
 extern Internal.pairs;
@@ -53,5 +54,8 @@ public static class MapMembers
     extension<TKey, TValue>(ref Map<TKey, TValue> map)
     {
         public bool remove([ComparedByEquality] TKey key) => Internal.removeKey(map, key);
+
+        // `map[key] = value` runs it, as Kotlin's runs `operator fun set`.
+        public void set(TKey key, TValue value) => Internal.put(map, key, value);
     }
 }
