@@ -3,6 +3,7 @@ namespace Sharp;
 import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
 
+extern Internal.size;
 extern Internal.containsKey;
 extern Internal.removeKey;
 extern Internal.keys;
@@ -15,11 +16,11 @@ public static class MapMembers
 {
     extension<TKey, TValue>(Map<TKey, TValue> map)
     {
-        public int count() => global.count(map);
+        public int count() => Internal.size(map);
 
-        public bool isEmpty() => global.count(map) == 0;
+        public bool isEmpty() => Internal.size(map) == 0;
 
-        public bool isNotEmpty() => global.count(map) != 0;
+        public bool isNotEmpty() => Internal.size(map) != 0;
 
         public TValue? get([ComparedByEquality] TKey key) => Internal.get(map, key);
 

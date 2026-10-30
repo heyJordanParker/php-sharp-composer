@@ -12,11 +12,11 @@ public static class SetMembers
 {
     extension<T>(Set<T> set)
     {
-        public int count() => global.count(set);
+        public int count() => Internal.size(set);
 
-        public bool isEmpty() => global.count(set) == 0;
+        public bool isEmpty() => Internal.size(set) == 0;
 
-        public bool isNotEmpty() => global.count(set) != 0;
+        public bool isNotEmpty() => Internal.size(set) != 0;
 
         public bool contains([ComparedByEquality] T value) => Internal.containsKey(set, value);
 
