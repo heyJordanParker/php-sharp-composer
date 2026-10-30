@@ -2,6 +2,7 @@ namespace Sharp;
 
 import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
+import Sharp.Internal.ComparedByOrder;
 
 extern Internal.add;
 extern Internal.insert;
@@ -67,7 +68,7 @@ public static class ListMembers
 
         public Map<TKey, T> associateBy<TKey>(Function<TKey(T)> key) => Internal.associateBy(items, key);
 
-        public List<T> sortedBy<TKey>(Function<TKey(T)> selector) => Internal.sortedBy(items, selector);
+        public List<T> sortedBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.sortedBy(items, selector);
 
         public List<T> reversed() => global.array_reverse(items);
 

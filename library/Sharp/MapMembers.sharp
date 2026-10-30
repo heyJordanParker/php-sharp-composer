@@ -2,6 +2,7 @@ namespace Sharp;
 
 import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
+import Sharp.Internal.ComparedByOrder;
 
 extern Internal.size;
 extern Internal.containsKey;
@@ -46,7 +47,7 @@ public static class MapMembers
 
         public Map<TGroup, TValue> associateBy<TGroup>(Function<TGroup(TValue)> key) => Internal.associateBy(map, key);
 
-        public List<TValue> sortedBy<TOrder>(Function<TOrder(TValue)> selector) => Internal.sortedBy(map, selector);
+        public List<TValue> sortedBy<TOrder>([ComparedByOrder] Function<TOrder(TValue)> selector) => Internal.sortedBy(map, selector);
     }
 
     extension<TKey, TValue>(ref Map<TKey, TValue> map)

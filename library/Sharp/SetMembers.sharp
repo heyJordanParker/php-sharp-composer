@@ -2,6 +2,7 @@ namespace Sharp;
 
 import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
+import Sharp.Internal.ComparedByOrder;
 
 extern Internal.addKey;
 extern Internal.filterElements;
@@ -32,7 +33,7 @@ public static class SetMembers
 
         public bool any(Function<bool(T)> predicate) => Internal.any(set, predicate);
 
-        public List<T> sortedBy<TKey>(Function<TKey(T)> selector) => Internal.sortedBy(set, selector);
+        public List<T> sortedBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.sortedBy(set, selector);
     }
 
     extension<T>(ref Set<T> set)
