@@ -1,0 +1,24 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionProperty;
+
+// A property or field a class declares, as `Class<T>.properties()` gives it, spec section 25: its name, the class value
+// of its type without `?`, and whether the type is nullable, as .NET's PropertyInfo and Kotlin's KProperty give them.
+// The engine creates it.
+public class Property
+{
+    internal Property(
+        private Class<Object> declaringClass,
+        public string name { get; },
+        public Class<Any?> type { get; },
+        public bool nullable { get; }
+    ) { }
+
+    // The attributes of the property of the class `TAttribute` or of a class that extends or implements it, as
+    // `Class<T>.attributes()` gives a class's.
+    public List<TAttribute> attributes<TAttribute : Object>()
+        => new ReflectionProperty(this.declaringClass, this.name)
+            .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance());
+}

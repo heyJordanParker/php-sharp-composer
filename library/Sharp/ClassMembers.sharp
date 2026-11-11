@@ -2,19 +2,43 @@ namespace Sharp;
 
 import ReflectionAttribute;
 import ReflectionClass;
+import Sharp.Internal;
+
+extern Internal.properties;
+extern Internal.typeArguments;
 
 public static class ClassMembers
 {
+    // The engine gives a type as the text `typeof` gives it, which is its class value, spec section 25.
+    private static Class<Any?> classValue(string text)
+        => text as Class<Any?> ?? throw new ValueError("The engine gave a type text that names no type.");
+
     // The members of the class value of any type, a class's and `int`'s alike.
     extension(Class<Any?> type)
     {
         // The type's full name as PHP# writes it, spec section 25: `App.Orders.Counted`, and `List<string>` for a type
         // that is no class. A class value holds a class's name as PHP writes it, `App\Orders\Counted`.
         public string name() => global.str_replace("\\", ".", type);
+
+        // The type arguments of the type, as `[typeof(string), typeof(int)]` for `Map<string, int>`, and none for a
+        // type that has none.
+        public List<Class<Any?>> typeArguments() => Internal.typeArguments(type).map(ClassMembers.classValue);
     }
 
     extension<T>(Class<T> type)
     {
+        // The instance properties and fields of the class, its own first and then those it inherits, in the order they
+        // are declared, private ones included, as an ORM or a serializer reads them, spec section 25.
+        public List<Property> properties()
+            => Internal.properties(type).map(
+                declared => new Property(
+                    declared[0] as Class<Object> ?? throw new ValueError("The engine gave a class name that names no class."),
+                    declared[1],
+                    ClassMembers.classValue(declared[2]),
+                    declared[3] == "?"
+                )
+            );
+
         public List<TAttribute> attributes<TAttribute : Object>()
             => new ReflectionClass(type)
                 .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
