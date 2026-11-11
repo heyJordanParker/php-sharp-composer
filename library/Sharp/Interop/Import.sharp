@@ -1,0 +1,11 @@
+namespace Sharp.Interop;
+
+import Attribute;
+
+// Spec section 23: on a static method without a body, makes each call run the PHP function `function` names, as C#'s
+// `[DllImport]` runs a native one. The method's PHP# types check each argument and the result where they cross.
+[Attribute(Attribute.TARGET_METHOD)]
+public class Import
+{
+    public Import(public string function { get; }) { }
+}
