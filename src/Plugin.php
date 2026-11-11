@@ -49,32 +49,48 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
         $classMapFile = $composerDir . '/autoload_sharp.php';
         $filesystem = new Filesystem();
 
+        // Every dump reads each .sharp file for the functions it exports, and an optimized one for its classes too.
+        $optimize = $event->getFlags()['optimize'];
+        $generator = $composer->getAutoloadGenerator();
+        $packageMap = $generator->buildPackageMap($composer->getInstallationManager(), $composer->getPackage(), $composer->getRepositoryManager()->getLocalRepository()->getCanonicalPackages());
+        $excluded = $generator->parseAutoloads($packageMap, $composer->getPackage())['exclude-from-classmap'];
+        $exclusion = $excluded === [] ? null : '{(' . implode('|', $excluded) . ')}';
+
         $classes = [];
-        if ($event->getFlags()['optimize']) {
-            $generator = $composer->getAutoloadGenerator();
-            $packageMap = $generator->buildPackageMap($composer->getInstallationManager(), $composer->getPackage(), $composer->getRepositoryManager()->getLocalRepository()->getCanonicalPackages());
-            $excluded = $generator->parseAutoloads($packageMap, $composer->getPackage())['exclude-from-classmap'];
-            $exclusion = $excluded === [] ? null : '{(' . implode('|', $excluded) . ')}';
-
-            foreach (require $composerDir . '/autoload_psr4.php' as $namespace => $dirs) {
-                foreach (array_filter($dirs, 'is_dir') as $dir) {
-                    $dir = rtrim($dir, '/');
-                    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
-                    foreach ($files as $file) {
-                        if ($file->getExtension() !== 'sharp' || ($exclusion !== null && preg_match($exclusion, strtr($file->getRealPath(), '\\', '/')) === 1)) {
-                            continue;
-                        }
-
-                        $class = $namespace . strtr(substr($file->getPathname(), strlen($dir) + 1, -strlen('.sharp')), '/', '\\');
-                        $declared = self::declaredClasses($file);
-                        if ($class === ($declared[0] ?? null)) {
-                            $classes += array_fill_keys($declared, $file->getPathname());
-                        }
+        $exports = [];
+        foreach (require $composerDir . '/autoload_psr4.php' as $namespace => $dirs) {
+            foreach (array_filter($dirs, 'is_dir') as $dir) {
+                $dir = rtrim($dir, '/');
+                $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+                foreach ($files as $file) {
+                    if ($file->getExtension() !== 'sharp' || ($exclusion !== null && preg_match($exclusion, strtr($file->getRealPath(), '\\', '/')) === 1)) {
+                        continue;
                     }
+
+                    $class = $namespace . strtr(substr($file->getPathname(), strlen($dir) + 1, -strlen('.sharp')), '/', '\\');
+                    $declared = self::declaredClasses($file);
+                    if ($class !== ($declared[0] ?? null)) {
+                        continue;
+                    }
+                    if ($optimize) {
+                        $classes += array_fill_keys($declared, $file->getPathname());
+                    }
+                    $exports += self::exportedFunctions($file, $class);
                 }
             }
         }
         ksort($classes);
+        ksort($exports);
+
+        // Spec section 23: each `[Export("name")]` method is the global function `name`, declared when Composer's
+        // autoloader loads this package's autoload.php, so a library that declares its own only when none exists skips
+        // it. The function passes its arguments, named ones included, and returns the method's result.
+        $functions = '';
+        foreach ($exports as $function => $method) {
+            $functions .= "\nfunction $function(mixed ...\$arguments): mixed\n{\n    return \\$method(...\$arguments);\n}\n";
+        }
+        // The file is strict, so an argument crosses into the method's types as PHP# checks them, never PHP's weak mode.
+        $filesystem->filePutContentsIfModified($composerDir . '/autoload_sharp_exports.php', "<?php\n\ndeclare(strict_types=1);\n$functions");
 
         $entries = '';
         foreach ($classes as $class => $path) {
@@ -114,6 +130,27 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
         }
 
         return [$class, ...array_map(static fn (string $case): string => "$class\\$case", $cases[1])];
+    }
+
+    /**
+     * The global functions the static methods of `$class`, which `$file` declares, export with `[Export("name")]`,
+     * spec section 23, as `['auth_redirect' => 'App\Auth::redirect']`. The checker refuses the attribute on an
+     * instance method and a second export of one name, so each attribute here stands on a static method.
+     *
+     * @return array<string, string>
+     */
+    private static function exportedFunctions(SplFileInfo $file, string $class): array
+    {
+        $code = (string) file_get_contents($file->getPathname());
+        $method = '~^\s*\[Export\("(\w+)"\)\]\s*(?:\[.*\]\s*)*(?:(?:public|internal|static)\s+)+[^(;{=]*?\b(\w+)\s*(?:<[^>]*>)?\s*\(~m';
+        preg_match_all($method, $code, $exports, PREG_SET_ORDER);
+
+        $functions = [];
+        foreach ($exports as [, $function, $name]) {
+            $functions[$function] = "$class::$name";
+        }
+
+        return $functions;
     }
 
     public function activate(Composer $composer, IOInterface $io): void

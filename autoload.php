@@ -32,10 +32,15 @@ if (function_exists('Sharp\Internal\requireNative') && !class_exists(PluginManag
     $requireEngine();
 }
 
+// Spec section 23: the global functions `[Export]` methods give, which the plugin writes at each dump, are declared here,
+// before the app's own code and before a library that requires PHP# loads.
 $classMap = [];
 foreach (array_keys(ClassLoader::getRegisteredLoaders()) as $vendorDir) {
     if (is_file($file = $vendorDir . '/composer/autoload_sharp.php')) {
         $classMap += require $file;
+    }
+    if (is_file($file = $vendorDir . '/composer/autoload_sharp_exports.php')) {
+        require_once $file;
     }
 }
 
