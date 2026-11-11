@@ -5,6 +5,14 @@ import ReflectionClass;
 
 public static class ClassMembers
 {
+    // The members of the class value of any type, a class's and `int`'s alike.
+    extension(Class<Any?> type)
+    {
+        // The type's full name as PHP# writes it, spec section 25: `App.Orders.Counted`, and `List<string>` for a type
+        // that is no class. A class value holds a class's name as PHP writes it, `App\Orders\Counted`.
+        public string name() => global.str_replace("\\", ".", type);
+    }
+
     extension<T>(Class<T> type)
     {
         public List<TAttribute> attributes<TAttribute : Object>()
