@@ -35,11 +35,12 @@ public static class StringMembers
         // -1, 0 or 1 in byte order, the order `<` puts strings in, so "10" is before "9" and "Zebra" before "apple".
         public int compareTo(string other) => text <=> other;
 
-        public string trim() => global.mb_trim(text);
+        // Whitespace, or each character of `characters`, removed from both ends, as Kotlin's `trim(vararg chars)`.
+        public string trim(string? characters = null) => global.mb_trim(text, characters);
 
-        public string trimStart() => global.mb_ltrim(text);
+        public string trimStart(string? characters = null) => global.mb_ltrim(text, characters);
 
-        public string trimEnd() => global.mb_rtrim(text);
+        public string trimEnd(string? characters = null) => global.mb_rtrim(text, characters);
 
         public string removePrefix(string prefix) => global.str_starts_with(text, prefix) ? global.substr(text, global.strlen(prefix)) : text;
 
@@ -89,6 +90,22 @@ public static class StringMembers
         public List<int> codePoints()
             => text.characters().map(
                 (string character) => global.mb_ord(character, "UTF-8") as int ?? throw new ValueError("`codePoints` reads UTF-8 text, and the text is not."));
+
+        // The text read as its bytes, spec section 18, as `length()`, `substring()` and `codePoints()` read it as
+        // characters: binary data, as `Ip.toBinary` gives, and the bytes another system counts or signs.
+        public int byteLength() => global.strlen(text);
+
+        public string byteSubstring(int start, int? end = null)
+        {
+            const stop = end ?? text.byteLength();
+            if (start < 0 || stop < start || stop > text.byteLength()) {
+                throw new OutOfRangeException("`byteSubstring` takes a range inside the bytes, and the range is outside it.");
+            }
+            return global.substr(text, start, stop - start);
+        }
+
+        // Each byte as an `int` from 0 to 255.
+        public List<int> bytes() => global.str_split(text).map((string byte) => global.ord(byte));
 
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];

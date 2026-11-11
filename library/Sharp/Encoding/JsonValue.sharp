@@ -1,0 +1,22 @@
+namespace Sharp.Encoding;
+
+import Sharp.Internal;
+
+extern Internal.equals;
+
+// The value JSON text holds, as `Json.parse` gives it, spec section 24: `null`, a `bool`, an `int`, a `float`, a
+// `string`, a `List` or a `Map<string, …>` of them. Two compare by structure at every depth, as kotlinx's
+// `JsonElement`, .NET's `JsonNode.DeepEquals` and Rust's `serde_json::Value` do, so decoded settings or payloads
+// compare without encoding them again. `Json.encode` writes the value it holds.
+public struct JsonValue : JsonSerializable
+{
+    public JsonValue(public Any? value { get; }) { }
+
+    public static bool operator ==(JsonValue a, JsonValue b) => Internal.equals(a.value, b.value);
+
+    // Equal values are of one kind, a number of either kind, so they hash alike.
+    public int hash()
+        => global.is_int(this.value) || global.is_float(this.value) ? 1 : global.crc32(global.gettype(this.value));
+
+    public Any? jsonSerialize() => this.value;
+}
