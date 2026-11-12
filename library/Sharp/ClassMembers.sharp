@@ -4,6 +4,7 @@ import ReflectionAttribute;
 import ReflectionClass;
 import Sharp.Internal;
 
+extern Internal.methods;
 extern Internal.properties;
 extern Internal.typeArguments;
 
@@ -12,6 +13,10 @@ public static class ClassMembers
     // The engine gives a type as the text `typeof` gives it, which is its class value, spec section 25.
     private static Class<Any?> classValue(string text)
         => text as Class<Any?> ?? throw new ValueError("The engine gave a type text that names no type.");
+
+    // The engine gives the class that declares a member by its name.
+    private static Class<Object> declaringClass(string name)
+        => name as Class<Object> ?? throw new ValueError("The engine gave a class name that names no class.");
 
     // The members of the class value of any type, a class's and `int`'s alike.
     extension(Class<Any?> type)
@@ -32,10 +37,32 @@ public static class ClassMembers
         public List<Property> properties()
             => Internal.properties(type).map(
                 declared => new Property(
-                    declared[0] as Class<Object> ?? throw new ValueError("The engine gave a class name that names no class."),
+                    ClassMembers.declaringClass(declared[0]),
                     declared[1],
                     ClassMembers.classValue(declared[2]),
                     declared[3] == "?"
+                )
+            );
+
+        // The instance and static methods of the class, its own first and then those it inherits, in the order they
+        // are declared, private ones included, without its constructor, spec section 25.
+        public List<Method> methods()
+            => Internal.methods(type).map(
+                rows => new Method(
+                    ClassMembers.declaringClass(rows[0][0]),
+                    rows[0][1],
+                    ClassMembers.classValue(rows[0][2]),
+                    rows[0][3] == "?",
+                    rows.slice(1).map(
+                        parameter => new Parameter(
+                            ClassMembers.declaringClass(rows[0][0]),
+                            rows[0][1],
+                            parameter[0],
+                            ClassMembers.classValue(parameter[1]),
+                            parameter[2] == "?",
+                            parameter[3] == "optional"
+                        )
+                    )
                 )
             );
 

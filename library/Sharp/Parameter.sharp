@@ -1,0 +1,26 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionParameter;
+
+// A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, the class value of its type
+// without `?`, whether the type is nullable, and whether it is optional, which it is when it has a default value, as
+// .NET's ParameterInfo and Kotlin's KParameter give them. The engine creates it.
+public class Parameter
+{
+    internal Parameter(
+        private Class<Object> declaringClass,
+        private string method,
+        public string name { get; },
+        public Class<Any?> type { get; },
+        public bool nullable { get; },
+        public bool optional { get; }
+    ) { }
+
+    // The attributes of the parameter of the class `TAttribute` or of a class that extends or implements it, as
+    // `Class<T>.attributes()` gives a class's.
+    public List<TAttribute> attributes<TAttribute : Object>()
+        => new ReflectionParameter([this.declaringClass, this.method], this.name)
+            .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance());
+}

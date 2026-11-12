@@ -1,0 +1,28 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionMethod;
+
+// A method a class declares, as `Class<T>.methods()` gives it, spec section 25: its name, the class value of its result
+// type without `?`, whether the result type is nullable, and its parameters, as .NET's MethodInfo and Kotlin's KFunction
+// give them. The engine creates it.
+public class Method
+{
+    internal Method(
+        private Class<Object> declaringClass,
+        public string name { get; },
+        public Class<Any?> type { get; },
+        public bool nullable { get; },
+        private List<Parameter> declared
+    ) { }
+
+    // The method's parameters, in order.
+    public List<Parameter> parameters() => this.declared;
+
+    // The attributes of the method of the class `TAttribute` or of a class that extends or implements it, as
+    // `Class<T>.attributes()` gives a class's.
+    public List<TAttribute> attributes<TAttribute : Object>()
+        => new ReflectionMethod(this.declaringClass, this.name)
+            .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance());
+}
