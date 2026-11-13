@@ -21,6 +21,13 @@ public class Method
     // The method's parameters, in order.
     public List<Parameter> parameters() => this.declared;
 
+    // The result of the method called on `receiver` with `arguments`, as .NET's MethodInfo.Invoke and Kotlin's
+    // KCallable.call give it. The calling code reaches the method as a direct call would, and each argument is checked
+    // against its parameter's type there. A method that isn't private runs the receiver's override. The call may run
+    // any code, so it may have every effect, spec section 29.
+    public Any? invoke(Object receiver, List<Any?> arguments)
+        => Internal.invoke(receiver, this.declaringClass, this.name, arguments);
+
     // The attributes of the method of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
     public List<TAttribute> attributes<TAttribute : Object>()
