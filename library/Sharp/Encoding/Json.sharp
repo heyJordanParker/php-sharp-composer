@@ -1,7 +1,10 @@
 namespace Sharp.Encoding;
 
+import Sharp.Internal;
 import Sharp.Internal.EncodedAsJson;
 import Sharp.Internal.ParsesTypeArgument;
+
+extern Internal.jsonEncode;
 
 public static class Json
 {
@@ -26,19 +29,30 @@ public static class Json
     // `1.0`. `escapeSlashes` writes `/` as `\/`, `escapeUnicode` writes each character outside ASCII as `\u` and its
     // code, and `keepZeroFraction: false` writes `1.0` as `1`, so a payload matches the bytes another system signs:
     // all three give PHP's `json_encode` default, and `keepZeroFraction: false` alone JavaScript's `JSON.stringify`.
+    // The text is one line. An `indent` above 0 writes each nested value on its own line, `indent` spaces deeper than
+    // its parent, with `": "` after a key and `[]` and `{}` for an empty value, as JavaScript's
+    // `JSON.stringify(value, null, 2)` and Python's `json.dumps(value, indent=2)` do, so `indent: 4` writes PHP's
+    // `JSON_PRETTY_PRINT`. A negative `indent` throws `ValueError`.
     public static string encode(
         [EncodedAsJson] Any? value,
         bool escapeSlashes = false,
         bool escapeUnicode = false,
-        bool keepZeroFraction = true
+        bool keepZeroFraction = true,
+        int indent = 0
     )
-        => global.json_encode(
+    {
+        if (indent < 0) {
+            throw new ValueError(`Json.encode: indent is ${indent}, and it must be 0 or more`);
+        }
+
+        return Internal.jsonEncode(
             value,
-            global.JSON_THROW_ON_ERROR
-                | (escapeSlashes ? 0 : global.JSON_UNESCAPED_SLASHES)
+            (escapeSlashes ? 0 : global.JSON_UNESCAPED_SLASHES)
                 | (escapeUnicode ? 0 : global.JSON_UNESCAPED_UNICODE)
-                | (keepZeroFraction ? global.JSON_PRESERVE_ZERO_FRACTION : 0)
+                | (keepZeroFraction ? global.JSON_PRESERVE_ZERO_FRACTION : 0),
+            indent
         );
+    }
 
     private static Any? read(string json) => global.json_decode(json, true, 512, global.JSON_THROW_ON_ERROR);
 }
