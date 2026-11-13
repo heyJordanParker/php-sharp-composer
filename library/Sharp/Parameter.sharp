@@ -4,8 +4,8 @@ import ReflectionAttribute;
 import ReflectionParameter;
 
 // A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, the class value of its type
-// without `?`, whether the type is nullable, and whether it is optional, which it is when it has a default value, as
-// .NET's ParameterInfo and Kotlin's KParameter give them. The engine creates it.
+// without `?`, whether the type is nullable, whether it is optional, which it is when a call may leave it out, whether it
+// is variadic, and its default value, as .NET's ParameterInfo and Kotlin's KParameter give them. The engine creates it.
 public class Parameter
 {
     internal Parameter(
@@ -13,9 +13,26 @@ public class Parameter
         private string method,
         public string name { get; },
         public Class<Any?> type { get; },
-        public bool nullable { get; },
-        public bool optional { get; }
+        public bool isNullable { get; },
+        public bool isOptional { get; },
+        public bool isVariadic { get; }
     ) { }
+
+    // The value a call that leaves the parameter out gives it, as .NET's ParameterInfo.DefaultValue gives it. It is
+    // evaluated on each read, so a `new` in the default creates a new object each time. A parameter with no default
+    // value, a required or a variadic one, throws `OutOfRangeException`, as `List.first()` does when nothing matches.
+    public Any? defaultValue()
+    {
+        const parameter = new ReflectionParameter([this.declaringClass, this.method], this.name);
+        if (!parameter.isDefaultValueAvailable())
+        {
+            throw new OutOfRangeException(
+                `Parameter.defaultValue: the parameter ${this.name} of ${this.method} has no default value`
+            );
+        }
+
+        return parameter.getDefaultValue();
+    }
 
     // The attributes of the parameter of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.

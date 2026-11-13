@@ -1,0 +1,15 @@
+namespace Sharp;
+
+// Who reaches a member, spec section 5, as `Method.visibility` and `Property.visibility` give it, as Kotlin's
+// KVisibility and .NET's MethodInfo give theirs.
+public enum Visibility
+{
+    // Everyone.
+    case Public;
+    // The member's namespace and every namespace below it. Plain PHP reaches it as a public member.
+    case Internal;
+    // The member's class and its subclasses.
+    case Protected;
+    // The member's class.
+    case Private;
+}

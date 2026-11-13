@@ -18,6 +18,16 @@ public static class ClassMembers
     private static Class<Object> declaringClass(string name)
         => name as Class<Object> ?? throw new ValueError("The engine gave a class name that names no class.");
 
+    // The engine gives a member's visibility as the access modifier that declares it, spec section 5.
+    private static Visibility visibility(string modifier) => match (modifier)
+    {
+        "public" => Visibility.Public,
+        "internal" => Visibility.Internal,
+        "protected" => Visibility.Protected,
+        "private" => Visibility.Private,
+        default => throw new ValueError("The engine gave a visibility that is no access modifier."),
+    };
+
     // The members of the class value of any type, a class's and `int`'s alike.
     extension(Class<Any?> type)
     {
@@ -39,6 +49,7 @@ public static class ClassMembers
                 declared => new Property(
                     ClassMembers.declaringClass(declared[0]),
                     declared[1],
+                    ClassMembers.visibility(declared[4]),
                     ClassMembers.classValue(declared[2]),
                     declared[3] == "?"
                 )
@@ -51,6 +62,8 @@ public static class ClassMembers
                 rows => new Method(
                     ClassMembers.declaringClass(rows[0][0]),
                     rows[0][1],
+                    rows[0][4] == "static",
+                    ClassMembers.visibility(rows[0][5]),
                     ClassMembers.classValue(rows[0][2]),
                     rows[0][3] == "?",
                     rows.slice(1).map(
@@ -60,7 +73,8 @@ public static class ClassMembers
                             parameter[0],
                             ClassMembers.classValue(parameter[1]),
                             parameter[2] == "?",
-                            parameter[3] == "optional"
+                            parameter[3] == "optional",
+                            parameter[4] == "variadic"
                         )
                     )
                 )
