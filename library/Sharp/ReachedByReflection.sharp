@@ -1,0 +1,11 @@
+namespace Sharp;
+
+import Attribute;
+
+// Spec section 5: on an attribute class, says that a framework reads the attribute to reach the member it marks by
+// reflection, as a router reaches a `[Route]` method, as .NET's `[DynamicallyAccessedMembers]` says a member is reached.
+// The checker sees no such use, so a public member the attribute marks never warns that it is too wide.
+[Attribute(Attribute.TARGET_CLASS)]
+public class ReachedByReflection
+{
+}
