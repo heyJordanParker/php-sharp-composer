@@ -31,6 +31,6 @@ public class Property
     // `Class<T>.attributes()` gives a class's.
     public List<TAttribute> attributes<TAttribute : Object>()
         => new ReflectionProperty(this.declaringClass, this.name)
-            .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
+            .getAttributes(ClassMembers.attributeName<TAttribute>(), ReflectionAttribute.IS_INSTANCEOF)
             .map(attribute => attribute.newInstance());
 }

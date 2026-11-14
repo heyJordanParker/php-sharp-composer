@@ -28,6 +28,11 @@ public static class ClassMembers
         default => throw new ValueError("The engine gave a visibility that is no access modifier."),
     };
 
+    // The class PHP's `getAttributes` reads the attributes of, with `ReflectionAttribute.IS_INSTANCEOF`, or null for every
+    // attribute when `TAttribute` is the root bound `Object`, which is no class PHP declares.
+    internal static Class<TAttribute>? attributeName<TAttribute : Object>()
+        => typeof(TAttribute) == typeof(Object) ? null : typeof(TAttribute);
+
     // The members of the class value of any type, a class's and `int`'s alike.
     extension(Class<Any?> type)
     {
@@ -82,7 +87,7 @@ public static class ClassMembers
 
         public List<TAttribute> attributes<TAttribute : Object>()
             => new ReflectionClass(type)
-                .getAttributes(typeof(TAttribute), ReflectionAttribute.IS_INSTANCEOF)
+                .getAttributes(ClassMembers.attributeName<TAttribute>(), ReflectionAttribute.IS_INSTANCEOF)
                 .map(attribute => attribute.newInstance());
     }
 }
