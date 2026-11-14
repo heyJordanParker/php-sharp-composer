@@ -9,4 +9,36 @@ public static class Path
     public static string extension(string path) => global.pathinfo(path, global.PATHINFO_EXTENSION);
 
     public static string fileNameWithoutExtension(string path) => global.pathinfo(path, global.PATHINFO_FILENAME);
+
+    // The parts joined with "/", adding none after one already there, and starting again at an absolute part, as Rust's
+    // Path::join and .NET's Path.Combine do: Path.join("a", "/b", "c") is "/b/c".
+    public static string join(string first, string ...rest)
+    {
+        let path = first;
+        for (const part of rest) {
+            path = path == "" || global.str_starts_with(part, "/") ? part : global.str_ends_with(path, "/") ? path + part : path + "/" + part;
+        }
+        return path;
+    }
+
+    // The path from the root, joined to the current directory when it is relative, without its "." and ".." parts, as
+    // .NET's GetFullPath. It reads no disk, so a missing file has one too.
+    public static string absolute(string path)
+    {
+        const current = global.getcwd();
+        if (current is not string directory) {
+            throw new RuntimeException("Path.absolute: the current directory cannot be read");
+        }
+        List<string> parts = [];
+        for (const part of Path.join(directory, path).split("/")) {
+            if (part == "..") {
+                if (parts.isNotEmpty()) {
+                    parts.removeLast();
+                }
+            } else if (part != "" && part != ".") {
+                parts.add(part);
+            }
+        }
+        return "/" + parts.join("/");
+    }
 }

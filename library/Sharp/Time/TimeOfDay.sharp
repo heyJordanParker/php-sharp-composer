@@ -1,0 +1,37 @@
+namespace Sharp.Time;
+
+// A time of day on a clock, with no date and no time zone, as Kotlin's LocalTime and .NET's TimeOnly.
+public struct TimeOfDay
+{
+    public TimeOfDay(public int hour { get; }, public int minute { get; }, public int second { get; } = 0, public int nanosecond { get; } = 0)
+    {
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59 || nanosecond < 0 || nanosecond > 999_999_999) {
+            throw new ValueError(`\`TimeOfDay\` takes a time of day, and ${hour}:${minute}:${second} and ${nanosecond} nanoseconds is not one.`);
+        }
+    }
+
+    // Earlier first, which is the order of the nanoseconds since midnight.
+    public static int operator <=>(TimeOfDay a, TimeOfDay b) => a.nanosecondOfDay <=> b.nanosecondOfDay;
+
+    // ISO-8601, as "21:30:00", and "21:30:00.250" with a fraction of a second.
+    public string toString() => `${global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second)}${Duration.fractionOf(this.nanosecond)}`;
+
+    public static TimeOfDay parse(string text)
+        => TimeOfDay.tryParse(text) ?? throw new ValueError(`\`TimeOfDay.parse\` reads an ISO-8601 time of day, such as "21:30:00", and "${text}" is not.`);
+
+    // "21:30", "21:30:00" or "21:30:00.250", as an HTML time input gives them.
+    public static TimeOfDay? tryParse(string text)
+    {
+        Map<int|string, string> found = [:];
+        if (global.preg_match("/\\A([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\\.([0-9]{1,9}))?)?\\z/", text, found) != 1) {
+            return null;
+        }
+        const hour = Int.parse(found[1] ?? "");
+        const minute = Int.parse(found[2] ?? "");
+        const second = (found[3] ?? "") == "" ? 0 : Int.parse(found[3] ?? "");
+
+        return hour <= 23 && minute <= 59 && second <= 59 ? new TimeOfDay(hour, minute, second, Duration.fractionNanoseconds(found[4] ?? "")) : null;
+    }
+
+    private int nanosecondOfDay => ((this.hour * 60 + this.minute) * 60 + this.second) * 1_000_000_000 + this.nanosecond;
+}

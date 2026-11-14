@@ -31,9 +31,30 @@ public static class SetMembers
 
         public T first(Function<bool(T)> predicate) => Internal.first(set, predicate);
 
+        public T? firstOrNull(Function<bool(T)> predicate) => Internal.firstOrNull(set, predicate);
+
         public bool any(Function<bool(T)> predicate) => Internal.any(set, predicate);
 
         public List<T> sortedBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.sortedBy(set, selector);
+
+        // The elements of either set, this set's first, each once, as Kotlin's union.
+        public Set<T> union(Set<T> other)
+        {
+            Set<T> united = set;
+            for (const element of other) {
+                Internal.addKey(united, element);
+            }
+            return united;
+        }
+
+        // The elements of this set that the other holds too, in this set's order, as Kotlin's intersect.
+        public Set<T> intersect(Set<T> other) => Internal.filterElements(set, (T element) => Internal.containsKey(other, element));
+
+        // The elements of this set that the other doesn't hold, in order, as Kotlin's subtract.
+        public Set<T> subtract(Set<T> other) => Internal.filterElements(set, (T element) => !Internal.containsKey(other, element));
+
+        // Whether the other set holds every element of this one, as Rust's is_subset.
+        public bool isSubsetOf(Set<T> other) => !Internal.any(set, (T element) => !Internal.containsKey(other, element));
     }
 
     extension<T>(ref Set<T> set)

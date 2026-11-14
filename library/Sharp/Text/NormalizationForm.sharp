@@ -1,0 +1,15 @@
+namespace Sharp.Text;
+
+// A Unicode normalization form, as .NET's NormalizationForm and Java's Normalizer.Form. Each case's value is the form's
+// constant in PHP's intl extension, which `string.normalized` runs on.
+public enum NormalizationForm : int
+{
+    // Canonical composition, NFC: "é" as one character.
+    case C = 16;
+    // Canonical decomposition, NFD: "é" as "e" and a combining accent.
+    case D = 4;
+    // Compatibility composition, NFKC: "ﬁ" as "fi", then composed.
+    case KC = 32;
+    // Compatibility decomposition, NFKD.
+    case KD = 8;
+}

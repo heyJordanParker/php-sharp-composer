@@ -4,6 +4,18 @@ public static class StringMembers
 {
     private static extern string slugOf(string title);
 
+    // `text` with each character folded by Unicode's simple case folding where `ignoreCase` is true, which keeps its
+    // length, or `text` itself.
+    private static string folded(string text, bool ignoreCase)
+        => ignoreCase ? global.mb_convert_case(text, global.MB_CASE_FOLD_SIMPLE, "UTF-8") : text;
+
+    // Whether `text` holds a character and each is in `characterClass`, the inside of a regular expression's brackets,
+    // or ValueError naming `member` for text that is not UTF-8.
+    private static bool isEach(string text, string characterClass, string member)
+        => global.preg_match(`/\\A[${characterClass}]+\\z/u`, text) is int found
+            ? found == 1
+            : throw new ValueError(`\`${member}\` reads UTF-8 text, and the text is not.`);
+
     extension(string text)
     {
         public string slug() => StringMembers.slugOf(text);
@@ -19,21 +31,42 @@ public static class StringMembers
             return global.mb_substr(text, start, stop - start, "UTF-8");
         }
 
-        public int? indexOf(string other, int from = 0)
+        // Each member that takes `ignoreCase` compares the two texts with each character folded by Unicode's simple case
+        // folding, as Kotlin's `ignoreCase = true` and .NET's `OrdinalIgnoreCase` compare one character at a time, so a
+        // folded text keeps its length and an index into it is an index into the text.
+        public int? indexOf(string other, int from = 0, bool ignoreCase = false)
             => from < 0 || from > text.length()
                 ? throw new OutOfRangeException("`indexOf` starts inside the text, and the start is outside it.")
-                : global.mb_strpos(text, other, from, "UTF-8") is int index ? index : null;
+                : global.mb_strpos(StringMembers.folded(text, ignoreCase), StringMembers.folded(other, ignoreCase), from, "UTF-8") is int index ? index : null;
 
-        public int? lastIndexOf(string other) => global.mb_strrpos(text, other, 0, "UTF-8") is int index ? index : null;
+        public int? lastIndexOf(string other, bool ignoreCase = false)
+            => global.mb_strrpos(StringMembers.folded(text, ignoreCase), StringMembers.folded(other, ignoreCase), 0, "UTF-8") is int index ? index : null;
 
-        public bool contains(string other) => global.str_contains(text, other);
+        // These three branch on the flag, so a call without it runs PHP's function alone.
+        public bool contains(string other, bool ignoreCase = false)
+            => ignoreCase
+                ? global.str_contains(global.mb_convert_case(text, global.MB_CASE_FOLD_SIMPLE, "UTF-8"), global.mb_convert_case(other, global.MB_CASE_FOLD_SIMPLE, "UTF-8"))
+                : global.str_contains(text, other);
 
-        public bool startsWith(string prefix) => global.str_starts_with(text, prefix);
+        public bool startsWith(string prefix, bool ignoreCase = false)
+            => ignoreCase
+                ? global.str_starts_with(global.mb_convert_case(text, global.MB_CASE_FOLD_SIMPLE, "UTF-8"), global.mb_convert_case(prefix, global.MB_CASE_FOLD_SIMPLE, "UTF-8"))
+                : global.str_starts_with(text, prefix);
 
-        public bool endsWith(string suffix) => global.str_ends_with(text, suffix);
+        public bool endsWith(string suffix, bool ignoreCase = false)
+            => ignoreCase
+                ? global.str_ends_with(global.mb_convert_case(text, global.MB_CASE_FOLD_SIMPLE, "UTF-8"), global.mb_convert_case(suffix, global.MB_CASE_FOLD_SIMPLE, "UTF-8"))
+                : global.str_ends_with(text, suffix);
 
         // -1, 0 or 1 in byte order, the order `<` puts strings in, so "10" is before "9" and "Zebra" before "apple".
-        public int compareTo(string other) => text <=> other;
+        public int compareTo(string other, bool ignoreCase = false)
+            => StringMembers.folded(text, ignoreCase) <=> StringMembers.folded(other, ignoreCase);
+
+        public bool equals(string other, bool ignoreCase = false)
+            => StringMembers.folded(text, ignoreCase) == StringMembers.folded(other, ignoreCase);
+
+        // Each word with its first letter in title case and the rest in lowercase, as .NET's TextInfo.ToTitleCase.
+        public string titlecase() => global.mb_convert_case(text, global.MB_CASE_TITLE, "UTF-8");
 
         // Whitespace, or each character of `characters`, removed from both ends, as Kotlin's `trim(vararg chars)`.
         public string trim(string? characters = null) => global.mb_trim(text, characters);
@@ -70,10 +103,19 @@ public static class StringMembers
                 ? throw new ValueError("`repeat` takes a count of 0 or more, and it is negative.")
                 : global.str_repeat(text, times);
 
-        public string replace(string old, string @new)
-            => old == ""
-                ? throw new ValueError("`replace` needs text to replace, and it is empty.")
-                : global.str_replace(old, @new, text);
+        // Every occurrence, or the first `limit` of them, as Rust's replacen.
+        public string replace(string old, string @new, int? limit = null)
+        {
+            if (old == "") {
+                throw new ValueError("`replace` needs text to replace, and it is empty.");
+            }
+            if (limit is int count) {
+                return count < 0
+                    ? throw new ValueError("`replace` takes a limit of 0 or more, and it is negative.")
+                    : global.implode(@new, global.explode(old, text, count == global.PHP_INT_MAX ? count : count + 1));
+            }
+            return global.str_replace(old, @new, text);
+        }
 
         // A limit of 0 gives every part, and a positive one at most that many, the last holding the rest, as Kotlin's.
         public List<string> split(string delimiter, int limit = 0)
@@ -109,6 +151,27 @@ public static class StringMembers
 
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];
+
+        // Each character class member is true when the text holds a character and every character is in the class, as
+        // Kotlin's and Rust's `char` members test one, so `"".isLetter()` is false.
+        public bool isLetter() => StringMembers.isEach(text, "\\p{L}", "isLetter");
+
+        public bool isDigit() => StringMembers.isEach(text, "\\p{Nd}", "isDigit");
+
+        public bool isLetterOrDigit() => StringMembers.isEach(text, "\\p{L}\\p{Nd}", "isLetterOrDigit");
+
+        // A separator or a control character Kotlin's `isWhitespace` takes, as a tab or a line break.
+        public bool isWhitespace() => StringMembers.isEach(text, "\\p{Z}\\t\\n\\x{0B}\\f\\r\\x{1C}-\\x{1F}", "isWhitespace");
+
+        public bool isUppercase() => StringMembers.isEach(text, "\\p{Lu}", "isUppercase");
+
+        public bool isLowercase() => StringMembers.isEach(text, "\\p{Ll}", "isLowercase");
+
+        // The text in a Unicode normalization form, C by default, as .NET's Normalize.
+        public string normalized(NormalizationForm form = NormalizationForm.C)
+            => global.normalizer_normalize(text, form.value) is string normalized
+                ? normalized
+                : throw new ValueError("`normalized` reads UTF-8 text, and the text is not.");
     }
 
     extension(List<string> parts)

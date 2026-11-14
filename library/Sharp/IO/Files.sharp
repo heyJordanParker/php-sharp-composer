@@ -109,6 +109,19 @@ public foreign class Files
     public string temporaryFile()
         => global.tempnam(global.sys_get_temp_dir(), "sharp") is string path ? path : throw new RuntimeException("Files.temporaryFile: no temporary file can be created");
 
+    // The folder temporary files go in, as Rust's env::temp_dir and .NET's Path.GetTempPath.
+    public string temporaryDirectory() => global.sys_get_temp_dir();
+
+    // The full path of each file and folder below the folder, a folder before its contents and each folder's entries
+    // in name order, read as a loop reaches them, as Kotlin's Path.walk. A link to a folder is given and not followed.
+    // null when the folder doesn't exist.
+    public Iterable<string>? walk(string directory)
+    {
+        Files.local(directory, "Files.walk");
+
+        return global.is_dir(directory) ? Files.entries(global.rtrim(directory, "/")) : null;
+    }
+
     private static Iterable<string> lines(string path)
     {
         const handle = global.fopen(path, "r");
@@ -121,6 +134,22 @@ public foreign class Files
             }
         } finally {
             global.fclose(handle);
+        }
+    }
+
+    private static Iterable<string> entries(string directory)
+    {
+        if (global.scandir(directory) is not List<string> names) {
+            throw new RuntimeException(`Files.walk: "${directory}" cannot be read`);
+        }
+        for (const name of names) {
+            if (name != "." && name != "..") {
+                const path = `${directory}/${name}`;
+                yield path;
+                if (global.is_dir(path) && !global.is_link(path)) {
+                    yield ...Files.entries(path);
+                }
+            }
         }
     }
 

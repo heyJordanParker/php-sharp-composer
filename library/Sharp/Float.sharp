@@ -43,6 +43,9 @@ public static class Float
 
         public bool isFinite() => global.is_finite(value);
 
+        // Whether the value is NaN, the one float `==` finds unequal to itself.
+        public bool isNaN() => global.is_nan(value);
+
         public string format(int decimals = 0, string decimalSeparator = ".", string thousandsSeparator = ",")
             => global.number_format(value, decimals, decimalSeparator, thousandsSeparator);
     }

@@ -26,6 +26,11 @@ extern Internal.any;
 extern Internal.groupBy;
 extern Internal.associateBy;
 extern Internal.sortedBy;
+extern Internal.firstOrNull;
+extern Internal.sortedByDescending;
+extern Internal.sortedWith;
+extern Internal.minBy;
+extern Internal.maxBy;
 
 // The members of a `List`, spec section 12. A member that changes the list takes it by `ref`, spec section 26.
 public static class ListMembers
@@ -62,13 +67,113 @@ public static class ListMembers
 
         public T first(Function<bool(T)> predicate) => Internal.first(items, predicate);
 
+        public T? firstOrNull(Function<bool(T)> predicate) => Internal.firstOrNull(items, predicate);
+
+        public int? indexOfFirst(Function<bool(T)> predicate)
+        {
+            for (let index = 0; index < items.count(); index++) {
+                if (predicate(items[index])) {
+                    return index;
+                }
+            }
+            return null;
+        }
+
         public bool any(Function<bool(T)> predicate) => Internal.any(items, predicate);
 
         public Map<TKey, List<T>> groupBy<TKey>(Function<TKey(T)> key) => Internal.groupBy(items, key);
 
         public Map<TKey, T> associateBy<TKey>(Function<TKey(T)> key) => Internal.associateBy(items, key);
 
+        // A tuple key, as `p => [p.last, p.first]` gives, orders element by element, as Rust orders tuples.
         public List<T> sortedBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.sortedBy(items, selector);
+
+        public List<T> sortedByDescending<TKey>([ComparedByOrder] Function<TKey(T)> selector)
+            => Internal.sortedByDescending(items, selector);
+
+        // The comparison gives below 0 when its first element goes before its second, as Kotlin's sortedWith.
+        public List<T> sortedWith(Function<int(T, T)> comparison) => Internal.sortedWith(items, comparison);
+
+        // The first element of the smallest key, as Kotlin's minBy.
+        public T minBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.minBy(items, selector);
+
+        public T maxBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.maxBy(items, selector);
+
+        // Each pair of elements at one index, as long as the shorter list, as Kotlin's zip.
+        public List<[T, TOther]> zip<TOther>(List<TOther> other)
+        {
+            List<[T, TOther]> pairs = [];
+            for (let index = 0; index < items.count() && index < other.count(); index++) {
+                pairs.add([items[index], other[index]]);
+            }
+            return pairs;
+        }
+
+        // Each run of `size` elements in a row, in order, as Kotlin's windowed(size), so none for a size past the length.
+        public List<List<T>> windowed(int size)
+        {
+            if (size < 1) {
+                throw new ValueError("`windowed` takes a size of 1 or more, and it is smaller.");
+            }
+            List<List<T>> windows = [];
+            for (let start = 0; start + size <= items.count(); start++) {
+                windows.add(items.slice(start, start + size));
+            }
+            return windows;
+        }
+
+        // The elements the predicate matches, then the others, each in order, as Kotlin's partition.
+        public [List<T>, List<T>] partition(Function<bool(T)> predicate)
+        {
+            List<T> matches = [];
+            List<T> others = [];
+            for (const item of items) {
+                if (predicate(item)) {
+                    matches.add(item);
+                } else {
+                    others.add(item);
+                }
+            }
+            return [matches, others];
+        }
+
+        // In a list sorted by the comparison, the index of an element it gives 0 for, or null when none, as Kotlin's
+        // binarySearch(comparison) and Rust's binary_search_by. It gives an element's order against what is sought.
+        public int? binarySearch(Function<int(T)> comparison)
+        {
+            let low = 0;
+            let high = items.count() - 1;
+            while (low <= high) {
+                const middle = (low + high) / 2;
+                const order = comparison(items[middle]);
+                if (order == 0) {
+                    return middle;
+                }
+                if (order < 0) {
+                    low = middle + 1;
+                } else {
+                    high = middle - 1;
+                }
+            }
+            return null;
+        }
+
+        // In a list where the predicate holds for each element before the first it fails for, that element's index, or
+        // the count when it holds for all, as Rust's partition_point: where a sought element goes.
+        public int partitionPoint(Function<bool(T)> predicate)
+        {
+            let low = 0;
+            let high = items.count();
+            while (low < high) {
+                const middle = (low + high) / 2;
+                if (predicate(items[middle])) {
+                    low = middle + 1;
+                } else {
+                    high = middle;
+                }
+            }
+            return low;
+        }
 
         public List<T> reversed() => global.array_reverse(items);
 
@@ -113,6 +218,14 @@ public static class ListMembers
         public T removeLast() => Internal.removeLast(list);
 
         public void clear() => Internal.clear(list);
+
+        // Removes each element the predicate matches, and gives whether it removed one, as Kotlin's removeAll.
+        public bool removeAll(Function<bool(T)> predicate)
+        {
+            const count = list.count();
+            list = Internal.filter(list, (T item) => !predicate(item));
+            return list.count() != count;
+        }
     }
 
     extension(List<int> numbers)
@@ -120,5 +233,8 @@ public static class ListMembers
         public int max() => global.max(Internal.nonEmpty(numbers));
 
         public int min() => global.min(Internal.nonEmpty(numbers));
+
+        // The text of the bytes, each an `int` from 0 to 255, as `Int.toByteString()` gives one byte's.
+        public string toByteString() => global.implode("", numbers.map((int byte) => byte.toByteString()));
     }
 }

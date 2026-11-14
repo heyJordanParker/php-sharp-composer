@@ -12,6 +12,7 @@ extern Internal.keys;
 extern Internal.values;
 extern Internal.pairs;
 extern Internal.filterEntries;
+extern Internal.getOrPut;
 
 // The members of a `Map`, spec section 12. A member that changes the map takes it by `ref`, spec section 26.
 public static class MapMembers
@@ -42,6 +43,8 @@ public static class MapMembers
 
         public TValue first(Function<bool(TValue)> predicate) => Internal.first(map, predicate);
 
+        public TValue? firstOrNull(Function<bool(TValue)> predicate) => Internal.firstOrNull(map, predicate);
+
         public bool any(Function<bool(TValue)> predicate) => Internal.any(map, predicate);
 
         public Map<TGroup, List<TValue>> groupBy<TGroup>(Function<TGroup(TValue)> key) => Internal.groupBy(map, key);
@@ -57,5 +60,10 @@ public static class MapMembers
 
         // `map[key] = value` runs it, as Kotlin's runs `operator fun set`.
         public void set(TKey key, TValue value) => Internal.put(map, key, value);
+
+        // The value of the key, or, when the map holds no equal key, what `defaultValue` gives, set under the key first,
+        // as Kotlin's getOrPut. `defaultValue` runs only for a missing key.
+        public TValue getOrPut([ComparedByEquality] TKey key, Function<TValue()> defaultValue)
+            => Internal.getOrPut(map, key, defaultValue);
     }
 }
