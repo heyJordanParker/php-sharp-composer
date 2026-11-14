@@ -39,6 +39,6 @@ public class Parameter
     // `Class<T>.attributes()` gives a class's.
     public List<TAttribute> attributes<TAttribute : Object>()
         => new ReflectionParameter([this.declaringClass, this.method], this.name)
-            .getAttributes(ClassMembers.attributeName<TAttribute>(), ReflectionAttribute.IS_INSTANCEOF)
+            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
             .map(attribute => attribute.newInstance());
 }

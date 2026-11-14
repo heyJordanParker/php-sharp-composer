@@ -28,10 +28,11 @@ public static class ClassMembers
         default => throw new ValueError("The engine gave a visibility that is no access modifier."),
     };
 
-    // The class PHP's `getAttributes` reads the attributes of, with `ReflectionAttribute.IS_INSTANCEOF`, or null for every
-    // attribute when `TAttribute` is the root bound `Object`, which is no class PHP declares.
-    internal static Class<TAttribute>? attributeName<TAttribute : Object>()
-        => typeof(TAttribute) == typeof(Object) ? null : typeof(TAttribute);
+    // `type` when it is a `Class<Object>`, the class value of a class, an interface or an enum, spec section 25, and null
+    // for the class value of a type that is no class, as the root bound `Object`, `int` or `List<int>`, which PHP declares
+    // no class for. Each member that hands a class value to PHP's reflection reads it through this, so such a type has no
+    // members, and filters no attributes.
+    internal static Class<T>? declared<T>(Class<T> type) => type is Class<Object> ? type : null;
 
     // The members of the class value of any type, a class's and `int`'s alike.
     extension(Class<Any?> type)
@@ -50,7 +51,7 @@ public static class ClassMembers
         // The instance properties and fields of the class, its own first and then those it inherits, in the order they
         // are declared, private ones included, as an ORM or a serializer reads them, spec section 25.
         public List<Property> properties()
-            => Internal.properties(type).map(
+            => ClassMembers.declared(type) == null ? [] : Internal.properties(type).map(
                 declared => new Property(
                     ClassMembers.declaringClass(declared[0]),
                     declared[1],
@@ -63,7 +64,7 @@ public static class ClassMembers
         // The instance and static methods of the class, its own first and then those it inherits, in the order they
         // are declared, private ones included, without its constructor, spec section 25.
         public List<Method> methods()
-            => Internal.methods(type).map(
+            => ClassMembers.declared(type) == null ? [] : Internal.methods(type).map(
                 rows => new Method(
                     ClassMembers.declaringClass(rows[0][0]),
                     rows[0][1],
@@ -86,8 +87,8 @@ public static class ClassMembers
             );
 
         public List<TAttribute> attributes<TAttribute : Object>()
-            => new ReflectionClass(type)
-                .getAttributes(ClassMembers.attributeName<TAttribute>(), ReflectionAttribute.IS_INSTANCEOF)
+            => ClassMembers.declared(type) == null ? [] : new ReflectionClass(type)
+                .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
                 .map(attribute => attribute.newInstance());
     }
 }
