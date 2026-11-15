@@ -237,4 +237,12 @@ public static class ListMembers
         // The text of the bytes, each an `int` from 0 to 255, as `Int.toByteString()` gives one byte's.
         public string toByteString() => global.implode("", numbers.map((int byte) => byte.toByteString()));
     }
+
+    extension(List<string> fields)
+    {
+        // The fields as one CSV record of RFC 4180, which `parseCsv()` reads back: a field that holds a comma, a quote or
+        // a line break is quoted, with each quote doubled.
+        public string toCsv()
+            => global.implode(",", fields.map((string field) => global.strpbrk(field, ",\"\r\n") is string ? `"${global.str_replace("\"", "\"\"", field)}"` : field));
+    }
 }

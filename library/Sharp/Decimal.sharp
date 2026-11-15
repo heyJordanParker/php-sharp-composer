@@ -1,0 +1,89 @@
+namespace Sharp;
+
+import BcMath.Number;
+import RoundingMode as PhpRoundingMode;
+
+// An exact decimal number, as Java's BigDecimal: its digits, `scale` of them after its point. `+`, `-` and `*` give the
+// exact result, so 0.1 + 0.2 is 0.3. A quotient can have no end, so `divide` names its scale and its rounding, and
+// there is no `/`, as Java's BigDecimal.divide takes both. Two decimals are `==` when they are one number, so 1.5 and
+// 1.50 are, as .NET's decimal compares them, and each keeps its scale. It runs on PHP's BcMath\Number.
+public struct Decimal
+{
+    private Decimal(private Number number { get; }) { }
+
+    public static Decimal parse(string text)
+        => Decimal.tryParse(text) ?? throw new ValueError(`Decimal.parse: "${text}" is not a decimal number, such as "-12.50"`);
+
+    // Digits with an optional sign and point, as "12", "-0.5" and "+3.25". The digits after the point give the scale,
+    // so "1.50" has a scale of 2.
+    public static Decimal? tryParse(string text)
+        => global.preg_match("/\\A[+-]?[0-9]+(?:\\.[0-9]+)?\\z/", text) == 1 && global.is_numeric(text) ? new Decimal(new Number(text)) : null;
+
+    public static Decimal of(int value) => new Decimal(new Number(value));
+
+    // The count of digits after the point.
+    public int scale => this.number.scale;
+
+    // An operator's operands are readonly, and PHP# checks no plain PHP class's methods, so each operator runs on a
+    // `Number` of its own, made from the first operand's digits.
+
+    // The exact sum and difference, whose scale is the larger of both scales.
+    public static Decimal operator +(Decimal a, Decimal b) => new Decimal(new Number(a.number.value).add(b.number.value));
+
+    public static Decimal operator -(Decimal a, Decimal b) => new Decimal(new Number(a.number.value).sub(b.number.value));
+
+    // The exact product, whose scale is the sum of both scales.
+    public static Decimal operator *(Decimal a, Decimal b) => new Decimal(new Number(a.number.value).mul(b.number.value));
+
+    public static int operator <=>(Decimal a, Decimal b) => new Number(a.number.value).compare(b.number.value);
+
+    public static bool operator ==(Decimal a, Decimal b) => new Number(a.number.value).compare(b.number.value) == 0;
+
+    // One number hashes alike at every scale, so the digits hash without the zeros that end the fraction.
+    public int hash()
+        => global.crc32(this.number.scale == 0 ? this.number.value : global.rtrim(global.rtrim(this.number.value, "0"), "."));
+
+    // The quotient with `scale` digits after the point, rounded by `mode`, as Java's BigDecimal.divide(divisor, scale,
+    // mode). A divisor of 0 throws `DivisionByZeroError`.
+    public Decimal divide(Decimal divisor, int scale, RoundingMode mode = RoundingMode.HalfEven)
+    {
+        if (scale < 0) {
+            throw new ValueError(`Decimal.divide takes a scale of 0 or more, and ${scale} is not one.`);
+        }
+        if (divisor.number.compare(0) == 0) {
+            throw new DivisionByZeroError("Decimal.divide: the divisor is 0");
+        }
+        // The quotient one digit past the scale, toward 0, then one more digit that is not 0 when a remainder is left,
+        // rounds as the exact quotient does.
+        const quotient = this.number.div(divisor.number, scale + 1);
+        const exact = quotient.mul(divisor.number).compare(this.number) == 0;
+        const negative = (this.number.compare(0) < 0) != (divisor.number.compare(0) < 0);
+        const last = new Number(10).pow(-(scale + 2), scale + 2);
+        const decided = exact ? quotient : negative ? quotient.sub(last) : quotient.add(last);
+
+        return new Decimal(decided.round(scale, Decimal.phpMode(mode)));
+    }
+
+    // The number with `scale` digits after the point, rounded by `mode` where it had more, as Java's setScale.
+    public Decimal round(int scale, RoundingMode mode = RoundingMode.HalfEven)
+    {
+        if (scale < 0) {
+            throw new ValueError(`Decimal.round takes a scale of 0 or more, and ${scale} is not one.`);
+        }
+
+        return new Decimal(this.number.round(scale, Decimal.phpMode(mode)));
+    }
+
+    // The digits, with a `-` before a negative number, as "-12.50".
+    public string toString() => this.number.value;
+
+    private static PhpRoundingMode phpMode(RoundingMode mode) => match (mode) {
+        RoundingMode.HalfEven => PhpRoundingMode.HalfEven,
+        RoundingMode.HalfUp => PhpRoundingMode.HalfAwayFromZero,
+        RoundingMode.HalfDown => PhpRoundingMode.HalfTowardsZero,
+        RoundingMode.Up => PhpRoundingMode.AwayFromZero,
+        RoundingMode.Down => PhpRoundingMode.TowardsZero,
+        RoundingMode.Ceiling => PhpRoundingMode.PositiveInfinity,
+        RoundingMode.Floor => PhpRoundingMode.NegativeInfinity,
+    };
+}

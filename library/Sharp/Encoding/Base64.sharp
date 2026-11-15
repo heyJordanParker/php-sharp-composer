@@ -2,8 +2,21 @@ namespace Sharp.Encoding;
 
 public static class Base64
 {
-    public static string encode(string data) => global.base64_encode(data);
+    // `urlSafe` writes the URL and file name alphabet of RFC 4648, with `-` and `_` for `+` and `/`, and no padding, as
+    // .NET's Base64Url.
+    public static string encode(string data, bool urlSafe = false)
+        => urlSafe ? global.rtrim(global.strtr(global.base64_encode(data), "+/", "-_"), "=") : global.base64_encode(data);
 
-    public static string decode(string text)
-        => global.base64_decode(text, true) is string data ? data : throw new ValueError("Base64.decode: the text is not valid base64");
+    // `urlSafe` reads the URL and file name alphabet, with its padding or without it, as .NET's Base64Url.
+    public static string decode(string text, bool urlSafe = false)
+    {
+        if (urlSafe && global.preg_match("/\\A[A-Za-z0-9_-]*={0,2}\\z/", text) != 1) {
+            throw new ValueError("Base64.decode: the text is not valid URL-safe base64");
+        }
+        const standard = urlSafe ? global.strtr(text, "-_", "+/") : text;
+
+        return global.base64_decode(standard, true) is string data
+            ? data
+            : throw new ValueError(urlSafe ? "Base64.decode: the text is not valid URL-safe base64" : "Base64.decode: the text is not valid base64");
+    }
 }

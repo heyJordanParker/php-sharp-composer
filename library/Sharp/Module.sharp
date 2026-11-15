@@ -2,6 +2,7 @@ namespace Sharp;
 
 import Sharp.IO.Console;
 import Sharp.IO.Files;
+import Sharp.Interop.PhpGlobals;
 import Sharp.Net.Dns;
 import Sharp.Net.Http;
 import Sharp.Net.Mail;
@@ -20,5 +21,6 @@ module
     singleton Http = Http;
     singleton Mail = Mail;
     singleton Dns = Dns;
+    singleton PhpGlobals = PhpGlobals;
     singleton Dispatcher = ImmediateDispatcher;
 }

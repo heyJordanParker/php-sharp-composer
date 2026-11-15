@@ -56,6 +56,7 @@ import Dom.TokenList;
 import DateTimeImmutable;
 import DateTimeInterface;
 import DateTimeZone;
+import BcMath.Number;
 
 extern global._ uses Environment;
 extern global.abs;
@@ -2339,3 +2340,4 @@ extern DateTimeZone;
 extern DateTimeImmutable.__construct uses Clock;
 extern DateTimeImmutable.createFromFormat uses Clock;
 extern DateTimeImmutable.modify uses Clock;
+extern Number;

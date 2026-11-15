@@ -1,5 +1,9 @@
 namespace Sharp.System;
 
+import Sharp.Internal;
+
+extern Internal.processorCount uses Environment;
+
 public foreign class Environment
 {
     public List<string> arguments { get; }
@@ -36,6 +40,13 @@ public foreign class Environment
 
     public string require(string name)
         => global.getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
+
+    // How many processors the machine has online, at least 1, as .NET's Environment.ProcessorCount.
+    public int processorCount() => Internal.processorCount();
+
+    // The machine's host name, as .NET's Environment.MachineName.
+    public string machineName()
+        => global.gethostname() is string name ? name : throw new RuntimeException("Environment.machineName: the host name cannot be read");
 
     private static extern List<string> commandLine();
 }

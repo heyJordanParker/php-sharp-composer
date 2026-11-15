@@ -1,0 +1,145 @@
+namespace Sharp.Collections;
+
+import Sharp.Internal;
+
+// A set that keeps its elements in order, as Rust's BTreeSet and .NET's SortedSet, with every member a `Set` has. It
+// orders by the element's `operator <=>`, as `<` orders two elements, or by the comparison its constructor takes,
+// which gives below 0 when its first element goes before its second. Two elements the order puts at 0 are one element.
+// It keeps its elements in a sorted list, so a search takes log n steps, and a write moves the elements after it.
+public class SortedSet<T> : Iterable<T>
+{
+    private Function<int(T, T)> order;
+
+    private List<T> sorted = [];
+
+    public SortedSet(Function<int(T, T) uses none>? comparison = null)
+    {
+        this.order = comparison ?? ((T a, T b) => Internal.compare(a, b));
+    }
+
+    // Each element, in order.
+    public Iterable<T> elements() => this.sorted;
+
+    public int count() => this.sorted.count();
+
+    public bool isEmpty() => this.sorted.isEmpty();
+
+    public bool isNotEmpty() => this.sorted.isNotEmpty();
+
+    public bool contains(T value)
+    {
+        const at = this.position(value);
+
+        return at < this.sorted.count() && this.order(this.sorted[at], value) == 0;
+    }
+
+    public List<T> toList() => this.sorted;
+
+    public SortedSet<T> filter(Function<bool(T)> predicate) => this.ordered(this.sorted.filter(predicate));
+
+    public List<TResult> map<TResult>(Function<TResult(T)> transform) => this.sorted.map(transform);
+
+    public TResult sumOf<TResult : int|float>(Function<TResult(T)> selector) => this.sorted.sumOf(selector);
+
+    // The smallest element, or the smallest the predicate matches, as a `Set`'s first. An empty set throws
+    // `OutOfRangeException`.
+    public T first(Function<bool(T)>? predicate = null)
+    {
+        if (predicate is Function<bool(T)> matches) {
+            return this.sorted.first(matches);
+        }
+
+        return this.sorted.isEmpty() ? throw new OutOfRangeException("SortedSet.first: the set is empty") : this.sorted[0];
+    }
+
+    public T? firstOrNull(Function<bool(T)> predicate) => this.sorted.firstOrNull(predicate);
+
+    // The largest element, as Rust's BTreeSet.last. An empty set throws `OutOfRangeException`.
+    public T last() => this.sorted.isEmpty() ? throw new OutOfRangeException("SortedSet.last: the set is empty") : this.sorted[this.sorted.count() - 1];
+
+    public bool any(Function<bool(T)> predicate) => this.sorted.any(predicate);
+
+    // The elements in the order of the keys `selector` gives them, as `<` orders those keys.
+    public List<T> sortedBy<TKey>(Function<TKey(T)> selector) => this.sorted.sortedWith((T a, T b) => Internal.compare(selector(a), selector(b)));
+
+    // The largest element at or below `value`, or null, as Java's TreeSet.floor.
+    public T? floor(T value)
+    {
+        const at = this.position(value);
+        if (at < this.sorted.count() && this.order(this.sorted[at], value) == 0) {
+            return this.sorted[at];
+        }
+
+        return at > 0 ? this.sorted[at - 1] : null;
+    }
+
+    // The smallest element at or above `value`, or null, as Java's TreeSet.ceiling.
+    public T? ceiling(T value)
+    {
+        const at = this.position(value);
+
+        return at < this.sorted.count() ? this.sorted[at] : null;
+    }
+
+    // The elements from `from` up to `to`, `to` itself left out, as Rust's range(from..to).
+    public SortedSet<T> range(T from, T to) => this.ordered(this.sorted.slice(this.position(from), Math.max(this.position(from), this.position(to))));
+
+    // The elements of either set, each once, as a `Set`'s union.
+    public SortedSet<T> union(SortedSet<T> other)
+    {
+        const united = this.ordered(this.sorted);
+        for (const element of other.sorted) {
+            united.add(element);
+        }
+
+        return united;
+    }
+
+    // The elements of this set that the other holds too, as a `Set`'s intersect.
+    public SortedSet<T> intersect(SortedSet<T> other) => this.ordered(this.sorted.filter((T element) => other.contains(element)));
+
+    // The elements of this set that the other doesn't hold, as a `Set`'s subtract.
+    public SortedSet<T> subtract(SortedSet<T> other) => this.ordered(this.sorted.filter((T element) => !other.contains(element)));
+
+    // Whether the other set holds every element of this one, as a `Set`'s isSubsetOf.
+    public bool isSubsetOf(SortedSet<T> other) => this.sorted.all((T element) => other.contains(element));
+
+    // Adds `value`, and gives whether the set lacked it.
+    public bool add(T value)
+    {
+        if (this.contains(value)) {
+            return false;
+        }
+        this.sorted.insert(this.position(value), value);
+
+        return true;
+    }
+
+    // Removes `value`, and gives whether the set held it.
+    public bool remove(T value)
+    {
+        if (!this.contains(value)) {
+            return false;
+        }
+        this.sorted.removeAt(this.position(value));
+
+        return true;
+    }
+
+    public void clear()
+    {
+        this.sorted.clear();
+    }
+
+    // A set of this set's order that holds `elements`, which are in that order already.
+    private SortedSet<T> ordered(List<T> elements)
+    {
+        const set = new SortedSet<T>(this.order);
+        set.sorted = elements;
+
+        return set;
+    }
+
+    // The index of the first element the order puts at or after `value`, as Rust's partition_point.
+    private int position(T value) => this.sorted.partitionPoint((T held) => this.order(held, value) < 0);
+}

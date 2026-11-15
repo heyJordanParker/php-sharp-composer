@@ -1,0 +1,37 @@
+namespace Sharp.Interop;
+
+import Sharp.Internal;
+
+extern Internal.readGlobal uses PhpGlobals;
+extern Internal.writeGlobal uses PhpGlobals;
+extern Internal.includeGlobal uses PhpGlobals;
+
+// PHP's global variables and superglobals, for plain PHP that keeps its state there, as a legacy page or a WordPress
+// plugin does. PHP# has no `global` and no superglobals, so code that reaches them takes this class and has its effect.
+public foreign class PhpGlobals
+{
+    // The global variable `name`, as PHP's `$GLOBALS[name]` reads it, or null when it is not set.
+    public Any? get(string name) => Internal.readGlobal(name);
+
+    // Sets the global variable `name`, as PHP's `$GLOBALS[name] = value` does.
+    public void set(string name, Any? value)
+    {
+        Internal.writeGlobal(name, value);
+    }
+
+    // The value at `key` of a superglobal, as PHP's `$_SERVER[key]` reads it, or null when it is not set.
+    public Any? read(Superglobal which, string key) => Internal.readGlobal(which.value, key);
+
+    // Sets the value at `key` of a superglobal, as PHP's `$_SERVER[key] = value` does.
+    public void write(Superglobal which, string key, Any? value)
+    {
+        Internal.writeGlobal(which.value, value, key);
+    }
+
+    // Runs the PHP file at `path` in the global scope, as a page's own `include` does, so each global variable is in
+    // its scope, and each one it sets is a global after it. A file that cannot be read throws `RuntimeException`.
+    public void include(string path)
+    {
+        Internal.includeGlobal(path);
+    }
+}

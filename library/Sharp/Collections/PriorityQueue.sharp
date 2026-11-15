@@ -1,0 +1,77 @@
+namespace Sharp.Collections;
+
+import Sharp.Internal;
+
+// A queue whose element of the lowest priority leaves first, as .NET's PriorityQueue<TElement, TPriority>. It orders
+// the priorities by their `operator <=>`, as `<` orders two priorities, or by the comparison its constructor takes,
+// which gives below 0 when its first priority goes before its second. Elements of one priority leave in no set order.
+// It keeps a binary heap, so `enqueue` and `dequeue` take log n steps.
+public class PriorityQueue<TElement, TPriority>
+{
+    private Function<int(TPriority, TPriority)> order;
+
+    private List<[TElement element, TPriority priority]> heap = [];
+
+    public PriorityQueue(Function<int(TPriority, TPriority) uses none>? comparison = null)
+    {
+        this.order = comparison ?? ((TPriority a, TPriority b) => Internal.compare(a, b));
+    }
+
+    // How many elements wait in the queue.
+    public int count() => this.heap.count();
+
+    public bool isEmpty() => this.heap.isEmpty();
+
+    public void enqueue(TElement element, TPriority priority)
+    {
+        this.heap.add([element, priority]);
+        let child = this.heap.count() - 1;
+        while (child > 0 && this.goesBefore(child, (child - 1) / 2)) {
+            this.swap(child, (child - 1) / 2);
+            child = (child - 1) / 2;
+        }
+    }
+
+    // The element of the lowest priority, which stays in the queue. An empty queue throws `UnderflowException`, as
+    // .NET's throws InvalidOperationException.
+    public TElement peek()
+        => this.heap.isEmpty() ? throw new UnderflowException("PriorityQueue.peek: the queue is empty") : this.heap[0].element;
+
+    // Removes the element of the lowest priority and gives it. An empty queue throws `UnderflowException`.
+    public TElement dequeue()
+    {
+        if (this.heap.isEmpty()) {
+            throw new UnderflowException("PriorityQueue.dequeue: the queue is empty");
+        }
+        const lowest = this.heap[0].element;
+        const last = this.heap.removeLast();
+        if (this.heap.isNotEmpty()) {
+            this.heap[0] = last;
+            let parent = 0;
+            while (true) {
+                let smallest = parent;
+                for (const child of [2 * parent + 1, 2 * parent + 2]) {
+                    if (child < this.heap.count() && this.goesBefore(child, smallest)) {
+                        smallest = child;
+                    }
+                }
+                if (smallest == parent) {
+                    break;
+                }
+                this.swap(parent, smallest);
+                parent = smallest;
+            }
+        }
+
+        return lowest;
+    }
+
+    private bool goesBefore(int at, int other) => this.order(this.heap[at].priority, this.heap[other].priority) < 0;
+
+    private void swap(int at, int other)
+    {
+        const held = this.heap[at];
+        this.heap[at] = this.heap[other];
+        this.heap[other] = held;
+    }
+}

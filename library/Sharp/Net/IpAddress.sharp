@@ -1,0 +1,35 @@
+namespace Sharp.Net;
+
+// An IPv4 or IPv6 address, as .NET's IPAddress and Rust's IpAddr. It holds the address's bytes, so two texts of one
+// address, as `::1` and `0:0:0:0:0:0:0:1`, give `==` addresses.
+public struct IpAddress
+{
+    private IpAddress(private string bytes { get; }) { }
+
+    public static IpAddress parse(string text)
+        => IpAddress.tryParse(text) ?? throw new ValueError(`IpAddress.parse: "${text}" is not an IPv4 or IPv6 address`);
+
+    public static IpAddress? tryParse(string text)
+        => global.filter_var(text, global.FILTER_VALIDATE_IP) is string && global.inet_pton(text) is string bytes ? new IpAddress(bytes) : null;
+
+    public IpFamily family => global.strlen(this.bytes) == 4 ? IpFamily.V4 : IpFamily.V6;
+
+    // `127.0.0.0/8`, or `::1`, as Rust's is_loopback.
+    public bool isLoopback()
+        => this.family == IpFamily.V4 ? this.bytes.bytes()[0] == 127 : this.toString() == "::1";
+
+    // `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` of RFC 1918, or an IPv6 unique local address, `fc00::/7` of
+    // RFC 4193, as Rust's is_private and is_unique_local.
+    public bool isPrivate()
+    {
+        const octets = this.bytes.bytes();
+        if (this.family == IpFamily.V6) {
+            return (octets[0] & 0xFE) == 0xFC;
+        }
+
+        return octets[0] == 10 || (octets[0] == 172 && (octets[1] & 0xF0) == 16) || (octets[0] == 192 && octets[1] == 168);
+    }
+
+    // The address as RFC 5952 writes it, as `192.168.0.1` and `2001:db8::1`.
+    public string toString() => global.inet_ntop(this.bytes) is string text ? text : throw new ValueError("IpAddress.toString: the bytes are no address");
+}

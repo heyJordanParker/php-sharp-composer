@@ -43,6 +43,16 @@ public static class Int
         return global.str_starts_with(digits, "-") ? negated : negated.checkedMultiply(-1);
     }
 
+    // The int the 8 bytes write in `order`, as Rust's i64::from_be_bytes and from_le_bytes.
+    public static int fromBytes(string bytes, ByteOrder order = ByteOrder.Big)
+    {
+        if (global.strlen(bytes) != 8) {
+            throw new ValueError(`Int.fromBytes: an int is 8 bytes, and the text holds ${global.strlen(bytes)}`);
+        }
+
+        return global.unpack(order.value, bytes) is [int value] ? value : throw new ValueError("Int.fromBytes: the bytes write no int");
+    }
+
     private static void checkRadix(int radix, string member)
     {
         if (radix < 2 || radix > 36) {
@@ -100,6 +110,9 @@ public static class Int
         // The string of the one byte `value`, from 0 to 255, as Kotlin's `Int.toByte()` gives it.
         public string toByteString()
             => value >= 0 && value <= 255 ? global.chr(value) : throw new ValueError("`toByteString` needs a byte from 0 to 255, and the value is outside it.");
+
+        // The 8 bytes of `value` in `order`, a negative one in two's complement, as Rust's to_be_bytes and to_le_bytes.
+        public string toBytes(ByteOrder order = ByteOrder.Big) => global.pack(order.value, value);
 
         // The character of the code point `value`, as Rust's char::from_u32 and .NET's char.ConvertFromUtf32.
         public string toCharacter()

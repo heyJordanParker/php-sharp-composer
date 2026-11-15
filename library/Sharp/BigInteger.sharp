@@ -1,0 +1,68 @@
+namespace Sharp;
+
+import BcMath.Number;
+
+// An integer of any size, as .NET's BigInteger and Java's BigInteger. `/` and `%` round toward 0, as an `int`'s do, so
+// -7 / 2 is -3 and -7 % 2 is -1, and a divisor of 0 throws `DivisionByZeroError`. It runs on PHP's BcMath\Number.
+public struct BigInteger
+{
+    private BigInteger(private Number number { get; }) { }
+
+    public static BigInteger parse(string text)
+        => BigInteger.tryParse(text) ?? throw new ValueError(`BigInteger.parse: "${text}" is not an integer, such as "-12"`);
+
+    // Decimal digits with an optional sign, as "12", "-7" and "+9223372036854775808".
+    public static BigInteger? tryParse(string text)
+        => global.preg_match("/\\A[+-]?[0-9]+\\z/", text) == 1 && global.is_numeric(text) ? new BigInteger(new Number(text)) : null;
+
+    public static BigInteger of(int value) => new BigInteger(new Number(value));
+
+    // An operator's operands are readonly, and PHP# checks no plain PHP class's methods, so each operator runs on a
+    // `Number` of its own, made from the first operand's digits.
+    public static BigInteger operator +(BigInteger a, BigInteger b) => new BigInteger(new Number(a.number.value).add(b.number.value));
+
+    public static BigInteger operator -(BigInteger a, BigInteger b) => new BigInteger(new Number(a.number.value).sub(b.number.value));
+
+    public static BigInteger operator *(BigInteger a, BigInteger b) => new BigInteger(new Number(a.number.value).mul(b.number.value));
+
+    public static BigInteger operator /(BigInteger a, BigInteger b) => new BigInteger(new Number(a.number.value).div(b.number.value, 0));
+
+    public static BigInteger operator %(BigInteger a, BigInteger b) => new BigInteger(new Number(a.number.value).mod(b.number.value, 0));
+
+    public static int operator <=>(BigInteger a, BigInteger b) => new Number(a.number.value).compare(b.number.value);
+
+    public static bool operator ==(BigInteger a, BigInteger b) => new Number(a.number.value).compare(b.number.value) == 0;
+
+    public int hash() => global.crc32(this.number.value);
+
+    // The number to the power `exponent`, as .NET's BigInteger.Pow. A negative exponent throws `ArithmeticError`, as
+    // an `int`'s `**` does.
+    public BigInteger pow(int exponent)
+        => exponent < 0
+            ? throw new ArithmeticError(`BigInteger.pow: ${exponent} is a negative exponent, and an integer raised to it is no integer`)
+            : new BigInteger(this.number.pow(exponent));
+
+    // The digits in `radix`, from 2 to 36, with the letters a to z past 9, as .NET's ToString and Java's
+    // toString(radix): 255 in 16 is "ff".
+    public string toString(int radix = 10)
+    {
+        if (radix < 2 || radix > 36) {
+            throw new ValueError(`BigInteger.toString takes a base from 2 to 36, and ${radix} is not one.`);
+        }
+        if (radix == 10) {
+            return this.number.value;
+        }
+        let rest = this.number.compare(0) < 0 ? new Number(0).sub(this.number) : this.number;
+        let written = "";
+        do {
+            written = global.base_convert(rest.mod(radix).value, 10, radix) + written;
+            rest = rest.div(radix, 0);
+        } while (rest.compare(0) != 0);
+
+        return this.number.compare(0) < 0 ? "-" + written : written;
+    }
+
+    // The number as an `int`, or null past `Int.MAX` and `Int.MIN`, as Kotlin's toIntOrNull.
+    public int? toIntOrNull()
+        => this.number.compare(Int.MAX) <= 0 && this.number.compare(Int.MIN) >= 0 ? global.intval(this.number.value) : null;
+}

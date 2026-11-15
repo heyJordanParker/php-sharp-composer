@@ -1,0 +1,23 @@
+namespace Sharp.Interop;
+
+// One of PHP's superglobal arrays, which `PhpGlobals.read` and `PhpGlobals.write` reach by key. Each case's value is the
+// array's name in PHP's global scope.
+public enum Superglobal : string
+{
+    // `$_SERVER`, the server's and the request's details.
+    case Server = "_SERVER";
+    // `$_GET`, the query string's parameters.
+    case Get = "_GET";
+    // `$_POST`, the form fields of a POST request.
+    case Post = "_POST";
+    // `$_FILES`, the files a request uploads.
+    case Files = "_FILES";
+    // `$_REQUEST`, the query string's parameters, the form fields and the cookies together.
+    case Request = "_REQUEST";
+    // `$_COOKIE`, the request's cookies.
+    case Cookie = "_COOKIE";
+    // `$_ENV`, the environment PHP read at its start.
+    case Env = "_ENV";
+    // `$_SESSION`, the session's values once `session_start` ran.
+    case Session = "_SESSION";
+}

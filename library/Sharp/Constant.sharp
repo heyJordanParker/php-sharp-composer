@@ -1,0 +1,36 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionClassConstant;
+
+extern Internal.constant;
+
+// A constant a class declares, as `Class<T>.constants()` gives it, spec section 25: the class that declares it, its
+// name and its type as declared, as .NET's FieldInfo gives a literal field and Kotlin's KProperty a companion's
+// `const val`. The engine creates it.
+public class Constant
+{
+    internal Constant(
+        public Class<Object> declaringClass { get; },
+        public string name { get; },
+        public Class<Any?> type { get; }
+    ) { }
+
+    // Two values are one constant when they name it in the class that declares it, as C#'s FieldInfo compares, so a
+    // `Map<Constant, V>` keys by the constant whenever `constants()` read it.
+    public static bool operator ==(Constant a, Constant b) => a.declaringClass == b.declaringClass && a.name == b.name;
+
+    public int hash() => global.crc32(this.declaringClass.name() + "::" + this.name);
+
+    // The constant's value, as .NET's FieldInfo.GetValue(null) gives a literal field's. The calling code reaches the
+    // constant as a direct read would, so a private one only from its class, and a `Map` or `Set` constant gives the
+    // object a direct read gives.
+    public Any? value() => Internal.constant(this.declaringClass, this.name);
+
+    // The attributes of the constant of the class `TAttribute` or of a class that extends or implements it, as
+    // `Class<T>.attributes()` gives a class's.
+    public List<TAttribute> attributes<TAttribute : Object>()
+        => new ReflectionClassConstant(this.declaringClass, this.name)
+            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance());
+}

@@ -23,6 +23,7 @@ extern Internal.interfaces;
 extern Internal.classFacts;
 extern Internal.enumBackingType;
 extern Internal.enumCases;
+extern Internal.constants;
 extern Internal.makeGenericType;
 
 public static class ClassMembers
@@ -278,6 +279,21 @@ public static class ClassMembers
             => ClassMembers.declared(type) != null && Internal.enumBackingType(type) is string backing
                 ? ClassMembers.classValue(backing)
                 : null;
+
+        // The constants of the class, its own first and then those it inherits, in the order they are declared, at
+        // every visibility, without an enum's cases, which `enumCases()` gives, spec section 25, as .NET's
+        // `GetFields()` gives a class's literal fields. The engine gives each as the class that declares it, its name
+        // and its type.
+        public List<Constant> constants()
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.constants(type).map(
+                    declared => new Constant(
+                        ClassMembers.declaringClass(declared[0]),
+                        declared[1],
+                        ClassMembers.classValue(declared[2])
+                    )
+                );
 
         // An enum's cases, in the order they are declared, as C# reads an enum's fields.
         public List<EnumCase> enumCases()

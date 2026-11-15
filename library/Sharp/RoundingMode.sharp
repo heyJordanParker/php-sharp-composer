@@ -1,0 +1,21 @@
+namespace Sharp;
+
+// How a `Decimal` drops the digits past a scale, as Java's RoundingMode. "Up" and "Down" go away from 0 and toward 0,
+// "Ceiling" and "Floor" toward positive and negative infinity.
+public enum RoundingMode
+{
+    // To the nearer neighbor, and from halfway to the even one, as banks round: 2.5 gives 2, and 3.5 gives 4.
+    case HalfEven;
+    // To the nearer neighbor, and from halfway away from 0, as schools round: 2.5 gives 3, and -2.5 gives -3.
+    case HalfUp;
+    // To the nearer neighbor, and from halfway toward 0: 2.5 gives 2, and -2.5 gives -2.
+    case HalfDown;
+    // Away from 0: 2.1 gives 3, and -2.1 gives -3.
+    case Up;
+    // Toward 0: 2.9 gives 2, and -2.9 gives -2.
+    case Down;
+    // Toward positive infinity: 2.1 gives 3, and -2.9 gives -2.
+    case Ceiling;
+    // Toward negative infinity: 2.9 gives 2, and -2.1 gives -3.
+    case Floor;
+}
