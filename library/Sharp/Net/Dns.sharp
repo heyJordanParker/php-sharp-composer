@@ -1,0 +1,21 @@
+namespace Sharp.Net;
+
+import Sharp.Internal;
+
+extern Internal.resolve uses Dns;
+
+// The addresses a host name resolves to, as .NET's Dns.GetHostAddresses, through the system resolver, which reads the
+// hosts file before it asks a DNS server.
+public foreign class Dns
+{
+    // Each IPv4 and IPv6 address of the host, once, in the order the system resolver gives them. A host the resolver
+    // can't find throws `RuntimeException`, as .NET throws `SocketException`.
+    public List<string> addresses(string host)
+    {
+        if (global.filter_var(host, global.FILTER_VALIDATE_DOMAIN, global.FILTER_FLAG_HOSTNAME) is not string) {
+            throw new ValueError(`Dns.addresses: "${host}" is not a valid host name`);
+        }
+
+        return Internal.resolve(host);
+    }
+}
