@@ -103,27 +103,55 @@ public static class StringMembers
                 ? throw new ValueError("`repeat` takes a count of 0 or more, and it is negative.")
                 : global.str_repeat(text, times);
 
-        // Every occurrence, or the first `limit` of them, as Rust's replacen.
+        // Every occurrence, or the first `limit` of them, as Rust's replacen. Empty text to replace occurs before each
+        // character and after the last, as Kotlin's and Rust's do, so `"ab".replace("", "-")` is `"-a-b-"`.
         public string replace(string old, string @new, int? limit = null)
         {
-            if (old == "") {
-                throw new ValueError("`replace` needs text to replace, and it is empty.");
-            }
             if (limit is int count) {
-                return count < 0
-                    ? throw new ValueError("`replace` takes a limit of 0 or more, and it is negative.")
-                    : global.implode(@new, global.explode(old, text, count == global.PHP_INT_MAX ? count : count + 1));
+                if (count < 0) {
+                    throw new ValueError("`replace` takes a limit of 0 or more, and it is negative.");
+                }
+                if (old != "") {
+                    return global.implode(@new, global.explode(old, text, count == global.PHP_INT_MAX ? count : count + 1));
+                }
             }
-            return global.str_replace(old, @new, text);
+            if (old != "") {
+                return global.str_replace(old, @new, text);
+            }
+            const replaced = limit ?? global.PHP_INT_MAX;
+            let written = "";
+            let index = 0;
+            for (const character of text.characters()) {
+                written += index < replaced ? @new + character : character;
+                index += 1;
+            }
+            return index < replaced ? written + @new : written;
         }
 
         // A limit of 0 gives every part, and a positive one at most that many, the last holding the rest, as Kotlin's.
+        // An empty delimiter matches before each character and after the last, as Kotlin's does, so `"ab".split("")` is
+        // `["", "a", "b", ""]`.
         public List<string> split(string delimiter, int limit = 0)
-            => delimiter == ""
-                ? throw new ValueError("`split` needs a delimiter, and it is empty.")
-                : limit < 0
-                    ? throw new ValueError("`split` takes a limit of 0 or more, and it is negative.")
-                    : global.explode(delimiter, text, limit == 0 ? global.PHP_INT_MAX : limit);
+        {
+            if (limit < 0) {
+                throw new ValueError("`split` takes a limit of 0 or more, and it is negative.");
+            }
+            if (delimiter != "") {
+                return global.explode(delimiter, text, limit == 0 ? global.PHP_INT_MAX : limit);
+            }
+            List<string> parts = [""];
+            for (const character of text.characters()) {
+                if (limit != 0 && parts.count() == limit) {
+                    parts.set(limit - 1, parts.last() + character);
+                } else {
+                    parts.add(character);
+                }
+            }
+            if (limit == 0 || parts.count() < limit) {
+                parts.add("");
+            }
+            return parts;
+        }
 
         public List<string> lines() => global.preg_split("/\\r\\n|\\n|\\r/", text) as List<string> ?? [text];
 

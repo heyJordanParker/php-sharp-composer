@@ -1,36 +1,123 @@
 namespace Sharp;
 
 import ReflectionAttribute;
+import ReflectionClass;
+import ReflectionMethod;
 import ReflectionProperty;
 
+extern Internal.accessors;
+
 // A property or field a class declares, as `Class<T>.properties()` gives it, spec section 25: the class that declares
-// it, its name, its visibility, the class value of its type without `?`, and whether the type is nullable, as .NET's
-// PropertyInfo and Kotlin's KProperty give them. The engine creates it.
+// it, its name, its visibility, its type as declared, the visibility that reaches its `set` or `init`, null for a
+// get-only one, whether it has an `init`, and its modifiers, as .NET's PropertyInfo and Kotlin's KProperty give them.
+// A property is virtual when a subclass may replace it, as `Method.isVirtual` says. The engine creates it, for the class
+// value it was read from.
 public class Property
 {
     internal Property(
+        private Class<Any?> readOn,
         public Class<Object> declaringClass { get; },
         public string name { get; },
         public Visibility visibility { get; },
         public Class<Any?> type { get; },
-        public bool isNullable { get; }
+        public Visibility? setVisibility { get; },
+        public bool isInitOnly { get; },
+        public bool isStatic { get; },
+        public bool isVirtual { get; },
+        public bool isAbstract { get; },
+        public bool isOverride { get; }
     ) { }
 
-    // The property's value on `receiver`, as .NET's PropertyInfo.GetValue and Kotlin's KProperty1.get give it. The
-    // calling code reaches the property as a direct read would. A computed property runs its `get`, whose body may have
-    // any effect (spec section 6.1), so the read may have every effect, spec section 29.
-    public Any? get(Object receiver) => Internal.read(receiver, this.declaringClass, this.name);
+    // Two values are one property when they name it in the class that declares it, as C#'s PropertyInfo compares, so a
+    // `Map<Property, V>` keys by the property whenever `properties()` read it.
+    public static bool operator ==(Property a, Property b) => a.declaringClass == b.declaringClass && a.name == b.name;
 
-    // Writes `value` into the property on `receiver`, as .NET's PropertyInfo.SetValue and Kotlin's
-    // KMutableProperty1.set do. The calling code reaches the property as a direct write would, a get-only one included,
-    // and `value` is checked against the property's type there. A `set` may run any code, so the write may have every
-    // effect, spec section 29.
-    public void set(Object receiver, Any? value) => Internal.write(receiver, this.declaringClass, this.name, value);
+    public int hash() => global.crc32(this.declaringClass.name() + "::$" + this.name);
+
+    // The property's value on `receiver`, as .NET's PropertyInfo.GetValue and Kotlin's KProperty1.get give it, and a
+    // static's, which takes null. The calling code reaches the property as a direct read would. A computed property runs
+    // its `get`, whose body may have any effect (spec section 6.1), so the read may have every effect, spec section 29.
+    // An instance property given null throws InvalidArgumentException.
+    public Any? get(Object? receiver) => Internal.read(receiver, this.declaringClass, this.name);
+
+    // Writes `value` into the property on `receiver`, or into a static, which takes null, as .NET's
+    // PropertyInfo.SetValue and Kotlin's KMutableProperty1.set do. The calling code reaches the property as a direct
+    // write would, a get-only one included, and `value` is checked against the property's type there. A `set` may run
+    // any code, so the write may have every effect, spec section 29.
+    public void set(Object? receiver, Any? value) => Internal.write(receiver, this.declaringClass, this.name, value);
+
+    // Whether the property holds a value on `receiver`, as Kotlin's `::prop.isInitialized` reads a `lateinit` and PHP's
+    // `ReflectionProperty::isInitialized` reads it: false for a `late` property no code has set, and for a property of
+    // a lazy object `createLazy` made that has not loaded and `setBeforeLoad` did not write, which the read does not
+    // load, as PHP's `ReflectionProperty::isLazy` reads it, since PHP's `isInitialized` loads the object. A computed
+    // property always holds one. There is no reset, as Kotlin has none: a `late` property is set once.
+    public bool isInitialized(Object receiver)
+    {
+        const property = new ReflectionProperty(this.declaringClass, this.name);
+
+        return new ReflectionClass(receiver).isUninitializedLazyObject(receiver)
+            ? !property.isLazy(receiver)
+            : property.isInitialized(receiver);
+    }
+
+    // The `get` accessor of a property that runs one, as C#'s `PropertyInfo.GetMethod` and PHP's
+    // `ReflectionProperty::getHook` give it, named `$name::get` as PHP names a property hook, or null for a plain stored
+    // property, which is how code tells a property with accessors apart. Its `invoke` reads the property, as `get` does.
+    public Method? getter() => this.accessor(0);
+
+    // The `set` accessor of a property that runs one, as C#'s `PropertyInfo.SetMethod` gives it, named `$name::set`, or
+    // null. Its `invoke` writes its one argument into the property, as `set` does.
+    public Method? setter() => this.accessor(1);
+
+    private Method? accessor(int which)
+        => Internal.accessors(this.readOn, this.name)[which] is List<List<string>> rows
+            ? ClassMembers.method(this.readOn, rows)
+            : null;
+
+    // Writes `value` into the property on `receiver`, a lazy object `createLazy` made, without loading it, so a read of
+    // the property never loads it either, as PHP 8.4's `setRawValueWithoutLazyInitialization` writes, and as Doctrine
+    // gives a ghost its identifier before it loads. The calling code reaches the property as a direct write would, as
+    // `set` does, its `set` accessor included. On an object that is not lazy, or one already loaded, it writes as `set`
+    // does.
+    public void setBeforeLoad(Object receiver, Any? value)
+        => Internal.write(receiver, this.declaringClass, this.name, value, true);
+
+    // Whether the declaration gives the property an initial value, constant or not, as C#'s and Kotlin's reflection
+    // read a declared initializer.
+    public bool hasDefaultValue
+        => new ReflectionClass(this.declaringClass).hasMethod(this.name + "#initial")
+            || (this.stored() is ReflectionProperty property && property.hasDefaultValue());
+
+    // The initial value the declaration gives the property, as `hasDefaultValue` reads it. One that is not constant runs
+    // on each read, as `Parameter.defaultValue()` runs a default that is not constant, so `= new Draft()` gives a new
+    // Draft each time. A property with none throws `OutOfRangeException`, as `Parameter.defaultValue()` does.
+    public Any? defaultValue()
+    {
+        const initial = this.name + "#initial";
+        if (new ReflectionClass(this.declaringClass).hasMethod(initial)) {
+            return new ReflectionMethod(this.declaringClass, initial).invoke(null);
+        }
+        if (this.stored() is ReflectionProperty property && property.hasDefaultValue()) {
+            return property.getDefaultValue();
+        }
+
+        throw new OutOfRangeException(
+            "`defaultValue` reads a property that has a default, and `" + this.name + "` has none."
+        );
+    }
 
     // The attributes of the property of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
     public List<TAttribute> attributes<TAttribute : Object>()
-        => new ReflectionProperty(this.declaringClass, this.name)
-            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-            .map(attribute => attribute.newInstance());
+        => this.stored()
+            ?.getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance())
+            ?? [];
+
+    // PHP's reflection of the property's storage, or null for a static whose class keeps none, as a computed one, see
+    // `Class<T>.properties()`.
+    private ReflectionProperty? stored()
+        => new ReflectionClass(this.declaringClass).hasProperty(this.name)
+            ? new ReflectionProperty(this.declaringClass, this.name)
+            : null;
 }

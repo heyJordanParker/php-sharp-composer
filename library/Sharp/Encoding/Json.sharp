@@ -5,6 +5,7 @@ import Sharp.Internal.EncodedAsJson;
 import Sharp.Internal.ParsesTypeArgument;
 
 extern Internal.jsonEncode;
+extern Internal.jsonDecode;
 
 public static class Json
 {
@@ -32,13 +33,17 @@ public static class Json
     // The text is one line. An `indent` above 0 writes each nested value on its own line, `indent` spaces deeper than
     // its parent, with `": "` after a key and `[]` and `{}` for an empty value, as JavaScript's
     // `JSON.stringify(value, null, 2)` and Python's `json.dumps(value, indent=2)` do, so `indent: 4` writes PHP's
-    // `JSON_PRETTY_PRINT`. A negative `indent` throws `ValueError`.
+    // `JSON_PRETTY_PRINT`. A negative `indent` throws `ValueError`. By default `escapeHtml` writes `<`, `>`, `&`, `'`
+    // and `"` inside a string as `<`, `>`, `&`, `'` and `"`, so JSON put inside a `<script>`
+    // can't close it, as Go's `json.Marshal` and .NET's default `JavaScriptEncoder` do. `escapeHtml: false` writes them
+    // as themselves, `"` as `\"`.
     public static string encode(
         [EncodedAsJson] Any? value,
         bool escapeSlashes = false,
         bool escapeUnicode = false,
         bool keepZeroFraction = true,
-        int indent = 0
+        int indent = 0,
+        bool escapeHtml = true
     )
     {
         if (indent < 0) {
@@ -49,10 +54,15 @@ public static class Json
             value,
             (escapeSlashes ? 0 : global.JSON_UNESCAPED_SLASHES)
                 | (escapeUnicode ? 0 : global.JSON_UNESCAPED_UNICODE)
-                | (keepZeroFraction ? global.JSON_PRESERVE_ZERO_FRACTION : 0),
+                | (keepZeroFraction ? global.JSON_PRESERVE_ZERO_FRACTION : 0)
+                | (escapeHtml
+                    ? global.JSON_HEX_TAG | global.JSON_HEX_AMP | global.JSON_HEX_APOS | global.JSON_HEX_QUOT
+                    : 0),
             indent
         );
     }
 
-    private static Any? read(string json) => global.json_decode(json, true, 512, global.JSON_THROW_ON_ERROR);
+    // An empty object reads as an empty `Map` and an empty array as an empty `List`, which `encode` writes back as
+    // `{}` and `[]`.
+    private static Any? read(string json) => Internal.jsonDecode(json);
 }

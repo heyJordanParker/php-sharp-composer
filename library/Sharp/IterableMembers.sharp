@@ -3,7 +3,8 @@ namespace Sharp;
 import Sharp.Internal.Sequence;
 
 // The lazy operations of an `Iterable`, spec section 12, which read nothing until `toList()` or a loop reads the result.
-// Only a value typed `Iterable` has them: a `List`, a `Map` or a `Set` has its own members.
+// Every implementation of `Iterable` has them where it declares no member of the name, a plain PHP `Traversable` too,
+// and a `List`, a `Map` or a `Set` has its own members.
 public static class IterableMembers
 {
     extension<T>(Iterable<T> items)

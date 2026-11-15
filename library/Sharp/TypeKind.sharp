@@ -1,0 +1,20 @@
+namespace Sharp;
+
+// The kind of a type, as `Class<T>.kind()` gives it, spec section 25, as Rust's reflection enums name a type's kind.
+// Each kind has the members of `Class<T>` that take it apart.
+public enum TypeKind
+{
+    // A type with a name and its type arguments: a class, an interface, an enum or a built-in type, `int`, `List<int>`
+    // or `Crate<Mark>`: `typeArguments()` and `genericDefinition()`.
+    case Named;
+    // `Box<Tone>|Tone`: `unionMembers()`.
+    case Union;
+    // `Shippable & Billable`: `intersectionMembers()`.
+    case Intersection;
+    // `[string method, int count]`: `tupleElements()`.
+    case Tuple;
+    // `Function<int(string)>`: `parameterTypes()` and `returnType()`.
+    case Function;
+    // `TItem` of `Crate<TItem : Mark>`, read on `typeof(Crate)`: `bound()`.
+    case TypeParameter;
+}

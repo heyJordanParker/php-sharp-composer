@@ -1,0 +1,13 @@
+namespace Sharp;
+
+// An element of a tuple type, as `Class<T>.tupleElements()` gives it, spec section 25: its name, or null for an element
+// written without one, and its type. The engine creates it.
+public class TupleElement
+{
+    internal TupleElement(public string? name { get; }, public Class<Any?> type { get; }) { }
+
+    // Two values are one element when they have one name, or none, and one type, as two tuple types with them are one.
+    public static bool operator ==(TupleElement a, TupleElement b) => a.name == b.name && a.type == b.type;
+
+    public int hash() => global.crc32((this.name ?? "") + ":" + this.type.name());
+}

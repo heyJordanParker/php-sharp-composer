@@ -1,37 +1,65 @@
 namespace Sharp;
 
+import PropertyHookType;
 import ReflectionAttribute;
 import ReflectionMethod;
+import ReflectionProperty;
 
 // A method a class declares, as `Class<T>.methods()` gives it, spec section 25: the class that declares it, its name,
-// whether it is static, its visibility, the class value of its result type without `?`, whether the result type is
-// nullable, and its parameters, as .NET's MethodInfo and Kotlin's KFunction give them. The engine creates it.
+// its modifiers, its visibility, its result type as declared, `void` for a `void` method, and its parameters, as .NET's
+// MethodInfo and Kotlin's KFunction give them. A method is virtual when a subclass may replace it: a PHP# one that is
+// `virtual`, `abstract` or an `override` not `final`, and a plain PHP one PHP doesn't mark `final` or `private`, spec
+// section 22. The engine creates it, for the class value it was read from.
 public class Method
 {
     internal Method(
+        private Class<Any?> readOn,
         public Class<Object> declaringClass { get; },
         public string name { get; },
         public bool isStatic { get; },
+        public bool isVirtual { get; },
+        public bool isAbstract { get; },
+        public bool isOverride { get; },
         public Visibility visibility { get; },
         public Class<Any?> type { get; },
-        public bool isNullable { get; },
         private List<Parameter> declared
     ) { }
+
+    // Two values are one method when they name it in the class that declares it, as C#'s MethodInfo compares, so a
+    // `Map<Method, V>` keys by the method whenever `methods()` read it.
+    public static bool operator ==(Method a, Method b) => a.declaringClass == b.declaringClass && a.name == b.name;
+
+    public int hash() => global.crc32(this.declaringClass.name() + "::" + this.name);
 
     // The method's parameters, in order.
     public List<Parameter> parameters() => this.declared;
 
     // The result of the method called on `receiver` with `arguments`, as .NET's MethodInfo.Invoke and Kotlin's
     // KCallable.call give it. The calling code reaches the method as a direct call would, and each argument is checked
-    // against its parameter's type there. A method that isn't private runs the receiver's override. The call may run
-    // any code, so it may have every effect, spec section 29.
-    public Any? invoke(Object receiver, List<Any?> arguments)
-        => Internal.invoke(receiver, this.declaringClass, this.name, arguments);
+    // against its parameter's type there. A method that isn't private runs the receiver's override. A static method
+    // takes a null receiver, and runs on the class it was read from, as `ValueEntity.make()` does, and an instance method
+    // given null throws InvalidArgumentException. The call may run any code, so it may have every effect, spec section 29.
+    public Any? invoke(Object? receiver, List<Any?> arguments)
+        => Internal.invoke(receiver, this.declaringClass, this.name, arguments, this.readOn);
 
     // The attributes of the method of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
     public List<TAttribute> attributes<TAttribute : Object>()
-        => new ReflectionMethod(this.declaringClass, this.name)
+        => this.reflected()
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
             .map(attribute => attribute.newInstance());
+
+    // PHP's reflection of the method, and of a property's accessor, named `$name::get` or `$name::set` as PHP 8.4 names
+    // a property hook, through its property, which alone reaches the hook.
+    private ReflectionMethod reflected()
+    {
+        if (!global.str_starts_with(this.name, "$")) {
+            return new ReflectionMethod(this.declaringClass, this.name);
+        }
+        const parts = global.explode("::", global.substr(this.name, 1));
+        const kind = parts[1] == "get" ? PropertyHookType.Get : PropertyHookType.Set;
+
+        return new ReflectionProperty(this.declaringClass, parts[0]).getHook(kind)
+            ?? throw new ValueError("The engine gave an accessor its property does not run.");
+    }
 }

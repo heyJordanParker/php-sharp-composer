@@ -1,0 +1,32 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionMethod;
+
+// The constructor of a class, as `Class<T>.constructor()` gives it, spec section 25: its visibility and its parameters,
+// as .NET's ConstructorInfo gives them apart from its methods. `Class<T>.createInstance()` runs it. The engine creates
+// it.
+public class Constructor
+{
+    internal Constructor(
+        private Class<Object> declaringClass,
+        public Visibility visibility { get; },
+        private List<Parameter> declared
+    ) { }
+
+    // Two values are one constructor when one class declares both, as C#'s ConstructorInfo compares, PHP's class having
+    // one.
+    public static bool operator ==(Constructor a, Constructor b) => a.declaringClass == b.declaringClass;
+
+    public int hash() => global.crc32(this.declaringClass.name() + "::__construct");
+
+    // The constructor's parameters, in order, promoted or not.
+    public List<Parameter> parameters() => this.declared;
+
+    // The attributes of the constructor of the class `TAttribute` or of a class that extends or implements it, as
+    // `Class<T>.attributes()` gives a class's.
+    public List<TAttribute> attributes<TAttribute : Object>()
+        => new ReflectionMethod(this.declaringClass, "__construct")
+            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance());
+}

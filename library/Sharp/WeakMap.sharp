@@ -1,0 +1,36 @@
+namespace Sharp;
+
+import WeakMap as PhpWeakMap;
+
+// A map that keys by object identity and keeps no key alive, as .NET's ConditionalWeakTable and PHP's WeakMap: an
+// entry leaves the map once nothing else holds its key, spec section 12. A `Map` keys by `==` and `hash()` instead, and
+// keeps every key, as Rust's HashMap does.
+public class WeakMap<TKey : Object, TValue>
+{
+    private PhpWeakMap<TKey, TValue> entries = new PhpWeakMap();
+
+    // The value of `key`, or null when the map holds no entry for it.
+    public TValue? get(TKey key) => this.entries.offsetExists(key) ? this.entries.offsetGet(key) : null;
+
+    // Sets the value of `key`, in place of the value it had.
+    public void set(TKey key, TValue value)
+    {
+        this.entries.offsetSet(key, value);
+    }
+
+    public bool containsKey(TKey key) => this.entries.offsetExists(key);
+
+    // Removes the entry of `key`, and whether the map held one.
+    public bool remove(TKey key)
+    {
+        if (!this.entries.offsetExists(key)) {
+            return false;
+        }
+        this.entries.offsetUnset(key);
+
+        return true;
+    }
+
+    // How many entries the map holds, each of a key something else still holds.
+    public int count() => this.entries.count();
+}

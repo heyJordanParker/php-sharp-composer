@@ -1,0 +1,31 @@
+namespace Sharp;
+
+import ReflectionAttribute;
+import ReflectionEnumUnitCase;
+import UnitEnum;
+
+// A case of an enum, as `Class<T>.enumCases()` gives it, spec section 25: its name, the case itself, as .NET's
+// FieldInfo.GetValue gives an enum's value, and its backing value, the int or the string, null for a pure enum's. The
+// engine creates it.
+public class EnumCase
+{
+    internal EnumCase(
+        public string name { get; },
+        public Object value { get; },
+        public Any? backingValue { get; }
+    ) { }
+
+    // Two values are one case when they name it in one enum, as C#'s FieldInfo compares.
+    public static bool operator ==(EnumCase a, EnumCase b) => Class.of(a.value) == Class.of(b.value) && a.name == b.name;
+
+    public int hash() => global.crc32(Class.of(this.value).name() + "::" + this.name);
+
+    // The attributes of the case of the class `TAttribute` or of a class that extends or implements it, as
+    // `Class<T>.attributes()` gives a class's and .NET reads an enum field's.
+    public List<TAttribute> attributes<TAttribute : Object>()
+        => this.value is UnitEnum unit
+            ? new ReflectionEnumUnitCase(unit, this.name)
+                .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
+                .map(attribute => attribute.newInstance())
+            : [];
+}

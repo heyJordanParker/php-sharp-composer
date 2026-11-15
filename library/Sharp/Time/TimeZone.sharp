@@ -4,14 +4,14 @@ import DateTimeImmutable;
 import DateTimeZone;
 
 // A region's rules for its clocks, named exactly as the IANA time zone database names it, such as "Europe/Sofia", or
-// by one of its older names, such as "Europe/Kiev", as Java's ZoneId.of takes them. The name is the zone's one field,
-// so two zones of one name are `==`.
+// by one of its older names, such as "Europe/Kiev", or a fixed offset from UTC, such as "+03:00", as Java's ZoneId.of
+// and Kotlin's TimeZone.of take them. The name is the zone's one field, so two zones of one name are `==`.
 public struct TimeZone
 {
     public TimeZone(public string name { get; })
     {
-        if (!TimeZone.databaseNames.contains(name)) {
-            throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", and "${name}" is not one. \`TimeZone.tryOf\` gives null for it instead.`);
+        if (!TimeZone.isName(name)) {
+            throw new ValueError(`\`TimeZone\` takes a name from the time zone database, such as "Europe/Sofia", or an offset from -18:00 to +18:00, such as "+03:00", and "${name}" is neither. \`TimeZone.tryOf\` gives null for it instead.`);
         }
     }
 
@@ -19,7 +19,11 @@ public struct TimeZone
 
     public static List<string> names() => global.array_values(global.timezone_identifiers_list());
 
-    public static TimeZone? tryOf(string name) => TimeZone.databaseNames.contains(name) ? new TimeZone(name) : null;
+    public static TimeZone? tryOf(string name) => TimeZone.isName(name) ? new TimeZone(name) : null;
+
+    // Whether `name` is a name of the database, or an offset written `+HH:MM` or `-HH:MM` within Java's ±18:00.
+    private static bool isName(string name)
+        => TimeZone.databaseNames.contains(name) || global.preg_match("/\\A[+-](?:(?:0[0-9]|1[0-7]):[0-5][0-9]|18:00)\\z/", name) == 1;
 
     // How far the zone's clocks are ahead of UTC at `instant`.
     public Duration offsetAt(Instant instant) => Duration.ofSeconds(this.rules().getOffset(DateTimeImmutable.createFromTimestamp(instant.epochSeconds)));

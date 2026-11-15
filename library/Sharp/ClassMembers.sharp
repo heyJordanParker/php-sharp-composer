@@ -1,12 +1,29 @@
 namespace Sharp;
 
+import BackedEnum;
 import ReflectionAttribute;
 import ReflectionClass;
 import Sharp.Internal;
 
 extern Internal.methods;
 extern Internal.properties;
+extern Internal.constructor;
+extern Internal.createInstance;
+extern Internal.createLazy;
 extern Internal.typeArguments;
+extern Internal.typeKind;
+extern Internal.isNullable;
+extern Internal.nonNullable;
+extern Internal.typeParts;
+extern Internal.tupleNames;
+extern Internal.genericDefinition;
+extern Internal.typeParameters;
+extern Internal.baseType;
+extern Internal.interfaces;
+extern Internal.classFacts;
+extern Internal.enumBackingType;
+extern Internal.enumCases;
+extern Internal.makeGenericType;
 
 public static class ClassMembers
 {
@@ -28,63 +45,247 @@ public static class ClassMembers
         default => throw new ValueError("The engine gave a visibility that is no access modifier."),
     };
 
+    // The words the engine gives of a member's modifiers, each after a space.
+    private static List<string> words(string text) => global.explode(" ", text);
+
+    // The parameters of a method or a constructor as the engine gives them, after the row of the method itself: each
+    // parameter's name, type, "optional" or "" and "variadic" or "", in order.
+    private static List<Parameter> parameters(List<List<string>> rows)
+    {
+        List<Parameter> parameters = [];
+        for (const parameter of rows.slice(1)) {
+            parameters.add(new Parameter(
+                ClassMembers.declaringClass(rows[0][0]),
+                rows[0][1],
+                parameters.count(),
+                parameter[0],
+                ClassMembers.classValue(parameter[1]),
+                parameter[2] == "optional",
+                parameter[3] == "variadic"
+            ));
+        }
+
+        return parameters;
+    }
+
+    // A method of `readOn` as the engine gives it: first the class that declares it, its name, its result type, its
+    // modifier words, each after a space, and its access modifier, then its parameters. `Property.getter()` and
+    // `Property.setter()` read a property's accessors through it.
+    internal static Method method(Class<Any?> readOn, List<List<string>> rows)
+    {
+        const words = ClassMembers.words(rows[0][3]);
+
+        return new Method(
+            readOn,
+            ClassMembers.declaringClass(rows[0][0]),
+            rows[0][1],
+            words.contains("static"),
+            words.contains("virtual"),
+            words.contains("abstract"),
+            words.contains("override"),
+            ClassMembers.visibility(rows[0][4]),
+            ClassMembers.classValue(rows[0][2]),
+            ClassMembers.parameters(rows)
+        );
+    }
+
+    // A property of `readOn` as the engine gives it: the class that declares it, its name, its type, its access modifier
+    // and its words, each after a space: what writes it, "set" or "init" and the access modifier that reaches it, none
+    // for a get-only property, then its modifiers.
+    private static Property property(Class<Any?> readOn, List<string> declared)
+    {
+        const words = ClassMembers.words(declared[4]);
+        const writer = words.indexOfFirst(word => word == "set" || word == "init");
+
+        return new Property(
+            readOn,
+            ClassMembers.declaringClass(declared[0]),
+            declared[1],
+            ClassMembers.visibility(declared[3]),
+            ClassMembers.classValue(declared[2]),
+            writer == null ? null : ClassMembers.visibility(words[writer + 1]),
+            words.contains("init"),
+            words.contains("static"),
+            words.contains("virtual"),
+            words.contains("abstract"),
+            words.contains("override")
+        );
+    }
+
+    // The one value a member of `type` gives for a type of the kind `kind`, its first part, or OutOfRangeException with
+    // `message`, as `List.first()` throws when nothing matches.
+    private static Class<Any?> part(Class<Any?> type, TypeKind kind, string message)
+        => type.kind() == kind
+            ? ClassMembers.classValue(Internal.typeParts(type)[0])
+            : throw new OutOfRangeException(message + " " + type.name() + " is none.");
+
     // `type` when it is a `Class<Object>`, the class value of a class, an interface or an enum, spec section 25, and null
     // for the class value of a type that is no class, as the root bound `Object`, `int` or `List<int>`, which PHP declares
     // no class for. Each member that hands a class value to PHP's reflection reads it through this, so such a type has no
     // members, and filters no attributes.
     internal static Class<T>? declared<T>(Class<T> type) => type is Class<Object> ? type : null;
 
-    // The members of the class value of any type, a class's and `int`'s alike.
+    // The members of the class value of any type, a class's and `int`'s alike, which take the type apart, spec section 25,
+    // as C#'s `System.Type` does. A member of one kind of type gives `[]` for a type of any other kind, or throws
+    // `OutOfRangeException` where it gives one value. Each reads the type without its `?`, but `isNullable()` and
+    // `nonNullable()`.
     extension(Class<Any?> type)
     {
         // The type's full name as PHP# writes it, spec section 25: `App.Orders.Counted`, and `List<string>` for a type
-        // that is no class. A class value holds a class's name as PHP writes it, `App\Orders\Counted`.
-        public string name() => global.str_replace("\\", ".", type);
+        // that is no class. A class value holds a class's name as PHP writes it, `App\Orders\Counted`. A type parameter's
+        // is its name, `TItem`. `typeof(List)`, `typeof(Map)` and `typeof(Set)` hold the engine's class of the
+        // collection, and their names are the collection's, as `List` for `List<int>`'s `genericDefinition()`.
+        public string name()
+            => type == typeof(List) ? "List"
+                : type == typeof(Map) ? "Map"
+                : type == typeof(Set) ? "Set"
+                : global.str_replace("\\", ".", type);
 
-        // The type arguments of the type, as `[typeof(string), typeof(int)]` for `Map<string, int>`, and none for a
-        // type that has none.
+        public TypeKind kind() => match (Internal.typeKind(type))
+        {
+            "Named" => TypeKind.Named,
+            "Union" => TypeKind.Union,
+            "Intersection" => TypeKind.Intersection,
+            "Tuple" => TypeKind.Tuple,
+            "Function" => TypeKind.Function,
+            "TypeParameter" => TypeKind.TypeParameter,
+            default => throw new ValueError("The engine gave a type kind TypeKind has no case for."),
+        };
+
+        // Whether the type takes null: `int?`, `Box<Tone>?` and a union that holds null.
+        public bool isNullable() => Internal.isNullable(type);
+
+        // The type without null, as C#'s `Nullable.GetUnderlyingType`: `typeof(int)` for `int?`.
+        public Class<Any?> nonNullable() => ClassMembers.classValue(Internal.nonNullable(type));
+
+        // The type arguments of a class or a built-in type, each whole: `[typeof(string), typeof(Box<int>?)]` for
+        // `Map<string, Box<int>?>`.
         public List<Class<Any?>> typeArguments() => Internal.typeArguments(type).map(ClassMembers.classValue);
+
+        // The generic type without its type arguments, as C#'s `GetGenericTypeDefinition`: `typeof(List)` for
+        // `List<int>`, and null for a type that declares no type parameter.
+        public Class<Any?>? genericDefinition()
+            => Internal.genericDefinition(type) is string definition ? ClassMembers.classValue(definition) : null;
+
+        // The type parameters a generic type declares, each of the kind TypeParameter, as C#'s `GetGenericArguments` on
+        // a definition: `[TItem]` for `typeof(Crate)`.
+        public List<Class<Any?>> typeParameters() => Internal.typeParameters(type).map(ClassMembers.classValue);
+
+        // A type parameter's bound, as C#'s `GetGenericParameterConstraints`: `Any?` where none is written.
+        public Class<Any?> bound() => ClassMembers.part(type, TypeKind.TypeParameter, "`bound` reads a type parameter, and");
+
+        // A union's members. Null is never one, and `isNullable()` holds it.
+        public List<Class<Any?>> unionMembers()
+            => type.kind() == TypeKind.Union ? Internal.typeParts(type).map(ClassMembers.classValue) : [];
+
+        // An intersection's members, `[typeof(Shippable), typeof(Billable)]` for `Shippable & Billable`, as
+        // TypeScript's `IntersectionType.types` gives them.
+        public List<Class<Any?>> intersectionMembers()
+            => type.kind() == TypeKind.Intersection ? Internal.typeParts(type).map(ClassMembers.classValue) : [];
+
+        // A tuple's elements, each with its name, or null for an element written without one.
+        public List<TupleElement> tupleElements()
+            => type.kind() != TypeKind.Tuple ? [] : Internal.tupleNames(type).zip(Internal.typeParts(type)).map(
+                element => new TupleElement(element[0], ClassMembers.classValue(element[1]))
+            );
+
+        // A function type's parameter types, as C#'s delegate `Invoke` signature gives them.
+        public List<Class<Any?>> parameterTypes()
+            => type.kind() == TypeKind.Function ? Internal.typeParts(type).slice(1).map(ClassMembers.classValue) : [];
+
+        // A function type's result type.
+        public Class<Any?> returnType()
+            => ClassMembers.part(type, TypeKind.Function, "`returnType` reads a function type, and");
+
+        // The generic type with `arguments`, as C#'s `MakeGenericType`: `typeof(List).makeGenericType([typeof(Order)])`
+        // is `typeof(List<Order>)`. Throws InvalidArgumentException on another count of arguments than the type has
+        // type parameters, and on an argument outside its parameter's bound.
+        public Class<Any?> makeGenericType(List<Class<Any?>> arguments)
+            => ClassMembers.classValue(Internal.makeGenericType(type, arguments));
     }
 
     extension<T>(Class<T> type)
     {
-        // The instance properties and fields of the class, its own first and then those it inherits, in the order they
-        // are declared, private ones included, as an ORM or a serializer reads them, spec section 25.
+        // The properties and fields of the class, its own first and then those it inherits, in the order they are
+        // declared, at every visibility, its statics included, as an ORM or a serializer reads them, spec section 25.
         public List<Property> properties()
-            => ClassMembers.declared(type) == null ? [] : Internal.properties(type).map(
-                declared => new Property(
-                    ClassMembers.declaringClass(declared[0]),
-                    declared[1],
-                    ClassMembers.visibility(declared[4]),
-                    ClassMembers.classValue(declared[2]),
-                    declared[3] == "?"
-                )
-            );
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.properties(type).map(declared => ClassMembers.property(type, declared));
 
         // The instance and static methods of the class, its own first and then those it inherits, in the order they
-        // are declared, private ones included, without its constructor, spec section 25.
+        // are declared, at every visibility, without its constructor, spec section 25.
         public List<Method> methods()
-            => ClassMembers.declared(type) == null ? [] : Internal.methods(type).map(
-                rows => new Method(
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.methods(type).map(rows => ClassMembers.method(type, rows));
+
+        // The class's constructor, its own or the one it inherits, as C#'s `GetConstructors()` gives PHP's one, or null
+        // for a class that has none.
+        public Constructor? constructor()
+        {
+            if (ClassMembers.declared(type) == null) {
+                return null;
+            }
+            const rows = Internal.constructor(type);
+
+            return rows == null
+                ? null
+                : new Constructor(
                     ClassMembers.declaringClass(rows[0][0]),
-                    rows[0][1],
-                    rows[0][4] == "static",
-                    ClassMembers.visibility(rows[0][5]),
-                    ClassMembers.classValue(rows[0][2]),
-                    rows[0][3] == "?",
-                    rows.slice(1).map(
-                        parameter => new Parameter(
-                            ClassMembers.declaringClass(rows[0][0]),
-                            rows[0][1],
-                            parameter[0],
-                            ClassMembers.classValue(parameter[1]),
-                            parameter[2] == "?",
-                            parameter[3] == "optional",
-                            parameter[4] == "variadic"
-                        )
-                    )
-                )
-            );
+                    ClassMembers.visibility(rows[0][4]),
+                    ClassMembers.parameters(rows)
+                );
+        }
+
+        // A new object of the class, with the class value's type arguments, created by its constructor with
+        // `arguments`, as C#'s `Activator.CreateInstance` creates one. The calling code reaches the constructor as a
+        // direct `new` would. Throws InvalidArgumentException for an abstract class, an interface or an enum, and for
+        // arguments the constructor's parameters don't take.
+        public T createInstance(List<Any?> arguments) => Internal.createInstance(type, arguments);
+
+        // A new lazy object of the class, with the class value's type arguments, created empty with no constructor run,
+        // as PHP 8.4's `ReflectionClass::newLazyGhost` creates one: `initialize` runs on it at its first property read or
+        // write, as Doctrine loads an entity, and a property `Property.setBeforeLoad` wrote reads without it. Throws
+        // InvalidArgumentException for an abstract class, an interface or an enum, and for a class that extends one of
+        // PHP's own.
+        public T createLazy(Function<void(T)> initialize) => Internal.createLazy(type, initialize);
+
+        // The class the class extends, with the type arguments it gives it, as C#'s `Type.BaseType`, or null.
+        public Class<Any?>? baseType()
+            => ClassMembers.declared(type) != null && Internal.baseType(type) is string base
+                ? ClassMembers.classValue(base)
+                : null;
+
+        // The interfaces the class implements, its own and those it inherits, each with the type arguments it gives it,
+        // as C#'s `GetInterfaces()`.
+        public List<Class<Any?>> interfaces()
+            => ClassMembers.declared(type) == null ? [] : Internal.interfaces(type).map(ClassMembers.classValue);
+
+        // Whether the class is abstract, an interface included, as C#'s `IsAbstract`.
+        public bool isAbstract() => ClassMembers.declared(type) != null && Internal.classFacts(type)[0];
+
+        public bool isInterface() => ClassMembers.declared(type) != null && Internal.classFacts(type)[1];
+
+        // Whether the class is a struct, spec section 10, as C#'s `IsValueType`.
+        public bool isStruct() => ClassMembers.declared(type) != null && Internal.classFacts(type)[2];
+
+        public bool isEnum() => ClassMembers.declared(type) != null && Internal.classFacts(type)[3];
+
+        // The type an enum's cases are backed by, `int` or `string`, as C#'s `Enum.GetUnderlyingType`, or null for a pure
+        // enum and any other class.
+        public Class<Any?>? enumBackingType()
+            => ClassMembers.declared(type) != null && Internal.enumBackingType(type) is string backing
+                ? ClassMembers.classValue(backing)
+                : null;
+
+        // An enum's cases, in the order they are declared, as C# reads an enum's fields.
+        public List<EnumCase> enumCases()
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.enumCases(type).map(
+                    found => new EnumCase(found.name, found, found is BackedEnum backed ? backed.value : null)
+                );
 
         public List<TAttribute> attributes<TAttribute : Object>()
             => ClassMembers.declared(type) == null ? [] : new ReflectionClass(type)
