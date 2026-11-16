@@ -22,6 +22,10 @@ public static class StringMembers
 
         public int length() => global.mb_strlen(text, "UTF-8");
 
+        public bool isEmpty() => global.strlen(text) == 0;
+
+        public bool isNotEmpty() => global.strlen(text) != 0;
+
         public string substring(int start, int? end = null)
         {
             const stop = end ?? text.length();
