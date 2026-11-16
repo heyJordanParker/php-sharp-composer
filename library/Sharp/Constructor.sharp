@@ -2,6 +2,7 @@ namespace Sharp;
 
 import ReflectionAttribute;
 import ReflectionMethod;
+import Sharp.Internal.CreatesAttributes;
 
 // The constructor of a class, as `Class<T>.constructor()` gives it, spec section 25: its visibility and its parameters,
 // as .NET's ConstructorInfo gives them apart from its methods. `Class<T>.createInstance()` runs it. The engine creates
@@ -25,6 +26,7 @@ public class Constructor
 
     // The attributes of the constructor of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
+    [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => new ReflectionMethod(this.declaringClass, "__construct")
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)

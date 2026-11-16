@@ -2,6 +2,7 @@ namespace Sharp;
 
 import ReflectionAttribute;
 import ReflectionParameter;
+import Sharp.Internal.CreatesAttributes;
 
 // A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, its type as declared, whether
 // it is optional, which it is when a call may leave it out, whether it is variadic, and its default value, as .NET's
@@ -44,6 +45,7 @@ public class Parameter
 
     // The attributes of the parameter of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
+    [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => new ReflectionParameter([this.declaringClass, this.method], this.name)
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)

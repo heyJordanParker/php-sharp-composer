@@ -1,13 +1,10 @@
 namespace Sharp;
 
-import ReflectionAttribute;
-import ReflectionClass;
-import ReflectionMethod;
-import ReflectionProperty;
+import Sharp.Internal.CreatesAttributes;
 
 extern Internal.accessors;
 
-// A property or field a class declares, as `Class<T>.properties()` gives it, spec section 25: the class that declares
+// A property a class declares, as `Class<T>.properties()` gives it, spec section 25: the class that declares
 // it, its name, its visibility, its type as declared, the visibility that reaches its `set` or `init`, null for a
 // get-only one, whether it has an `init`, and its modifiers, as .NET's PropertyInfo and Kotlin's KProperty give them.
 // A property is virtual when a subclass may replace it, as `Method.isVirtual` says. The engine creates it, for the class
@@ -46,19 +43,9 @@ public class Property
     // any code, so the write may have every effect, spec section 29.
     public void set(Object? receiver, Any? value) => Internal.write(receiver, this.declaringClass, this.name, value);
 
-    // Whether the property holds a value on `receiver`, as Kotlin's `::prop.isInitialized` reads a `lateinit` and PHP's
-    // `ReflectionProperty::isInitialized` reads it: false for a `late` property no code has set, and for a property of
-    // a lazy object `createLazy` made that has not loaded and `setBeforeLoad` did not write, which the read does not
-    // load, as PHP's `ReflectionProperty::isLazy` reads it, since PHP's `isInitialized` loads the object. A computed
-    // property always holds one. There is no reset, as Kotlin has none: a `late` property is set once.
-    public bool isInitialized(Object receiver)
-    {
-        const property = new ReflectionProperty(this.declaringClass, this.name);
-
-        return new ReflectionClass(receiver).isUninitializedLazyObject(receiver)
-            ? !property.isLazy(receiver)
-            : property.isInitialized(receiver);
-    }
+    // Whether the property holds a value on `receiver`, as `ClassMembers.isInitialized` reads it: false for a `late`
+    // property no code has set, and for one of a lazy object that has not loaded, which the read does not load.
+    public bool isInitialized(Object receiver) => ClassMembers.isInitialized(this.declaringClass, this.name, receiver);
 
     // The `get` accessor of a property that runs one, as C#'s `PropertyInfo.GetMethod` and PHP's
     // `ReflectionProperty::getHook` give it, named `$name::get` as PHP names a property hook, or null for a plain stored
@@ -82,42 +69,18 @@ public class Property
     public void setBeforeLoad(Object receiver, Any? value)
         => Internal.write(receiver, this.declaringClass, this.name, value, true);
 
-    // Whether the declaration gives the property an initial value, constant or not, as C#'s and Kotlin's reflection
-    // read a declared initializer.
-    public bool hasDefaultValue
-        => new ReflectionClass(this.declaringClass).hasMethod(this.name + "#initial")
-            || (this.stored() is ReflectionProperty property && property.hasDefaultValue());
+    // Whether the declaration gives the property an initial value, constant or not, as `ClassMembers.hasDefaultValue`
+    // reads it.
+    public bool hasDefaultValue => ClassMembers.hasDefaultValue(this.declaringClass, this.name);
 
-    // The initial value the declaration gives the property, as `hasDefaultValue` reads it. One that is not constant runs
-    // on each read, as `Parameter.defaultValue()` runs a default that is not constant, so `= new Draft()` gives a new
-    // Draft each time. A property with none throws `OutOfRangeException`, as `Parameter.defaultValue()` does.
-    public Any? defaultValue()
-    {
-        const initial = this.name + "#initial";
-        if (new ReflectionClass(this.declaringClass).hasMethod(initial)) {
-            return new ReflectionMethod(this.declaringClass, initial).invoke(null);
-        }
-        if (this.stored() is ReflectionProperty property && property.hasDefaultValue()) {
-            return property.getDefaultValue();
-        }
-
-        throw new OutOfRangeException(
-            "`defaultValue` reads a property that has a default, and `" + this.name + "` has none."
-        );
-    }
+    // The initial value the declaration gives the property, as `ClassMembers.defaultValue` gives it: one that is not
+    // constant runs on each read, so `= new Draft()` gives a new Draft each time, and a property with none throws
+    // `OutOfRangeException`.
+    public Any? defaultValue() => ClassMembers.defaultValue(this.declaringClass, this.name);
 
     // The attributes of the property of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
+    [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => this.stored()
-            ?.getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-            .map(attribute => attribute.newInstance())
-            ?? [];
-
-    // PHP's reflection of the property's storage, or null for a static whose class keeps none, as a computed one, see
-    // `Class<T>.properties()`.
-    private ReflectionProperty? stored()
-        => new ReflectionClass(this.declaringClass).hasProperty(this.name)
-            ? new ReflectionProperty(this.declaringClass, this.name)
-            : null;
+        => ClassMembers.memberAttributes<TAttribute>(this.declaringClass, this.name);
 }

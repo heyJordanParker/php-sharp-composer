@@ -4,6 +4,7 @@ import PropertyHookType;
 import ReflectionAttribute;
 import ReflectionMethod;
 import ReflectionProperty;
+import Sharp.Internal.CreatesAttributes;
 
 // A method a class declares, as `Class<T>.methods()` gives it, spec section 25: the class that declares it, its name,
 // its modifiers, its visibility, its result type as declared, `void` for a `void` method, and its parameters, as .NET's
@@ -44,6 +45,7 @@ public class Method
 
     // The attributes of the method of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
+    [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => this.reflected()
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)

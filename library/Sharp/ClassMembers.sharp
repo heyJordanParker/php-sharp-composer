@@ -3,7 +3,10 @@ namespace Sharp;
 import BackedEnum;
 import ReflectionAttribute;
 import ReflectionClass;
+import ReflectionMethod;
+import ReflectionProperty;
 import Sharp.Internal;
+import Sharp.Internal.CreatesAttributes;
 
 extern Internal.methods;
 extern Internal.properties;
@@ -90,9 +93,9 @@ public static class ClassMembers
         );
     }
 
-    // A property of `readOn` as the engine gives it: the class that declares it, its name, its type, its access modifier
-    // and its words, each after a space: what writes it, "set" or "init" and the access modifier that reaches it, none
-    // for a get-only property, then its modifiers.
+    // A property or a field of `readOn` as the engine gives it: the class that declares it, its name, its type, its
+    // access modifier and its words, each after a space: what writes it, "set" or "init" and the access modifier that
+    // reaches it, none for a get-only property, then its modifiers, and last "field" for a field.
     private static Property property(Class<Any?> readOn, List<string> declared)
     {
         const words = ClassMembers.words(declared[4]);
@@ -112,6 +115,83 @@ public static class ClassMembers
             words.contains("override")
         );
     }
+
+    // Whether a member `readOn` gives as `property` reads it is a field.
+    private static bool isField(List<string> declared) => ClassMembers.words(declared[4]).contains("field");
+
+    // Whether a member `readOn` gives as `property` reads it is storage a `Field` reads, spec section 25: a field, or an
+    // auto-property that is neither `virtual` nor `abstract`, spec section 6.1, which runs no accessor.
+    private static bool isStorage(Class<Any?> readOn, List<string> declared)
+    {
+        if (ClassMembers.isField(declared)) {
+            return true;
+        }
+        const words = ClassMembers.words(declared[4]);
+        const accessors = Internal.accessors(readOn, declared[1]);
+
+        return !words.contains("virtual") && !words.contains("abstract") && accessors[0] == null && accessors[1] == null;
+    }
+
+    // The storage of a member as the engine gives it, see `property`.
+    private static Field field(List<string> declared)
+        => new Field(
+            ClassMembers.declaringClass(declared[0]),
+            declared[1],
+            ClassMembers.visibility(declared[3]),
+            ClassMembers.classValue(declared[2]),
+            ClassMembers.words(declared[4]).contains("static")
+        );
+
+    // Whether the property or field `name` that `declaring` declares holds a value on `receiver`, as Kotlin's
+    // `::prop.isInitialized` reads a `lateinit` and PHP's `ReflectionProperty::isInitialized` reads it: false for a
+    // `late` one no code has set, and for one of a lazy object `createLazy` made that has not loaded and
+    // `setBeforeLoad` did not write, which the read does not load, as PHP's `ReflectionProperty::isLazy` reads it, since
+    // PHP's `isInitialized` loads the object. A computed property always holds one. There is no reset, as Kotlin has
+    // none: a `late` member is set once.
+    internal static bool isInitialized(Class<Object> declaring, string name, Object receiver)
+    {
+        const property = new ReflectionProperty(declaring, name);
+
+        return new ReflectionClass(receiver).isUninitializedLazyObject(receiver)
+            ? !property.isLazy(receiver)
+            : property.isInitialized(receiver);
+    }
+
+    // Whether the declaration of the property or field `name` that `declaring` declares gives it an initial value,
+    // constant or not, as C#'s and Kotlin's reflection read a declared initializer.
+    internal static bool hasDefaultValue(Class<Object> declaring, string name)
+        => new ReflectionClass(declaring).hasMethod(name + "#initial")
+            || (ClassMembers.stored(declaring, name) is ReflectionProperty property && property.hasDefaultValue());
+
+    // The initial value the declaration of the property or field `name` that `declaring` declares gives it, as
+    // `hasDefaultValue` reads it. One that is not constant runs on each read, as `Parameter.defaultValue()` runs a
+    // default that is not constant, so `= new Draft()` gives a new Draft each time. A member with none throws
+    // `OutOfRangeException`, as `Parameter.defaultValue()` does.
+    internal static Any? defaultValue(Class<Object> declaring, string name)
+    {
+        const initial = name + "#initial";
+        if (new ReflectionClass(declaring).hasMethod(initial)) {
+            return new ReflectionMethod(declaring, initial).invoke(null);
+        }
+        if (ClassMembers.stored(declaring, name) is ReflectionProperty property && property.hasDefaultValue()) {
+            return property.getDefaultValue();
+        }
+
+        throw new OutOfRangeException("`defaultValue` reads a property that has a default, and `" + name + "` has none.");
+    }
+
+    // The attributes of the property or field `name` that `declaring` declares of the class `TAttribute` or of a class
+    // that extends or implements it, as `Class<T>.attributes()` gives a class's.
+    internal static List<TAttribute> memberAttributes<TAttribute : Object>(Class<Object> declaring, string name)
+        => ClassMembers.stored(declaring, name)
+            ?.getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
+            .map(attribute => attribute.newInstance())
+            ?? [];
+
+    // PHP's reflection of the storage of the property or field `name` that `declaring` declares, or null for a static
+    // whose class keeps none, as a computed one, see `properties()`.
+    private static ReflectionProperty? stored(Class<Object> declaring, string name)
+        => new ReflectionClass(declaring).hasProperty(name) ? new ReflectionProperty(declaring, name) : null;
 
     // The one value a member of `type` gives for a type of the kind `kind`, its first part, or OutOfRangeException with
     // `message`, as `List.first()` throws when nothing matches.
@@ -207,12 +287,26 @@ public static class ClassMembers
 
     extension<T>(Class<T> type)
     {
-        // The properties and fields of the class, its own first and then those it inherits, in the order they are
-        // declared, at every visibility, its statics included, as an ORM or a serializer reads them, spec section 25.
+        // The properties of the class, auto-properties, ones with accessors and computed ones, and no field, its own
+        // first and then those it inherits, in the order they are declared, at every visibility, its statics included,
+        // as .NET's `GetProperties()` gives them, spec section 25.
         public List<Property> properties()
             => ClassMembers.declared(type) == null
                 ? []
-                : Internal.properties(type).map(declared => ClassMembers.property(type, declared));
+                : Internal.properties(type)
+                    .filter(declared => !ClassMembers.isField(declared))
+                    .map(declared => ClassMembers.property(type, declared));
+
+        // What the class's objects store, as an ORM or a serializer reads it, spec section 25: each field and the storage
+        // of each auto-property that is neither `virtual` nor `abstract`, its own first and then those it inherits, in
+        // the order they are declared, at every visibility, its statics included, as .NET's `GetFields()` reaches an
+        // auto-property's backing field.
+        public List<Field> fields()
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.properties(type)
+                    .filter(declared => ClassMembers.isStorage(type, declared))
+                    .map(ClassMembers.field);
 
         // The instance and static methods of the class, its own first and then those it inherits, in the order they
         // are declared, at every visibility, without its constructor, spec section 25.
@@ -303,6 +397,7 @@ public static class ClassMembers
                     found => new EnumCase(found.name, found, found is BackedEnum backed ? backed.value : null)
                 );
 
+        [CreatesAttributes]
         public List<TAttribute> attributes<TAttribute : Object>()
             => ClassMembers.declared(type) == null ? [] : new ReflectionClass(type)
                 .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)

@@ -2,6 +2,7 @@ namespace Sharp;
 
 import ReflectionAttribute;
 import ReflectionEnumUnitCase;
+import Sharp.Internal.CreatesAttributes;
 import UnitEnum;
 
 // A case of an enum, as `Class<T>.enumCases()` gives it, spec section 25: its name, the case itself, as .NET's
@@ -22,6 +23,7 @@ public class EnumCase
 
     // The attributes of the case of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's and .NET reads an enum field's.
+    [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => this.value is UnitEnum unit
             ? new ReflectionEnumUnitCase(unit, this.name)

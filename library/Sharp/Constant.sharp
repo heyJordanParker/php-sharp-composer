@@ -2,6 +2,7 @@ namespace Sharp;
 
 import ReflectionAttribute;
 import ReflectionClassConstant;
+import Sharp.Internal.CreatesAttributes;
 
 extern Internal.constant;
 
@@ -29,6 +30,7 @@ public class Constant
 
     // The attributes of the constant of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
+    [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => new ReflectionClassConstant(this.declaringClass, this.name)
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
