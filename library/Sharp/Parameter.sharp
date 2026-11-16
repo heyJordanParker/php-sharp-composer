@@ -31,7 +31,7 @@ public class Parameter
     // value, a required or a variadic one, throws `OutOfRangeException`, as `List.first()` does when nothing matches.
     public Any? defaultValue()
     {
-        const parameter = new ReflectionParameter([this.declaringClass, this.method], this.name);
+        const parameter = this.reflected();
         if (!parameter.isDefaultValueAvailable())
         {
             throw new OutOfRangeException(
@@ -47,7 +47,13 @@ public class Parameter
     // `Class<T>.attributes()` gives a class's.
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => new ReflectionParameter([this.declaringClass, this.method], this.name)
+        => this.reflected()
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
             .map(attribute => attribute.newInstance());
+
+    // PHP's reflection of the parameter, through its method's, so a property accessor's `value` is reached as the
+    // accessor is.
+    private ReflectionParameter reflected()
+        => ClassMembers.reflectedMethod(this.declaringClass, this.method).getParameters()[this.position]
+            ?? throw new ValueError("The engine gave a parameter its method does not take.");
 }

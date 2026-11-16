@@ -1,9 +1,6 @@
 namespace Sharp;
 
-import PropertyHookType;
 import ReflectionAttribute;
-import ReflectionMethod;
-import ReflectionProperty;
 import Sharp.Internal.CreatesAttributes;
 
 // A method a class declares, as `Class<T>.methods()` gives it, spec section 25: the class that declares it, its name,
@@ -47,21 +44,7 @@ public class Method
     // `Class<T>.attributes()` gives a class's.
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => this.reflected()
+        => ClassMembers.reflectedMethod(this.declaringClass, this.name)
             .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
             .map(attribute => attribute.newInstance());
-
-    // PHP's reflection of the method, and of a property's accessor, named `$name::get` or `$name::set` as PHP 8.4 names
-    // a property hook, through its property, which alone reaches the hook.
-    private ReflectionMethod reflected()
-    {
-        if (!global.str_starts_with(this.name, "$")) {
-            return new ReflectionMethod(this.declaringClass, this.name);
-        }
-        const parts = global.explode("::", global.substr(this.name, 1));
-        const kind = parts[1] == "get" ? PropertyHookType.Get : PropertyHookType.Set;
-
-        return new ReflectionProperty(this.declaringClass, parts[0]).getHook(kind)
-            ?? throw new ValueError("The engine gave an accessor its property does not run.");
-    }
 }
