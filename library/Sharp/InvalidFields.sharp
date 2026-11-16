@@ -8,7 +8,8 @@ public class InvalidFields : ValueError
     {
         let message = "";
         for (const [path, problem] of fields) {
-            message = message == "" ? `${path}: ${problem}` : `${message}; ${path}: ${problem}`;
+            const part = path == "" ? problem : `${path}: ${problem}`;
+            message = message == "" ? part : `${message}; ${part}`;
         }
         return message;
     }

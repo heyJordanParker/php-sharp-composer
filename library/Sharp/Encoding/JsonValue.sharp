@@ -12,6 +12,10 @@ public struct JsonValue : JsonSerializable
 {
     public JsonValue(public Any? value { get; }) { }
 
+    // Any value, as a field `parse` reads gives it, spec section 10: a `JsonValue` field holds the value under its key,
+    // whatever JSON value it is.
+    public static JsonValue parse(Any? value) => new JsonValue(value);
+
     public static bool operator ==(JsonValue a, JsonValue b) => Internal.equals(a.value, b.value);
 
     // Equal values are of one kind, a number of either kind, so they hash alike.

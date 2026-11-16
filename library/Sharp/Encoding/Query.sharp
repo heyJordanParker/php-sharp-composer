@@ -1,0 +1,15 @@
+namespace Sharp.Encoding;
+
+import Sharp.Internal;
+import Sharp.Internal.ParsesTypeArgument;
+import Sharp.Net.Url;
+
+public static class Query
+{
+    // The value of type `T` that query text holds, as `Query.decode<Search>("q=shoes&page=2")` reads it, spec section
+    // 24: each field read as `Json.decode` reads it, but a number or a bool from its text, through its type's
+    // `parse(string)`, so `page=2` is the `int` 2. A list field reads PHP's repeated `tags[]=a&tags[]=b`. It throws one
+    // `InvalidFields` that lists every bad field.
+    [ParsesTypeArgument]
+    public static T decode<T>(string query) => Internal.parseAs(typeof(T), Url.parseQuery(query), true);
+}

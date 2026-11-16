@@ -2,8 +2,11 @@ namespace Sharp;
 
 import Attribute;
 
-[Attribute(Attribute.TARGET_PARAMETER | Attribute.TARGET_PROPERTY)]
+// Spec section 10: on a field `parse` reads, the key `parse` reads it from and `Json.encode` writes it under, the field's
+// own name when `name` is null. `omitNull` leaves the key out when the value is null, and a missing key reads as null.
+// On a class or an enum case below a `[Tag]` family, `name` is the variant's name in the data, which it must give.
+[Attribute(Attribute.TARGET_PARAMETER | Attribute.TARGET_PROPERTY | Attribute.TARGET_CLASS | Attribute.TARGET_CLASS_CONSTANT)]
 public class Key
 {
-    public Key(public string name { get; }) { }
+    public Key(public string? name { get; } = null, public bool omitNull { get; } = false) { }
 }

@@ -1,0 +1,12 @@
+namespace Sharp;
+
+import Attribute;
+
+// Spec section 10: on a sealed interface, an abstract class or an enum whose cases carry data, the key whose value
+// names the variant, as `[Tag("type")]` reads and writes `{"type": "card", …}`. Each variant that can be created gives
+// its name with `[Key("card")]`.
+[Attribute(Attribute.TARGET_CLASS)]
+public class Tag
+{
+    public Tag(public string key { get; }) { }
+}

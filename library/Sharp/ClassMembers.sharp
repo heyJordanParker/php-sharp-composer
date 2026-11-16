@@ -28,6 +28,7 @@ extern Internal.enumBackingType;
 extern Internal.enumCases;
 extern Internal.constants;
 extern Internal.makeGenericType;
+extern Internal.withTag;
 
 public static class ClassMembers
 {
@@ -345,6 +346,11 @@ public static class ClassMembers
         // InvalidArgumentException for an abstract class, an interface or an enum, and for a class that extends one of
         // PHP's own.
         public T createLazy(Function<void(T)> initialize) => Internal.createLazy(type, initialize);
+
+        // The variant of the family the class is whose `[Key]` is `tag`, spec section 10, or null for a name it has no
+        // variant of, and for a class that is no family. It is pure, so a single-table-inheritance base builds the row's
+        // class with `new (typeof(Self).withTag(row.type) ?? throw …)(…)`.
+        public Class<T>? withTag(string tag) => Internal.withTag(type, tag) is string variant ? variant as Class<T> : null;
 
         // The class the class extends, with the type arguments it gives it, as C#'s `Type.BaseType`, or null.
         public Class<Any?>? baseType()

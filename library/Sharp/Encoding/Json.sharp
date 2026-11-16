@@ -6,6 +6,7 @@ import Sharp.Internal.ParsesTypeArgument;
 
 extern Internal.jsonEncode;
 extern Internal.jsonDecode;
+extern Internal.parseAs;
 
 public static class Json
 {
@@ -13,18 +14,11 @@ public static class Json
     // that is no JSON.
     public static JsonValue parse(string json) => new JsonValue(Json.read(json));
 
-    // The struct or PHP# class `T` that JSON text holds, read by `T.parse`, which throws one error that lists every bad
-    // field (spec section 10).
+    // The value of type `T` that JSON text holds, any type a field `parse` reads can hold, as `List<Payment>`: each
+    // struct, class, family and enum case in it built as a field of `T` reads it. It throws one `InvalidFields` that
+    // lists every bad part (spec section 10). A number or a bool must be one in the JSON, so `"2"` is no `int`.
     [ParsesTypeArgument]
-    public static T decode<T>(string json)
-    {
-        const value = Json.read(json);
-        if (!global.is_array(value) && !global.is_object(value)) {
-            throw new ValueError("Json.decode: the JSON text holds no object, and a struct or a class is read from one");
-        }
-
-        return T.parse(value);
-    }
+    public static T decode<T>(string json) => Internal.parseAs(typeof(T), Json.read(json), false);
 
     // JSON text of the value. By default `/` stays `/`, each character outside ASCII stays itself and `1.0` stays
     // `1.0`. `escapeSlashes` writes `/` as `\/`, `escapeUnicode` writes each character outside ASCII as `\u` and its
