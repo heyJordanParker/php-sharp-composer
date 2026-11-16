@@ -1,0 +1,126 @@
+namespace Sharp.IO;
+
+import ZipArchive as PhpZipArchive;
+
+// A ZIP archive on disk, as .NET's ZipArchive and ZipFile: its entries are listed, read as text, added from text or
+// from a file, and extracted to a folder. The changes reach the file when `close()` runs, as .NET's Dispose writes
+// them. Each member reads or writes files, so code that calls one has the effect `Files`. A failure throws
+// `RuntimeException` with the archive's path and libzip's reason.
+public class ZipArchive
+{
+    private ZipArchive(private PhpZipArchive archive, private string path) { }
+
+    // The archive at `path`, to read and to add to, as .NET's ZipFile.Open in Update mode.
+    public static ZipArchive open(string path) => ZipArchive.opened(path, 0, "ZipArchive.open");
+
+    // A new archive at `path` with no entries, in place of any file there, as .NET's File.Create replaces one. It is
+    // written by `close()`, an empty one too.
+    public static ZipArchive create(string path)
+    {
+        const created = ZipArchive.opened(path, PhpZipArchive.CREATE | PhpZipArchive.OVERWRITE, "ZipArchive.create");
+        if (!created.archive.setArchiveFlag(PhpZipArchive.AFL_CREATE_OR_KEEP_FILE_FOR_EMPTY_ARCHIVE, 1)) {
+            throw created.failure(`ZipArchive.create: "${path}" cannot be created`);
+        }
+
+        return created;
+    }
+
+    // The name of each entry, in the archive's order, as .NET's Entries. A folder's entry ends in "/".
+    public List<string> list()
+    {
+        List<string> names = [];
+        for (let index = 0; index < this.archive.count(); index++) {
+            names.add(this.archive.getNameIndex(index) is string name ? name : throw this.failure(`ZipArchive.list: "${this.path}" cannot be read`));
+        }
+
+        return names;
+    }
+
+    // The text of the entry `name`, null when the archive has none, as Files.read gives null for a missing file.
+    public string? read(string name)
+    {
+        if (this.archive.locateName(name) is not int) {
+            this.archive.clearError();
+            return null;
+        }
+
+        return this.archive.getFromName(name) is string contents ? contents : throw this.failure(`ZipArchive.read: "${name}" in "${this.path}" cannot be read`);
+    }
+
+    // Adds the entry `name` holding `contents`, in place of an entry of that name, as Files.write replaces a file.
+    public void write(string name, string contents)
+    {
+        if (!this.archive.addFromString(name, contents)) {
+            throw this.failure(`ZipArchive.write: "${name}" cannot be added to "${this.path}"`);
+        }
+    }
+
+    // Adds the entry `name` holding the file at `file`, read now, in place of an entry of that name, as .NET's
+    // CreateEntryFromFile.
+    public void addFile(string file, string name)
+    {
+        if (!global.is_file(file)) {
+            throw new RuntimeException(`ZipArchive.addFile: "${file}" is not a file`);
+        }
+        if (!this.archive.addFile(file, name, 0, 0, PhpZipArchive.FL_OVERWRITE | PhpZipArchive.FL_OPEN_FILE_NOW)) {
+            throw this.failure(`ZipArchive.addFile: "${file}" cannot be added to "${this.path}"`);
+        }
+    }
+
+    // Writes each entry into `directory`, an entry added since the archive opened too, creating the folder and each
+    // entry's folders and replacing a file of the entry's name, as .NET's ExtractToDirectory with overwriting.
+    public void extractTo(string directory)
+    {
+        const names = this.list();
+        if (!this.archive.extractTo(directory, names.isEmpty() ? null : names)) {
+            throw this.failure(`ZipArchive.extractTo: "${this.path}" cannot be extracted to "${directory}"`);
+        }
+    }
+
+    // Writes the changes to the file and closes the archive, as .NET's Dispose. A member called after it throws
+    // `ValueError`.
+    public void close()
+    {
+        if (!this.archive.close()) {
+            throw this.failure(`ZipArchive.close: "${this.path}" cannot be written`);
+        }
+    }
+
+    private static ZipArchive opened(string path, int flags, string member)
+    {
+        const archive = new PhpZipArchive();
+        const result = archive.open(path, flags);
+        if (result is int code) {
+            throw new RuntimeException(`${member}: "${path}" cannot be opened: ${ZipArchive.reason(code)}`);
+        }
+        if (result == false) {
+            throw new RuntimeException(`${member}: "${path}" cannot be opened`);
+        }
+
+        return new ZipArchive(archive, path);
+    }
+
+    // libzip's text for each failure of opening an archive, which PHP's ZipArchive::open gives as its code alone.
+    private static string reason(int code)
+        => [
+            PhpZipArchive.ER_EXISTS: "File already exists",
+            PhpZipArchive.ER_INCONS: "Zip archive inconsistent",
+            PhpZipArchive.ER_INVAL: "Invalid argument",
+            PhpZipArchive.ER_MEMORY: "Malloc failure",
+            PhpZipArchive.ER_NOENT: "No such file",
+            PhpZipArchive.ER_NOZIP: "Not a zip archive",
+            PhpZipArchive.ER_OPEN: "Can't open file",
+            PhpZipArchive.ER_READ: "Read error",
+            PhpZipArchive.ER_SEEK: "Seek error",
+        ].get(code) ?? `libzip error ${code}`;
+
+    // The exception `message` with libzip's reason. A failure outside libzip, as a folder that cannot be created, has
+    // none, and PHP's warning names it.
+    private RuntimeException failure(string message)
+    {
+        const reason = this.archive.status == PhpZipArchive.ER_OK ? "" : `: ${this.archive.getStatusString()}`;
+        this.archive.clearError();
+
+        return new RuntimeException(message + reason);
+    }
+}

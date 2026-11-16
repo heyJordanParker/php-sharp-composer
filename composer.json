@@ -13,6 +13,7 @@
         "composer-plugin-api": "^2.0",
         "ext-bcmath": "*",
         "ext-intl": "*",
+        "ext-zip": "*",
         "psr/container": "^2.0",
         "psr/event-dispatcher": "^1.0"
     },
