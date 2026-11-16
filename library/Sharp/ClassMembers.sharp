@@ -3,7 +3,6 @@ namespace Sharp;
 import BackedEnum;
 import ReflectionAttribute;
 import ReflectionClass;
-import ReflectionMethod;
 import ReflectionProperty;
 import Sharp.Internal;
 import Sharp.Internal.CreatesAttributes;
@@ -11,6 +10,7 @@ import Sharp.Internal.CreatesAttributes;
 extern Internal.methods;
 extern Internal.properties;
 extern Internal.constructor;
+extern Internal.initial;
 extern Internal.createInstance;
 extern Internal.createLazy;
 extern Internal.typeArguments;
@@ -161,7 +161,7 @@ public static class ClassMembers
     // Whether the declaration of the property or field `name` that `declaring` declares gives it an initial value,
     // constant or not, as C#'s and Kotlin's reflection read a declared initializer.
     internal static bool hasDefaultValue(Class<Object> declaring, string name)
-        => new ReflectionClass(declaring).hasMethod(name + "#initial")
+        => Internal.initial(declaring, name) != null
             || (ClassMembers.stored(declaring, name) is ReflectionProperty property && property.hasDefaultValue());
 
     // The initial value the declaration of the property or field `name` that `declaring` declares gives it, as
@@ -170,9 +170,9 @@ public static class ClassMembers
     // `OutOfRangeException`, as `Parameter.defaultValue()` does.
     internal static Any? defaultValue(Class<Object> declaring, string name)
     {
-        const initial = name + "#initial";
-        if (new ReflectionClass(declaring).hasMethod(initial)) {
-            return new ReflectionMethod(declaring, initial).invoke(null);
+        const initial = Internal.initial(declaring, name);
+        if (initial != null) {
+            return initial();
         }
         if (ClassMembers.stored(declaring, name) is ReflectionProperty property && property.hasDefaultValue()) {
             return property.getDefaultValue();
