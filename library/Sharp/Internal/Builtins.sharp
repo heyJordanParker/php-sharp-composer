@@ -53,6 +53,7 @@ import Dom.NodeList;
 import Dom.ParentNode;
 import Dom.Text;
 import Dom.TokenList;
+import Dom.XMLDocument;
 import DateTimeImmutable;
 import DateTimeInterface;
 import DateTimeZone;
