@@ -88,21 +88,21 @@ public static class ListMembers
 
         public Map<TKey, T> associateBy<TKey>(Function<TKey(T)> key) => Internal.associateBy(items, key);
 
-        // A tuple key, as `p => [p.last, p.first]` gives, orders element by element, as Rust orders tuples.
+        // A tuple key, as `p => [p.last, p.first]` gives, orders element by element.
         public List<T> sortedBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.sortedBy(items, selector);
 
         public List<T> sortedByDescending<TKey>([ComparedByOrder] Function<TKey(T)> selector)
             => Internal.sortedByDescending(items, selector);
 
-        // The comparison gives below 0 when its first element goes before its second, as Kotlin's sortedWith.
+        // The comparison gives below 0 when its first element goes before its second.
         public List<T> sortedWith(Function<int(T, T)> comparison) => Internal.sortedWith(items, comparison);
 
-        // The first element of the smallest key, as Kotlin's minBy.
+        // The first element of the smallest key.
         public T minBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.minBy(items, selector);
 
         public T maxBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.maxBy(items, selector);
 
-        // Each pair of elements at one index, as long as the shorter list, as Kotlin's zip.
+        // Each pair of elements at one index, as long as the shorter list.
         public List<[T, TOther]> zip<TOther>(List<TOther> other)
         {
             List<[T, TOther]> pairs = [];
@@ -112,7 +112,7 @@ public static class ListMembers
             return pairs;
         }
 
-        // Each run of `size` elements in a row, in order, as Kotlin's windowed(size), so none for a size past the length.
+        // Each run of `size` elements in a row, in order, so none for a size past the length.
         public List<List<T>> windowed(int size)
         {
             if (size < 1) {
@@ -125,7 +125,7 @@ public static class ListMembers
             return windows;
         }
 
-        // The elements the predicate matches, then the others, each in order, as Kotlin's partition.
+        // The elements the predicate matches, then the others, each in order.
         public [List<T>, List<T>] partition(Function<bool(T)> predicate)
         {
             List<T> matches = [];
@@ -140,8 +140,8 @@ public static class ListMembers
             return [matches, others];
         }
 
-        // In a list sorted by the comparison, the index of an element it gives 0 for, or null when none, as Kotlin's
-        // binarySearch(comparison) and Rust's binary_search_by. It gives an element's order against what is sought.
+        // In a list sorted by the comparison, the index of an element it gives 0 for, or null when none. It gives an
+        // element's order against what is sought.
         public int? binarySearch(Function<int(T)> comparison)
         {
             let low = 0;
@@ -162,7 +162,7 @@ public static class ListMembers
         }
 
         // In a list where the predicate holds for each element before the first it fails for, that element's index, or
-        // the count when it holds for all, as Rust's partition_point: where a sought element goes.
+        // the count when it holds for all: where a sought element goes.
         public int partitionPoint(Function<bool(T)> predicate)
         {
             let low = 0;
@@ -208,8 +208,7 @@ public static class ListMembers
 
         public void insert(int index, T value) => Internal.insert(list, index, value);
 
-        // `list[i] = v` runs it, as Kotlin's runs `operator fun set`, and it gives the element it replaced, as Kotlin's
-        // does.
+        // `list[i] = v` runs it, and it gives the element it replaced.
         public T set(int index, T value) => Internal.set(list, index, value);
 
         [SearchesElements]
@@ -223,7 +222,7 @@ public static class ListMembers
 
         public void clear() => Internal.clear(list);
 
-        // Removes each element the predicate matches, and gives whether it removed one, as Kotlin's removeAll.
+        // Removes each element the predicate matches, and gives whether it removed one.
         public bool removeAll(Function<bool(T)> predicate)
         {
             const count = list.count();

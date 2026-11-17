@@ -2,8 +2,8 @@ namespace Sharp;
 
 import BcMath.Number;
 
-// An integer of any size, as .NET's BigInteger and Java's BigInteger. `/` and `%` round toward 0, as an `int`'s do, so
-// -7 / 2 is -3 and -7 % 2 is -1, and a divisor of 0 throws `DivisionByZeroError`. It runs on PHP's BcMath\Number.
+// An integer of any size. `/` and `%` round toward 0, as an `int`'s do, so -7 / 2 is -3 and -7 % 2 is -1, and a
+// divisor of 0 throws `DivisionByZeroError`. It runs on PHP's BcMath\Number.
 public struct BigInteger
 {
     private BigInteger(private Number number { get; }) { }
@@ -35,15 +35,13 @@ public struct BigInteger
 
     public int hash() => global.crc32(this.number.value);
 
-    // The number to the power `exponent`, as .NET's BigInteger.Pow. A negative exponent throws `ArithmeticError`, as
-    // an `int`'s `**` does.
+    // The number to the power `exponent`. A negative exponent throws `ArithmeticError`, as an `int`'s `**` does.
     public BigInteger pow(int exponent)
         => exponent < 0
             ? throw new ArithmeticError(`BigInteger.pow: ${exponent} is a negative exponent, and an integer raised to it is no integer`)
             : new BigInteger(this.number.pow(exponent));
 
-    // The digits in `radix`, from 2 to 36, with the letters a to z past 9, as .NET's ToString and Java's
-    // toString(radix): 255 in 16 is "ff".
+    // The digits in `radix`, from 2 to 36, with the letters a to z past 9: 255 in 16 is "ff".
     public string toString(int radix = 10)
     {
         if (radix < 2 || radix > 36) {
@@ -62,7 +60,7 @@ public struct BigInteger
         return this.number.compare(0) < 0 ? "-" + written : written;
     }
 
-    // The number as an `int`, or null past `Int.MAX` and `Int.MIN`, as Kotlin's toIntOrNull.
+    // The number as an `int`, or null past `Int.MAX` and `Int.MIN`.
     public int? toIntOrNull()
         => this.number.compare(Int.MAX) <= 0 && this.number.compare(Int.MIN) >= 0 ? global.intval(this.number.value) : null;
 }

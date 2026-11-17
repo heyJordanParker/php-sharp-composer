@@ -1,6 +1,6 @@
 namespace Sharp.Net;
 
-// The version of the Internet Protocol an `IpAddress` belongs to, as .NET's AddressFamily and Rust's IpAddr variants.
+// The version of the Internet Protocol an `IpAddress` belongs to.
 public enum IpFamily
 {
     // A 4-byte address, as `192.168.0.1`.

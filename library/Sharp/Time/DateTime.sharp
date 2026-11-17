@@ -2,7 +2,7 @@ namespace Sharp.Time;
 
 import DateTimeImmutable;
 
-// An instant as the clocks of a time zone show it, as JavaScript's Temporal.ZonedDateTime and Java's ZonedDateTime.
+// An instant as the clocks of a time zone show it.
 public struct DateTime
 {
     public DateTime(public Instant instant { get; }, public TimeZone zone { get; }) { }
@@ -19,7 +19,7 @@ public struct DateTime
 
     public int nanosecond => this.instant.nanosecond;
 
-    // The time of day on the zone's clocks, from one read of them, as .NET's DateTime.TimeOfDay.
+    // The time of day on the zone's clocks, from one read of them.
     public TimeOfDay timeOfDay
     {
         get
@@ -43,11 +43,11 @@ public struct DateTime
     // A plain PHP date at the same instant, in the zone, to the microsecond, as `Instant.toPhpDateTime` gives one.
     public DateTimeImmutable toPhpDateTime() => this.instant.toPhpDateTime().setTimezone(this.zone.rules());
 
-    // By the instant, then by the zone's name, so it gives 0 exactly when `==` is true, as Java's ZonedDateTime.compareTo.
+    // By the instant, then by the zone's name, so it gives 0 exactly when `==` is true.
     public static int operator <=>(DateTime a, DateTime b)
         => a.instant == b.instant ? a.zone.name <=> b.zone.name : a.instant <=> b.instant;
 
-    // ISO-8601 with the offset, then the zone's name, as RFC 9557 and Temporal write it: "2026-10-22T21:30:00+03:00[Europe/Sofia]".
+    // ISO-8601 with the offset, then the zone's name, as RFC 9557 writes it: "2026-10-22T21:30:00+03:00[Europe/Sofia]".
     public string toString() => `${this.toOffsetString()}[${this.zone.name}]`;
 
     // ISO-8601 with the offset and no zone, as RFC 3339 and PHP's date("c") write it: "2026-10-22T21:30:00+03:00".
@@ -59,7 +59,7 @@ public struct DateTime
     // The date and time of day `text` writes on the clocks of `zone`, with a space or a "T" between them, as a SQL
     // DATETIME column or an HTML datetime-local input gives them: "2026-10-22 21:30:00", "2026-10-22T21:30" or
     // "2026-10-22T21:30:00.250". A time the clocks show twice is the earlier instant, and one they skip is the time the
-    // gap's length later, as Java's ZonedDateTime.of resolves them.
+    // gap's length later.
     public static DateTime parseLocal(string text, TimeZone zone)
         => DateTime.tryParseLocal(text, zone) ?? throw new ValueError(`\`DateTime.parseLocal\` reads a date and a time of day, such as "2026-10-22 21:30:00", and "${text}" is not.`);
 
@@ -85,7 +85,7 @@ public struct DateTime
     public static DateTime parse(string text)
         => DateTime.tryParse(text) ?? throw new ValueError(`\`DateTime.parse\` reads ISO-8601 with an offset and a zone, such as "2026-10-22T21:30:00+03:00[Europe/Sofia]", and "${text}" is not.`);
 
-    // Null when the offset is not the zone's offset at that instant, as Temporal rejects it.
+    // Null when the offset is not the zone's offset at that instant, since the offset and the zone then disagree.
     public static DateTime? tryParse(string text)
     {
         if (global.strrpos(text, "[") is not int open || !global.str_ends_with(text, "]")) {

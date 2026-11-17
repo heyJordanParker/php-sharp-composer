@@ -1,6 +1,6 @@
 namespace Sharp.Time;
 
-// A month of the year, numbered from January, as Java's Month.
+// A month of the year, numbered from January.
 public enum Month : int
 {
     case January = 1;

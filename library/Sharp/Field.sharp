@@ -7,8 +7,8 @@ extern Internal.writeField;
 
 // The storage of a field a class declares, or of an auto-property that is neither `virtual` nor `abstract`, as
 // `Class<T>.fields()` gives it, spec section 25: the class that declares it, its name, its visibility, its type as
-// declared and whether it is static, as .NET's FieldInfo gives a field and an auto-property's backing field. A field is
-// storage, spec section 6, so reading and writing one runs no code a project wrote. The engine creates it.
+// declared and whether it is static. A field is storage, spec section 6, so reading and writing one runs no code a
+// project wrote. The engine creates it.
 public class Field
 {
     internal Field(
@@ -19,22 +19,22 @@ public class Field
         public bool isStatic { get; }
     ) { }
 
-    // Two values are one field when they name it in the class that declares it, as C#'s FieldInfo compares, so a
-    // `Map<Field, V>` keys by the field whenever `fields()` read it.
+    // Two values are one field when they name it in the class that declares it, so a `Map<Field, V>` keys by the field
+    // whenever `fields()` read it.
     public static bool operator ==(Field a, Field b) => a.declaringClass == b.declaringClass && a.name == b.name;
 
     public int hash() => global.crc32(this.declaringClass.name() + "::$" + this.name);
 
-    // The value the storage holds on `receiver`, as .NET's FieldInfo.GetValue gives it, and a static's, which takes
-    // null. The calling code reaches it as a direct read of the field or the property would. It runs no accessor, so a
-    // read is pure, spec section 29, and on a lazy object that has not loaded, or a static whose class's initial values
-    // have not run, it throws Error rather than run them. An instance field given null throws InvalidArgumentException.
+    // The value the storage holds on `receiver`, and a static's, which takes null. The calling code reaches it as a
+    // direct read of the field or the property would. It runs no accessor, so a read is pure, spec section 29, and on a
+    // lazy object that has not loaded, or a static whose class's initial values have not run, it throws Error rather
+    // than run them. An instance field given null throws InvalidArgumentException.
     public Any? get(Object? receiver) => Internal.readField(receiver, this.declaringClass, this.name);
 
-    // Writes `value` into the storage on `receiver`, or into a static's, which takes null, as .NET's FieldInfo.SetValue
-    // does. The calling code reaches it as a direct write of the field, or the property's `set` or `init`, would, and
-    // `value` is checked against its type there. An `init` property's storage takes a write only while it holds no
-    // value. It runs no accessor, so a write is pure, and throws Error where `get` does.
+    // Writes `value` into the storage on `receiver`, or into a static's, which takes null. The calling code reaches it
+    // as a direct write of the field, or the property's `set` or `init`, would, and `value` is checked against its type
+    // there. An `init` property's storage takes a write only while it holds no value. It runs no accessor, so a write
+    // is pure, and throws Error where `get` does.
     public void set(Object? receiver, Any? value) => Internal.writeField(receiver, this.declaringClass, this.name, value);
 
     // Whether the storage holds a value on `receiver`, as `Property.isInitialized` reads it.

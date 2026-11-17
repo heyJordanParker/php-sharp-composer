@@ -10,8 +10,8 @@ public static class Path
 
     public static string fileNameWithoutExtension(string path) => global.pathinfo(path, global.PATHINFO_FILENAME);
 
-    // The parts joined with "/", adding none after one already there, and starting again at an absolute part, as Rust's
-    // Path::join and .NET's Path.Combine do: Path.join("a", "/b", "c") is "/b/c".
+    // The parts joined with "/", adding none after one already there, and starting again at an absolute part:
+    // Path.join("a", "/b", "c") is "/b/c".
     public static string join(string first, string ...rest)
     {
         let path = first;
@@ -21,8 +21,8 @@ public static class Path
         return path;
     }
 
-    // The path from the root, joined to the current directory when it is relative, without its "." and ".." parts, as
-    // .NET's GetFullPath. It reads no disk, so a missing file has one too.
+    // The path from the root, joined to the current directory when it is relative, without its "." and ".." parts. It
+    // reads no disk, so a missing file has one too.
     public static string absolute(string path)
     {
         const current = global.getcwd();

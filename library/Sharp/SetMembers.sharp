@@ -39,7 +39,7 @@ public static class SetMembers
 
         public List<T> sortedBy<TKey>([ComparedByOrder] Function<TKey(T)> selector) => Internal.sortedBy(set, selector);
 
-        // The elements of either set, this set's first, each once, as Kotlin's union.
+        // The elements of either set, this set's first, each once.
         public Set<T> union(Set<T> other)
         {
             Set<T> united = set;
@@ -49,13 +49,13 @@ public static class SetMembers
             return united;
         }
 
-        // The elements of this set that the other holds too, in this set's order, as Kotlin's intersect.
+        // The elements of this set that the other holds too, in this set's order.
         public Set<T> intersect(Set<T> other) => Internal.filterElements(set, (T element) => Internal.containsKey(other, element));
 
-        // The elements of this set that the other doesn't hold, in order, as Kotlin's subtract.
+        // The elements of this set that the other doesn't hold, in order.
         public Set<T> subtract(Set<T> other) => Internal.filterElements(set, (T element) => !Internal.containsKey(other, element));
 
-        // Whether the other set holds every element of this one, as Rust's is_subset.
+        // Whether the other set holds every element of this one.
         public bool isSubsetOf(Set<T> other) => !Internal.any(set, (T element) => !Internal.containsKey(other, element));
     }
 

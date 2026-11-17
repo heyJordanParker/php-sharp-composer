@@ -1,7 +1,7 @@
 namespace Sharp;
 
-// The order an `int`'s bytes are written in, as Java's ByteOrder and Rust's to_be_bytes and to_le_bytes. Each case's
-// value is the letter of PHP's `pack` that writes 8 bytes in that order, which `int.toBytes` runs on.
+// The order an `int`'s bytes are written in. Each case's value is the letter of PHP's `pack` that writes 8 bytes in
+// that order, which `int.toBytes` runs on.
 public enum ByteOrder : string
 {
     // The most significant byte first, as networks write numbers.

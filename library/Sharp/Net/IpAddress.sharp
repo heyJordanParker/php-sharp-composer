@@ -1,7 +1,7 @@
 namespace Sharp.Net;
 
-// An IPv4 or IPv6 address, as .NET's IPAddress and Rust's IpAddr. It holds the address's bytes, so two texts of one
-// address, as `::1` and `0:0:0:0:0:0:0:1`, give `==` addresses.
+// An IPv4 or IPv6 address. It holds the address's bytes, so two texts of one address, as `::1` and
+// `0:0:0:0:0:0:0:1`, give `==` addresses.
 public struct IpAddress
 {
     private IpAddress(private string bytes { get; }) { }
@@ -14,12 +14,12 @@ public struct IpAddress
 
     public IpFamily family => global.strlen(this.bytes) == 4 ? IpFamily.V4 : IpFamily.V6;
 
-    // `127.0.0.0/8`, or `::1`, as Rust's is_loopback.
+    // `127.0.0.0/8`, or `::1`.
     public bool isLoopback()
         => this.family == IpFamily.V4 ? this.bytes.bytes()[0] == 127 : this.toString() == "::1";
 
     // `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` of RFC 1918, or an IPv6 unique local address, `fc00::/7` of
-    // RFC 4193, as Rust's is_private and is_unique_local.
+    // RFC 4193.
     public bool isPrivate()
     {
         const octets = this.bytes.bytes();

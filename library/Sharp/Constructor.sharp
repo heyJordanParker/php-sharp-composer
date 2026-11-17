@@ -5,8 +5,7 @@ import ReflectionMethod;
 import Sharp.Internal.CreatesAttributes;
 
 // The constructor of a class, as `Class<T>.constructor()` gives it, spec section 25: its visibility and its parameters,
-// as .NET's ConstructorInfo gives them apart from its methods. `Class<T>.createInstance()` runs it. The engine creates
-// it.
+// apart from its methods. `Class<T>.createInstance()` runs it. The engine creates it.
 public class Constructor
 {
     internal Constructor(
@@ -15,8 +14,7 @@ public class Constructor
         private List<Parameter> declared
     ) { }
 
-    // Two values are one constructor when one class declares both, as C#'s ConstructorInfo compares, PHP's class having
-    // one.
+    // Two values are one constructor when one class declares both, PHP's class having one.
     public static bool operator ==(Constructor a, Constructor b) => a.declaringClass == b.declaringClass;
 
     public int hash() => global.crc32(this.declaringClass.name() + "::__construct");

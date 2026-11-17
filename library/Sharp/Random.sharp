@@ -3,7 +3,7 @@ namespace Sharp;
 import Random.Engine.Mt19937;
 import Random.Randomizer;
 
-// Random values, as .NET's System.Random, through PHP's Randomizer. Seeded for a fake in tests, secure without a seed.
+// Random values, through PHP's Randomizer. Seeded for a fake in tests, secure without a seed.
 public foreign class Random
 {
     private Randomizer randomizer;

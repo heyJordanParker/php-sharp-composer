@@ -6,9 +6,8 @@ extern Internal.accessors;
 
 // A property a class declares, as `Class<T>.properties()` gives it, spec section 25: the class that declares
 // it, its name, its visibility, its type as declared, the visibility that reaches its `set` or `init`, null for a
-// get-only one, whether it has an `init`, and its modifiers, as .NET's PropertyInfo and Kotlin's KProperty give them.
-// A property is virtual when a subclass may replace it, as `Method.isVirtual` says. The engine creates it, for the class
-// value it was read from.
+// get-only one, whether it has an `init`, and its modifiers. A property is virtual when a subclass may replace it, as
+// `Method.isVirtual` says. The engine creates it, for the class value it was read from.
 public class Property
 {
     internal Property(
@@ -25,35 +24,33 @@ public class Property
         public bool isOverride { get; }
     ) { }
 
-    // Two values are one property when they name it in the class that declares it, as C#'s PropertyInfo compares, so a
-    // `Map<Property, V>` keys by the property whenever `properties()` read it.
+    // Two values are one property when they name it in the class that declares it, so a `Map<Property, V>` keys by the
+    // property whenever `properties()` read it.
     public static bool operator ==(Property a, Property b) => a.declaringClass == b.declaringClass && a.name == b.name;
 
     public int hash() => global.crc32(this.declaringClass.name() + "::$" + this.name);
 
-    // The property's value on `receiver`, as .NET's PropertyInfo.GetValue and Kotlin's KProperty1.get give it, and a
-    // static's, which takes null. The calling code reaches the property as a direct read would. A computed property runs
-    // its `get`, whose body may have any effect (spec section 6.1), so the read may have every effect, spec section 29.
-    // An instance property given null throws InvalidArgumentException.
+    // The property's value on `receiver`, and a static's, which takes null. The calling code reaches the property as a
+    // direct read would. A computed property runs its `get`, whose body may have any effect (spec section 6.1), so the
+    // read may have every effect, spec section 29. An instance property given null throws InvalidArgumentException.
     public Any? get(Object? receiver) => Internal.read(receiver, this.declaringClass, this.name);
 
-    // Writes `value` into the property on `receiver`, or into a static, which takes null, as .NET's
-    // PropertyInfo.SetValue and Kotlin's KMutableProperty1.set do. The calling code reaches the property as a direct
-    // write would, a get-only one included, and `value` is checked against the property's type there. A `set` may run
-    // any code, so the write may have every effect, spec section 29.
+    // Writes `value` into the property on `receiver`, or into a static, which takes null. The calling code reaches the
+    // property as a direct write would, a get-only one included, and `value` is checked against the property's type
+    // there. A `set` may run any code, so the write may have every effect, spec section 29.
     public void set(Object? receiver, Any? value) => Internal.write(receiver, this.declaringClass, this.name, value);
 
     // Whether the property holds a value on `receiver`, as `ClassMembers.isInitialized` reads it: false for a `late`
     // property no code has set, and for one of a lazy object that has not loaded, which the read does not load.
     public bool isInitialized(Object receiver) => ClassMembers.isInitialized(this.declaringClass, this.name, receiver);
 
-    // The `get` accessor of a property that runs one, as C#'s `PropertyInfo.GetMethod` and PHP's
-    // `ReflectionProperty::getHook` give it, named `$name::get` as PHP names a property hook, or null for a plain stored
-    // property, which is how code tells a property with accessors apart. Its `invoke` reads the property, as `get` does.
+    // The `get` accessor of a property that runs one, as PHP's `ReflectionProperty::getHook` gives it, named
+    // `$name::get` as PHP names a property hook, or null for a plain stored property, which is how code tells a property
+    // with accessors apart. Its `invoke` reads the property, as `get` does.
     public Method? getter() => this.accessor(0);
 
-    // The `set` accessor of a property that runs one, as C#'s `PropertyInfo.SetMethod` gives it, named `$name::set`, or
-    // null. Its `invoke` writes its one argument into the property, as `set` does.
+    // The `set` accessor of a property that runs one, named `$name::set`, or null. Its `invoke` writes its one argument
+    // into the property, as `set` does.
     public Method? setter() => this.accessor(1);
 
     private Method? accessor(int which)

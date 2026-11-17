@@ -2,9 +2,8 @@ namespace Sharp.System;
 
 import Sharp.Time.Duration;
 
-// This process and the programs it starts, as .NET's Environment.Exit, Process.RunAndCaptureText and Process.Start. A
-// program runs from an argument list, so no shell reads it. Its output goes to temporary files, so a program that
-// writes a lot never waits on a full pipe.
+// This process and the programs it starts. A program runs from an argument list, so no shell reads it. Its output goes
+// to temporary files, so a program that writes a lot never waits on a full pipe.
 public foreign class Process
 {
     // Ends the run with `code`, from 0 to 254, skipping every finally. PHP keeps 255 for its own fatal errors.
@@ -38,8 +37,8 @@ public foreign class Process
         return new ProcessResult(exitCode, this.written(output), this.written(errorOutput));
     }
 
-    // Starts `program` with `arguments` and returns while it runs, as .NET's Process.Start and Rust's Command::spawn,
-    // with its input a pipe the returned `ChildProcess` writes.
+    // Starts `program` with `arguments` and returns while it runs, with its input a pipe the returned `ChildProcess`
+    // writes.
     public ChildProcess start(string program, List<string> arguments = [])
     {
         const output = global.tmpfile();
@@ -80,7 +79,7 @@ public foreign class Process
         }
     }
 
-    // Ends the program with SIGKILL, as .NET's Process.Kill and Rust's Child::kill, unless it was waited for already.
+    // Ends the program with SIGKILL, unless it was waited for already.
     internal void kill(Any process)
     {
         if (global.is_resource(process)) {

@@ -2,9 +2,8 @@ namespace Sharp.IO;
 
 import SplFileObject;
 
-// Standard output, standard error and standard input, as .NET's Console. PHP# strings interpolate with `${}`, so no
-// member takes a format string. Every host has PHP's `php://` streams, a web server's included, where standard output
-// is the response.
+// Standard output, standard error and standard input. PHP# strings interpolate with `${}`, so no member takes a format
+// string. Every host has PHP's `php://` streams, a web server's included, where standard output is the response.
 public foreign class Console
 {
     // Standard input, opened by the first read, so each read takes the next line of the one stream.

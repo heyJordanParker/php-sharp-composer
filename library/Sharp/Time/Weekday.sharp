@@ -1,6 +1,6 @@
 namespace Sharp.Time;
 
-// A day of the week, numbered from Monday as ISO-8601 numbers it, as Java's DayOfWeek.
+// A day of the week, numbered from Monday as ISO-8601 numbers it.
 public enum Weekday : int
 {
     case Monday = 1;

@@ -2,10 +2,10 @@ namespace Sharp.Collections;
 
 import Sharp.Internal;
 
-// A queue whose element of the lowest priority leaves first, as .NET's PriorityQueue<TElement, TPriority>. It orders
-// the priorities by their `operator <=>`, as `<` orders two priorities, or by the comparison its constructor takes,
-// which gives below 0 when its first priority goes before its second. Elements of one priority leave in no set order.
-// It keeps a binary heap, so `enqueue` and `dequeue` take log n steps.
+// A queue whose element of the lowest priority leaves first. It orders the priorities by their `operator <=>`, as `<`
+// orders two priorities, or by the comparison its constructor takes, which gives below 0 when its first priority goes
+// before its second. Elements of one priority leave in no set order. It keeps a binary heap, so `enqueue` and
+// `dequeue` take log n steps.
 public class PriorityQueue<TElement, TPriority>
 {
     private Function<int(TPriority, TPriority)> order;
@@ -32,8 +32,7 @@ public class PriorityQueue<TElement, TPriority>
         }
     }
 
-    // The element of the lowest priority, which stays in the queue. An empty queue throws `UnderflowException`, as
-    // .NET's throws InvalidOperationException.
+    // The element of the lowest priority, which stays in the queue. An empty queue throws `UnderflowException`.
     public TElement peek()
         => this.heap.isEmpty() ? throw new UnderflowException("PriorityQueue.peek: the queue is empty") : this.heap[0].element;
 

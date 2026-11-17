@@ -2,7 +2,7 @@ namespace Sharp.Time;
 
 import DateTimeImmutable;
 
-// A point on the time line, in seconds and nanoseconds since 1970-01-01T00:00:00Z, as Kotlin's and Java's Instant.
+// A point on the time line, in seconds and nanoseconds since 1970-01-01T00:00:00Z.
 public struct Instant
 {
     public Instant(public int epochSeconds { get; }, public int nanosecond { get; } = 0)

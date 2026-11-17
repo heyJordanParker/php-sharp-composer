@@ -4,8 +4,8 @@ import PDO;
 import PDOStatement;
 import Sharp.Time.Duration;
 
-// A key-value store in a SQLite file, as .NET's IDistributedCache over a table. Values are strings, which also cover
-// bytes, so a structured value goes through `Json`. A failing store throws `PDOException`, a `RuntimeException`.
+// A key-value store in a SQLite file. Values are strings, which also cover bytes, so a structured value goes through
+// `Json`. A failing store throws `PDOException`, a `RuntimeException`.
 public foreign class Cache
 {
     private PDO store;

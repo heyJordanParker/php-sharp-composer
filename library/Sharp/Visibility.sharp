@@ -1,7 +1,6 @@
 namespace Sharp;
 
-// Who reaches a member, spec section 5, as `Method.visibility` and `Property.visibility` give it, as Kotlin's
-// KVisibility and .NET's MethodInfo give theirs.
+// Who reaches a member, spec section 5, as `Method.visibility` and `Property.visibility` give it.
 public enum Visibility
 {
     // Everyone.

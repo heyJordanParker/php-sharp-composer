@@ -58,11 +58,11 @@ public static class MapMembers
     {
         public bool remove([ComparedByEquality] TKey key) => Internal.removeKey(map, key);
 
-        // `map[key] = value` runs it, as Kotlin's runs `operator fun set`.
+        // `map[key] = value` runs it.
         public void set(TKey key, TValue value) => Internal.put(map, key, value);
 
-        // The value of the key, or, when the map holds no equal key, what `defaultValue` gives, set under the key first,
-        // as Kotlin's getOrPut. `defaultValue` runs only for a missing key.
+        // The value of the key, or, when the map holds no equal key, what `defaultValue` gives, set under the key first.
+        // `defaultValue` runs only for a missing key.
         public TValue getOrPut([ComparedByEquality] TKey key, Function<TValue()> defaultValue)
             => Internal.getOrPut(map, key, defaultValue);
     }

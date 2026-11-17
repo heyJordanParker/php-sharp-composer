@@ -4,12 +4,12 @@ import Sharp.Internal;
 
 extern Internal.resolve uses Dns;
 
-// The addresses a host name resolves to, as .NET's Dns.GetHostAddresses, through the system resolver, which reads the
-// hosts file before it asks a DNS server.
+// The addresses a host name resolves to, through the system resolver, which reads the hosts file before it asks a DNS
+// server.
 public foreign class Dns
 {
     // Each IPv4 and IPv6 address of the host, once, in the order the system resolver gives them. A host the resolver
-    // can't find throws `RuntimeException`, as .NET throws `SocketException`.
+    // can't find throws `RuntimeException`.
     public List<IpAddress> addresses(string host)
     {
         if (global.filter_var(host, global.FILTER_VALIDATE_DOMAIN, global.FILTER_FLAG_HOSTNAME) is not string) {

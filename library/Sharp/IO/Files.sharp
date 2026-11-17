@@ -2,7 +2,7 @@ namespace Sharp.IO;
 
 import Sharp.Time.Instant;
 
-// Whole files and folders, as .NET's File and Directory. A missing file is a returned null.
+// Whole files and folders. A missing file is a returned null.
 public foreign class Files
 {
     // null when the file doesn't exist.
@@ -109,11 +109,11 @@ public foreign class Files
     public string temporaryFile()
         => global.tempnam(global.sys_get_temp_dir(), "sharp") is string path ? path : throw new RuntimeException("Files.temporaryFile: no temporary file can be created");
 
-    // The folder temporary files go in, as Rust's env::temp_dir and .NET's Path.GetTempPath.
+    // The folder temporary files go in.
     public string temporaryDirectory() => global.sys_get_temp_dir();
 
     // The full path of each file and folder below the folder, a folder before its contents and each folder's entries
-    // in name order, read as a loop reaches them, as Kotlin's Path.walk. A link to a folder is given and not followed.
+    // in name order, read as a loop reaches them. A link to a folder is given and not followed.
     // null when the folder doesn't exist.
     public Iterable<string>? walk(string directory)
     {

@@ -2,8 +2,8 @@ namespace Sharp.Time;
 
 import DateTimeInterface;
 
-// A plain PHP date, such as the Carbon a Laravel model gives, as an `Instant` or a `DateTime`, as kotlinx-datetime's
-// toKotlinInstant. `Instant.toPhpDateTime` and `DateTime.toPhpDateTime` cross back. None of them reads the clock.
+// A plain PHP date, such as the Carbon a Laravel model gives, as an `Instant` or a `DateTime`.
+// `Instant.toPhpDateTime` and `DateTime.toPhpDateTime` cross back. None of them reads the clock.
 public static class DateTimeInterfaceMembers
 {
     extension(DateTimeInterface value)

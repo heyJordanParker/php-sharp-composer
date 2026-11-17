@@ -1,6 +1,6 @@
 namespace Sharp.Net;
 
-// One mailbox, with an optional display name, as .NET's MailAddress.
+// One mailbox, with an optional display name.
 public struct MailAddress
 {
     public MailAddress(public string address { get; }, public string? name { get; } = null)
@@ -14,7 +14,7 @@ public struct MailAddress
         }
     }
 
-    // Whether `address` is one mailbox's address, as .NET's MailAddress.TryCreate tells.
+    // Whether `address` is one mailbox's address.
     public static bool isValid(string address) => global.filter_var(address, global.FILTER_VALIDATE_EMAIL) is string;
 
     // The address as a mail header writes it, as `Ann <ann@example.com>`.

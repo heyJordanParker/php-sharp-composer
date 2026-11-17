@@ -38,8 +38,8 @@ public static class StringMembers
         }
 
         // Each member that takes `ignoreCase` compares the two texts with each character folded by Unicode's simple case
-        // folding, as Kotlin's `ignoreCase = true` and .NET's `OrdinalIgnoreCase` compare one character at a time, so a
-        // folded text keeps its length and an index into it is an index into the text.
+        // folding, one character at a time, so a folded text keeps its length and an index into it is an index into the
+        // text.
         public int? indexOf(string other, int from = 0, bool ignoreCase = false)
             => from < 0 || from > text.length()
                 ? throw new OutOfRangeException("`indexOf` starts inside the text, and the start is outside it.")
@@ -72,10 +72,10 @@ public static class StringMembers
         public bool equals(string other, bool ignoreCase = false)
             => StringMembers.folded(text, ignoreCase) == StringMembers.folded(other, ignoreCase);
 
-        // Each word with its first letter in title case and the rest in lowercase, as .NET's TextInfo.ToTitleCase.
+        // Each word with its first letter in title case and the rest in lowercase.
         public string titlecase() => global.mb_convert_case(text, global.MB_CASE_TITLE, "UTF-8");
 
-        // Whitespace, or each character of `characters`, removed from both ends, as Kotlin's `trim(vararg chars)`.
+        // Whitespace, or each character of `characters`, removed from both ends.
         public string trim(string? characters = null) => global.mb_trim(text, characters);
 
         public string trimStart(string? characters = null) => global.mb_ltrim(text, characters);
@@ -110,8 +110,8 @@ public static class StringMembers
                 ? throw new ValueError("`repeat` takes a count of 0 or more, and it is negative.")
                 : global.str_repeat(text, times);
 
-        // Every occurrence, or the first `limit` of them, as Rust's replacen. Empty text to replace occurs before each
-        // character and after the last, as Kotlin's and Rust's do, so `"ab".replace("", "-")` is `"-a-b-"`.
+        // Every occurrence, or the first `limit` of them. Empty text to replace occurs before each character and after
+        // the last, so `"ab".replace("", "-")` is `"-a-b-"`.
         public string replace(string old, string @new, int? limit = null)
         {
             if (limit is int count) {
@@ -135,9 +135,8 @@ public static class StringMembers
             return index < replaced ? written + @new : written;
         }
 
-        // A limit of 0 gives every part, and a positive one at most that many, the last holding the rest, as Kotlin's.
-        // An empty delimiter matches before each character and after the last, as Kotlin's does, so `"ab".split("")` is
-        // `["", "a", "b", ""]`.
+        // A limit of 0 gives every part, and a positive one at most that many, the last holding the rest. An empty
+        // delimiter matches before each character and after the last, so `"ab".split("")` is `["", "a", "b", ""]`.
         public List<string> split(string delimiter, int limit = 0)
         {
             if (limit < 0) {
@@ -187,22 +186,23 @@ public static class StringMembers
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];
 
-        // Each character class member is true when the text holds a character and every character is in the class, as
-        // Kotlin's and Rust's `char` members test one, so `"".isLetter()` is false.
+        // Each character class member is true when the text holds a character and every character is in the class, so
+        // `"".isLetter()` is false.
         public bool isLetter() => StringMembers.isEach(text, "\\p{L}", "isLetter");
 
         public bool isDigit() => StringMembers.isEach(text, "\\p{Nd}", "isDigit");
 
         public bool isLetterOrDigit() => StringMembers.isEach(text, "\\p{L}\\p{Nd}", "isLetterOrDigit");
 
-        // A separator or a control character Kotlin's `isWhitespace` takes, as a tab or a line break.
+        // A Unicode separator, or a tab, a line break, a vertical tab, a form feed, a carriage return or a control
+        // character from 0x1C to 0x1F.
         public bool isWhitespace() => StringMembers.isEach(text, "\\p{Z}\\t\\n\\x{0B}\\f\\r\\x{1C}-\\x{1F}", "isWhitespace");
 
         public bool isUppercase() => StringMembers.isEach(text, "\\p{Lu}", "isUppercase");
 
         public bool isLowercase() => StringMembers.isEach(text, "\\p{Ll}", "isLowercase");
 
-        // The text in a Unicode normalization form, C by default, as .NET's Normalize.
+        // The text in a Unicode normalization form, C by default.
         public string normalized(NormalizationForm form = NormalizationForm.C)
             => global.normalizer_normalize(text, form.value) is string normalized
                 ? normalized

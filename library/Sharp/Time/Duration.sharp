@@ -1,6 +1,6 @@
 namespace Sharp.Time;
 
-// A length of time in nanoseconds, as Kotlin's Duration and .NET's TimeSpan. `Clock`, `Process`, `Http` and `Cache` take it.
+// A length of time in nanoseconds. `Clock`, `Process`, `Http` and `Cache` take it.
 public struct Duration
 {
     public Duration(public int nanoseconds { get; }) { }
@@ -40,7 +40,7 @@ public struct Duration
 
     public Duration negated() => new Duration(-this.nanoseconds);
 
-    // ISO-8601 in hours, minutes and seconds, as Kotlin's toIsoString: "PT1H30M", "PT0.5S", "-PT5S", "PT0S".
+    // ISO-8601 in hours, minutes and seconds: "PT1H30M", "PT0.5S", "-PT5S", "PT0S".
     public string toString()
     {
         if (this.nanoseconds == 0) {
@@ -62,7 +62,7 @@ public struct Duration
     public static Duration parse(string text)
         => Duration.tryParse(text) ?? throw new ValueError(`\`Duration.parse\` reads ISO-8601, such as "PT1H30M", and "${text}" is not.`);
 
-    // ISO-8601 days, hours, minutes and seconds, as Kotlin's parseIsoString. A day is 24 hours.
+    // ISO-8601 days, hours, minutes and seconds. A day is 24 hours.
     public static Duration? tryParse(string text)
     {
         Map<int|string, string> found = [:];

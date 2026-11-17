@@ -2,10 +2,10 @@ namespace Sharp.Collections;
 
 import Sharp.Internal;
 
-// A set that keeps its elements in order, as Rust's BTreeSet and .NET's SortedSet, with every member a `Set` has. It
-// orders by the element's `operator <=>`, as `<` orders two elements, or by the comparison its constructor takes,
-// which gives below 0 when its first element goes before its second. Two elements the order puts at 0 are one element.
-// It keeps its elements in a sorted list, so a search takes log n steps, and a write moves the elements after it.
+// A set that keeps its elements in order, with every member a `Set` has. It orders by the element's `operator <=>`,
+// as `<` orders two elements, or by the comparison its constructor takes, which gives below 0 when its first element
+// goes before its second. Two elements the order puts at 0 are one element. It keeps its elements in a sorted list, so
+// a search takes log n steps, and a write moves the elements after it.
 public class SortedSet<T> : Iterable<T>
 {
     private Function<int(T, T)> order;
@@ -54,7 +54,7 @@ public class SortedSet<T> : Iterable<T>
 
     public T? firstOrNull(Function<bool(T)> predicate) => this.sorted.firstOrNull(predicate);
 
-    // The largest element, as Rust's BTreeSet.last. An empty set throws `OutOfRangeException`.
+    // The largest element. An empty set throws `OutOfRangeException`.
     public T last() => this.sorted.isEmpty() ? throw new OutOfRangeException("SortedSet.last: the set is empty") : this.sorted[this.sorted.count() - 1];
 
     public bool any(Function<bool(T)> predicate) => this.sorted.any(predicate);
@@ -62,7 +62,7 @@ public class SortedSet<T> : Iterable<T>
     // The elements in the order of the keys `selector` gives them, as `<` orders those keys.
     public List<T> sortedBy<TKey>(Function<TKey(T)> selector) => this.sorted.sortedWith((T a, T b) => Internal.compare(selector(a), selector(b)));
 
-    // The largest element at or below `value`, or null, as Java's TreeSet.floor.
+    // The largest element at or below `value`, or null.
     public T? floor(T value)
     {
         const at = this.position(value);
@@ -73,7 +73,7 @@ public class SortedSet<T> : Iterable<T>
         return at > 0 ? this.sorted[at - 1] : null;
     }
 
-    // The smallest element at or above `value`, or null, as Java's TreeSet.ceiling.
+    // The smallest element at or above `value`, or null.
     public T? ceiling(T value)
     {
         const at = this.position(value);
@@ -81,7 +81,7 @@ public class SortedSet<T> : Iterable<T>
         return at < this.sorted.count() ? this.sorted[at] : null;
     }
 
-    // The elements from `from` up to `to`, `to` itself left out, as Rust's range(from..to).
+    // The elements from `from` up to `to`, `to` itself left out.
     public SortedSet<T> range(T from, T to) => this.ordered(this.sorted.slice(this.position(from), Math.max(this.position(from), this.position(to))));
 
     // The elements of either set, each once, as a `Set`'s union.
@@ -140,6 +140,6 @@ public class SortedSet<T> : Iterable<T>
         return set;
     }
 
-    // The index of the first element the order puts at or after `value`, as Rust's partition_point.
+    // The index of the first element the order puts at or after `value`.
     private int position(T value) => this.sorted.partitionPoint((T held) => this.order(held, value) < 0);
 }

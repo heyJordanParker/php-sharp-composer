@@ -3,10 +3,10 @@ namespace Sharp;
 import BcMath.Number;
 import RoundingMode as PhpRoundingMode;
 
-// An exact decimal number, as Java's BigDecimal: its digits, `scale` of them after its point. `+`, `-` and `*` give the
-// exact result, so 0.1 + 0.2 is 0.3. A quotient can have no end, so `divide` names its scale and its rounding, and
-// there is no `/`, as Java's BigDecimal.divide takes both. Two decimals are `==` when they are one number, so 1.5 and
-// 1.50 are, as .NET's decimal compares them, and each keeps its scale. It runs on PHP's BcMath\Number.
+// An exact decimal number: its digits, `scale` of them after its point. `+`, `-` and `*` give the exact result, so
+// 0.1 + 0.2 is 0.3. A quotient can have no end, so `divide` names its scale and its rounding, and there is no `/`. Two
+// decimals are `==` when they are one number, so 1.5 and 1.50 are, and each keeps its scale. It runs on PHP's
+// BcMath\Number.
 public struct Decimal
 {
     private Decimal(private Number number { get; }) { }
@@ -43,8 +43,7 @@ public struct Decimal
     public int hash()
         => global.crc32(this.number.scale == 0 ? this.number.value : global.rtrim(global.rtrim(this.number.value, "0"), "."));
 
-    // The quotient with `scale` digits after the point, rounded by `mode`, as Java's BigDecimal.divide(divisor, scale,
-    // mode). A divisor of 0 throws `DivisionByZeroError`.
+    // The quotient with `scale` digits after the point, rounded by `mode`. A divisor of 0 throws `DivisionByZeroError`.
     public Decimal divide(Decimal divisor, int scale, RoundingMode mode = RoundingMode.HalfEven)
     {
         if (scale < 0) {
@@ -64,7 +63,7 @@ public struct Decimal
         return new Decimal(decided.round(scale, Decimal.phpMode(mode)));
     }
 
-    // The number with `scale` digits after the point, rounded by `mode` where it had more, as Java's setScale.
+    // The number with `scale` digits after the point, rounded by `mode` where it had more.
     public Decimal round(int scale, RoundingMode mode = RoundingMode.HalfEven)
     {
         if (scale < 0) {

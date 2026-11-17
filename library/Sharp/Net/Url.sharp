@@ -1,7 +1,7 @@
 namespace Sharp.Net;
 
-// An absolute URL, split into its parts as RFC 3986 names them, as .NET's Uri and Java's URI. Each part keeps its
-// percent-encoding, and `decode` reads one.
+// An absolute URL, split into its parts as RFC 3986 names them. Each part keeps its percent-encoding, and `decode`
+// reads one.
 public struct Url
 {
     public Url(

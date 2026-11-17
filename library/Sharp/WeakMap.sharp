@@ -2,9 +2,8 @@ namespace Sharp;
 
 import WeakMap as PhpWeakMap;
 
-// A map that keys by object identity and keeps no key alive, as .NET's ConditionalWeakTable and PHP's WeakMap: an
-// entry leaves the map once nothing else holds its key, spec section 12. A `Map` keys by `==` and `hash()` instead, and
-// keeps every key, as Rust's HashMap does.
+// A map that keys by object identity and keeps no key alive, as PHP's WeakMap does: an entry leaves the map once
+// nothing else holds its key, spec section 12. A `Map` keys by `==` and `hash()` instead, and keeps every key.
 public class WeakMap<TKey : Object, TValue>
 {
     private PhpWeakMap<TKey, TValue> entries = new PhpWeakMap();

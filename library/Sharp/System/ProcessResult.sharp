@@ -1,6 +1,6 @@
 namespace Sharp.System;
 
-// What a program `Process.run` started gave back. A non-zero exit is a value, as .NET's RunAndCaptureText returns it.
+// What a program `Process.run` started gave back. A non-zero exit is a value, not an exception.
 public struct ProcessResult
 {
     public ProcessResult(public int exitCode { get; }, public string output { get; }, public string errorOutput { get; }) { }

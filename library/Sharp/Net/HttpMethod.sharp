@@ -1,6 +1,6 @@
 namespace Sharp.Net;
 
-// The method of an HTTP request, as .NET's HttpMethod.
+// The method of an HTTP request.
 public enum HttpMethod : string
 {
     case Get = "GET";

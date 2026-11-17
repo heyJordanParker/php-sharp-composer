@@ -2,19 +2,18 @@ namespace Sharp.IO;
 
 import ZipArchive as PhpZipArchive;
 
-// A ZIP archive on disk, as .NET's ZipArchive and ZipFile: its entries are listed, read as text, added from text or
-// from a file, and extracted to a folder. The changes reach the file when `close()` runs, as .NET's Dispose writes
-// them. Each member reads or writes files, so code that calls one has the effect `Files`. A failure throws
-// `RuntimeException` with the archive's path and libzip's reason.
+// A ZIP archive on disk: its entries are listed, read as text, added from text or from a file, and extracted to a
+// folder. The changes reach the file when `close()` runs. Each member reads or writes files, so code that calls one
+// has the effect `Files`. A failure throws `RuntimeException` with the archive's path and libzip's reason.
 public class ZipArchive
 {
     private ZipArchive(private PhpZipArchive archive, private string path) { }
 
-    // The archive at `path`, to read and to add to, as .NET's ZipFile.Open in Update mode.
+    // The archive at `path`, to read and to add to.
     public static ZipArchive open(string path) => ZipArchive.opened(path, 0, "ZipArchive.open");
 
-    // A new archive at `path` with no entries, in place of any file there, as .NET's File.Create replaces one. It is
-    // written by `close()`, an empty one too.
+    // A new archive at `path` with no entries, in place of any file there. It is written by `close()`, an empty one
+    // too.
     public static ZipArchive create(string path)
     {
         const created = ZipArchive.opened(path, PhpZipArchive.CREATE | PhpZipArchive.OVERWRITE, "ZipArchive.create");
@@ -25,7 +24,7 @@ public class ZipArchive
         return created;
     }
 
-    // The name of each entry, in the archive's order, as .NET's Entries. A folder's entry ends in "/".
+    // The name of each entry, in the archive's order. A folder's entry ends in "/".
     public List<string> list()
     {
         List<string> names = [];
@@ -55,8 +54,7 @@ public class ZipArchive
         }
     }
 
-    // Adds the entry `name` holding the file at `file`, read now, in place of an entry of that name, as .NET's
-    // CreateEntryFromFile.
+    // Adds the entry `name` holding the file at `file`, read now, in place of an entry of that name.
     public void addFile(string file, string name)
     {
         if (!global.is_file(file)) {
@@ -68,7 +66,7 @@ public class ZipArchive
     }
 
     // Writes each entry into `directory`, an entry added since the archive opened too, creating the folder and each
-    // entry's folders and replacing a file of the entry's name, as .NET's ExtractToDirectory with overwriting.
+    // entry's folders and replacing a file of the entry's name.
     public void extractTo(string directory)
     {
         const names = this.list();
@@ -77,8 +75,7 @@ public class ZipArchive
         }
     }
 
-    // Writes the changes to the file and closes the archive, as .NET's Dispose. A member called after it throws
-    // `ValueError`.
+    // Writes the changes to the file and closes the archive. A member called after it throws `ValueError`.
     public void close()
     {
         if (!this.archive.close()) {

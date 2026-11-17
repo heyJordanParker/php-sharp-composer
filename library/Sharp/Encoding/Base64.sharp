@@ -2,12 +2,11 @@ namespace Sharp.Encoding;
 
 public static class Base64
 {
-    // `urlSafe` writes the URL and file name alphabet of RFC 4648, with `-` and `_` for `+` and `/`, and no padding, as
-    // .NET's Base64Url.
+    // `urlSafe` writes the URL and file name alphabet of RFC 4648, with `-` and `_` for `+` and `/`, and no padding.
     public static string encode(string data, bool urlSafe = false)
         => urlSafe ? global.rtrim(global.strtr(global.base64_encode(data), "+/", "-_"), "=") : global.base64_encode(data);
 
-    // `urlSafe` reads the URL and file name alphabet, with its padding or without it, as .NET's Base64Url.
+    // `urlSafe` reads the URL and file name alphabet, with its padding or without it.
     public static string decode(string text, bool urlSafe = false)
     {
         if (urlSafe && global.preg_match("/\\A[A-Za-z0-9_-]*={0,2}\\z/", text) != 1) {

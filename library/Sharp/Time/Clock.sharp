@@ -3,14 +3,14 @@ namespace Sharp.Time;
 import DateTimeImmutable;
 import Sharp.Time.DateTimeInterfaceMembers;
 
-// The clock, as .NET's TimeProvider and Kotlin's Clock.
+// The clock.
 public foreign class Clock
 {
     // The instant a fixed clock reads, and null for the real clock.
     private Instant? fixedAt = null;
 
-    // A clock for tests whose `now()` is always `at`, as Java's Clock.fixed. It measures no time, and `sleep` returns at
-    // once. A test module binds it where the app's module binds the real one.
+    // A clock for tests whose `now()` is always `at`. It measures no time, and `sleep` returns at once. A test module
+    // binds it where the app's module binds the real one.
     public Clock.fixed(Instant at) : this()
     {
         this.fixedAt = at;

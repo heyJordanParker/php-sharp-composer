@@ -1,6 +1,6 @@
 namespace Sharp.Time;
 
-// A time of day on a clock, with no date and no time zone, as Kotlin's LocalTime and .NET's TimeOnly.
+// A time of day on a clock, with no date and no time zone.
 public struct TimeOfDay
 {
     public TimeOfDay(public int hour { get; }, public int minute { get; }, public int second { get; } = 0, public int nanosecond { get; } = 0)

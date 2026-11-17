@@ -1,7 +1,7 @@
 namespace Sharp;
 
-// The kind of a type, as `Class<T>.kind()` gives it, spec section 25, as Rust's reflection enums name a type's kind.
-// Each kind has the members of `Class<T>` that take it apart.
+// The kind of a type, as `Class<T>.kind()` gives it, spec section 25. Each kind has the members of `Class<T>` that
+// take it apart.
 public enum TypeKind
 {
     // A type with a name and its type arguments: a class, an interface, an enum or a built-in type, `int`, `List<int>`

@@ -4,7 +4,7 @@ import Sharp.Internal;
 
 extern Internal.compare;
 
-// A map that keeps its keys in order, as Rust's BTreeMap and .NET's SortedDictionary, with every member a `Map` has.
+// A map that keeps its keys in order, with every member a `Map` has.
 // It orders by the key's `operator <=>`, as `<` orders two keys, or by the comparison its constructor takes, which
 // gives below 0 when its first key goes before its second. Two keys the order puts at 0 are one key. It keeps its keys
 // in a sorted list, so a read takes log n steps, and a write moves the entries after its key.
@@ -82,7 +82,7 @@ public class SortedMap<TKey, TValue> : Iterable<[TKey, TValue]>
 
     public TValue? firstOrNull(Function<bool(TValue)> predicate) => this.sortedValues.firstOrNull(predicate);
 
-    // The value of the last key, as Rust's last_key_value. An empty map throws `OutOfRangeException`.
+    // The value of the last key. An empty map throws `OutOfRangeException`.
     public TValue last()
         => this.sortedValues.isEmpty() ? throw new OutOfRangeException("SortedMap.last: the map is empty") : this.sortedValues[this.sortedValues.count() - 1];
 
@@ -96,7 +96,7 @@ public class SortedMap<TKey, TValue> : Iterable<[TKey, TValue]>
     public List<TValue> sortedBy<TOrder>(Function<TOrder(TValue)> selector)
         => this.sortedValues.sortedWith((TValue a, TValue b) => Internal.compare(selector(a), selector(b)));
 
-    // The largest key at or below `key`, or null, as Java's floorKey.
+    // The largest key at or below `key`, or null.
     public TKey? floor(TKey key)
     {
         const at = this.position(key);
@@ -107,7 +107,7 @@ public class SortedMap<TKey, TValue> : Iterable<[TKey, TValue]>
         return at > 0 ? this.sortedKeys[at - 1] : null;
     }
 
-    // The smallest key at or above `key`, or null, as Java's ceilingKey.
+    // The smallest key at or above `key`, or null.
     public TKey? ceiling(TKey key)
     {
         const at = this.position(key);
@@ -115,7 +115,7 @@ public class SortedMap<TKey, TValue> : Iterable<[TKey, TValue]>
         return at < this.sortedKeys.count() ? this.sortedKeys[at] : null;
     }
 
-    // The entries from the key `from` up to the key `to`, `to` itself left out, as Rust's range(from..to).
+    // The entries from the key `from` up to the key `to`, `to` itself left out.
     public SortedMap<TKey, TValue> range(TKey from, TKey to)
     {
         const inside = new SortedMap<TKey, TValue>(this.order);
@@ -166,6 +166,6 @@ public class SortedMap<TKey, TValue> : Iterable<[TKey, TValue]>
         return value;
     }
 
-    // The index of the first key the order puts at or after `key`, as Rust's partition_point.
+    // The index of the first key the order puts at or after `key`.
     private int position(TKey key) => this.sortedKeys.partitionPoint((TKey held) => this.order(held, key) < 0);
 }

@@ -1,6 +1,6 @@
 namespace Sharp.Time;
 
-// A day of the proleptic Gregorian calendar, with no time and no time zone, as Kotlin's LocalDate and .NET's DateOnly.
+// A day of the proleptic Gregorian calendar, with no time and no time zone.
 public struct Date
 {
     public Date(public int year { get; }, public int month { get; }, public int day { get; })
@@ -37,7 +37,7 @@ public struct Date
 
     public Date plusDays(int days) => Date.ofEpochDay(this.epochDay + days);
 
-    // The same day `months` later, or the month's last day when it is shorter, as Kotlin's and Java's plusMonths.
+    // The same day `months` later, or the month's last day when it is shorter.
     public Date plusMonths(int months)
     {
         const index = this.year * 12 + this.month - 1 + months;

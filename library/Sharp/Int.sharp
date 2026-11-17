@@ -6,8 +6,7 @@ public static class Int
 
     public const int MIN = global.PHP_INT_MIN;
 
-    // The int `text` writes in `radix`, from 2 to 36, with the letters a to z, in either case, for the digits past 9, as
-    // Kotlin's toInt(radix).
+    // The int `text` writes in `radix`, from 2 to 36, with the letters a to z, in either case, for the digits past 9.
     public static int parse(string text, int radix = 10)
     {
         Int.checkRadix(radix, "Int.parse");
@@ -43,7 +42,7 @@ public static class Int
         return global.str_starts_with(digits, "-") ? negated : negated.checkedMultiply(-1);
     }
 
-    // The int the 8 bytes write in `order`, as Rust's i64::from_be_bytes and from_le_bytes.
+    // The int the 8 bytes write in `order`.
     public static int fromBytes(string bytes, ByteOrder order = ByteOrder.Big)
     {
         if (global.strlen(bytes) != 8) {
@@ -81,7 +80,7 @@ public static class Int
                 ? throw new ValueError("`clamp` needs a minimum no larger than its maximum, and the minimum is larger.")
                 : value < min ? min : value > max ? max : value;
 
-        // The quotient rounded down, as Kotlin's floorDiv and Java's Math.floorDiv: -7.floorDiv(2) is -4.
+        // The quotient rounded down: -7.floorDiv(2) is -4.
         public int floorDiv(int divisor)
         {
             const quotient = value / divisor;
@@ -89,7 +88,7 @@ public static class Int
             return value % divisor != 0 && (value < 0) != (divisor < 0) ? quotient - 1 : quotient;
         }
 
-        // The remainder with the divisor's sign, as Kotlin's mod and Java's Math.floorMod: -7.mod(2) is 1.
+        // The remainder with the divisor's sign: -7.mod(2) is 1.
         public int mod(int divisor)
         {
             const remainder = value % divisor;
@@ -107,20 +106,20 @@ public static class Int
         public string toHex()
             => value == Int.MIN ? "-8000000000000000" : value < 0 ? "-" + global.dechex(-value) : global.dechex(value);
 
-        // The string of the one byte `value`, from 0 to 255, as Kotlin's `Int.toByte()` gives it.
+        // The string of the one byte `value`, from 0 to 255.
         public string toByteString()
             => value >= 0 && value <= 255 ? global.chr(value) : throw new ValueError("`toByteString` needs a byte from 0 to 255, and the value is outside it.");
 
-        // The 8 bytes of `value` in `order`, a negative one in two's complement, as Rust's to_be_bytes and to_le_bytes.
+        // The 8 bytes of `value` in `order`, a negative one in two's complement.
         public string toBytes(ByteOrder order = ByteOrder.Big) => global.pack(order.value, value);
 
-        // The character of the code point `value`, as Rust's char::from_u32 and .NET's char.ConvertFromUtf32.
+        // The character of the code point `value`.
         public string toCharacter()
             => global.mb_chr(value, "UTF-8") is string character
                 ? character
                 : throw new ValueError("`toCharacter` needs a Unicode scalar value, from 0 to 0x10FFFF and no surrogate, and the value is not one.");
 
-        // The sum, or null where it is past Int.MAX or Int.MIN, as Rust's checked_add.
+        // The sum, or null where it is past Int.MAX or Int.MIN.
         public int? checkedAdd(int other)
             => (other > 0 && value > Int.MAX - other) || (other < 0 && value < Int.MIN - other) ? null : value + other;
 
@@ -137,7 +136,7 @@ public static class Int
             return overflows ? null : value * other;
         }
 
-        // The sum, or Int.MAX or Int.MIN where it is past them, as Rust's saturating_add.
+        // The sum, or Int.MAX or Int.MIN where it is past them.
         public int saturatingAdd(int other) => value.checkedAdd(other) ?? (other > 0 ? Int.MAX : Int.MIN);
 
         public int saturatingSubtract(int other) => value.checkedSubtract(other) ?? (other < 0 ? Int.MAX : Int.MIN);

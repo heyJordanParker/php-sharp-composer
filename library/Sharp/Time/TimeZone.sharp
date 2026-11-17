@@ -4,8 +4,8 @@ import DateTimeImmutable;
 import DateTimeZone;
 
 // A region's rules for its clocks, named exactly as the IANA time zone database names it, such as "Europe/Sofia", or
-// by one of its older names, such as "Europe/Kiev", or a fixed offset from UTC, such as "+03:00", as Java's ZoneId.of
-// and Kotlin's TimeZone.of take them. The name is the zone's one field, so two zones of one name are `==`.
+// by one of its older names, such as "Europe/Kiev", or a fixed offset from UTC, such as "+03:00". The name is the
+// zone's one field, so two zones of one name are `==`.
 public struct TimeZone
 {
     public TimeZone(public string name { get; })
@@ -24,13 +24,13 @@ public struct TimeZone
 
     public static TimeZone? tryOf(string name) => TimeZone.isName(name) ? new TimeZone(name) : null;
 
-    // Whether `name` is a name of the database, or an offset written `+HH:MM` or `-HH:MM` within Java's ±18:00.
+    // Whether `name` is a name of the database, or an offset written `+HH:MM` or `-HH:MM` within ±18:00.
     private static bool isName(string name)
         => TimeZone.databaseNames.contains(name) || global.preg_match("/\\A[+-](?:(?:0[0-9]|1[0-7]):[0-5][0-9]|18:00)\\z/", name) == 1;
 
-    // The offset of a zone whose clocks never change: "+03:00", "UTC" and
-    // "Etc/GMT-3" each have one, and a zone the database gives any change of offset, as "Europe/Sofia", has none. PHP's
-    // rules list each change, and none for a zone an offset names, which they give as false.
+    // The offset of a zone whose clocks never change: "+03:00", "UTC" and "Etc/GMT-3" each have one, and a zone the
+    // database gives any change of offset, as "Europe/Sofia", has none. PHP's rules list each change, and none for a
+    // zone an offset names, which they give as false.
     public Duration? fixedOffset
         => this.rules().getTransitions() is List<Any> changes && changes.count() > 1 ? null : this.offsetAt(new Instant(0));
 
@@ -39,9 +39,8 @@ public struct TimeZone
 
     public string toString() => this.name;
 
-    // The instant the zone's clocks show `localSeconds`, counted from 1970-01-01T00:00:00 on those clocks, as Java's
-    // ZonedDateTime.of resolves it: the earlier instant when the clocks show it twice, and the time the gap's length
-    // later when they skip it.
+    // The instant the zone's clocks show `localSeconds`, counted from 1970-01-01T00:00:00 on those clocks: the earlier
+    // instant when the clocks show it twice, and the time the gap's length later when they skip it.
     internal Instant instantAt(int localSeconds)
     {
         const before = this.offsetAt(new Instant(localSeconds - 86400)).seconds;

@@ -1,6 +1,6 @@
 namespace Sharp.Net;
 
-// A message `Mail.send` sends, as .NET's MailMessage.
+// A message `Mail.send` sends.
 public struct MailMessage
 {
     public MailMessage(

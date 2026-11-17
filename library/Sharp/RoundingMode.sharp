@@ -1,7 +1,7 @@
 namespace Sharp;
 
-// How a `Decimal` drops the digits past a scale, as Java's RoundingMode. "Up" and "Down" go away from 0 and toward 0,
-// "Ceiling" and "Floor" toward positive and negative infinity.
+// How a `Decimal` drops the digits past a scale. "Up" and "Down" go away from 0 and toward 0, "Ceiling" and "Floor"
+// toward positive and negative infinity.
 public enum RoundingMode
 {
     // To the nearer neighbor, and from halfway to the even one, as banks round: 2.5 gives 2, and 3.5 gives 4.

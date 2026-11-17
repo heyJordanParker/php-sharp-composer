@@ -1,29 +1,28 @@
 namespace Sharp.System;
 
-// A program `Process.start` started, which runs while the code goes on, as .NET's Process and Rust's Child. Its input
-// is a pipe, and its output and its error output go to temporary files, so a program that writes a lot never waits on
-// a reader. Each member runs through the `Process` that started it, so code that holds one has the effect `Process`.
+// A program `Process.start` started, which runs while the code goes on. Its input is a pipe, and its output and its
+// error output go to temporary files, so a program that writes a lot never waits on a reader. Each member runs through
+// the `Process` that started it, so code that holds one has the effect `Process`.
 public class ChildProcess
 {
     private int? exitCode = null;
 
     internal ChildProcess(private Process process, private Any handle, private Any? input, private Any output, private Any errorOutput) { }
 
-    // Writes `text` to the program's input, and waits while the pipe is full, as .NET's StandardInput.Write. Once the
-    // input is closed, it throws `RuntimeException`.
+    // Writes `text` to the program's input, and waits while the pipe is full. Once the input is closed, it throws
+    // `RuntimeException`.
     public void writeInput(string text)
     {
         this.process.write(this.input, text);
     }
 
-    // Closes the program's input, so a program that reads it to its end, as `cat`, goes on, as .NET's
-    // StandardInput.Close.
+    // Closes the program's input, so a program that reads it to its end, as `cat`, goes on.
     public void closeInput()
     {
         this.process.close(this.input);
     }
 
-    // Everything the program writes to its output, once it ends, as .NET's StandardOutput.ReadToEnd.
+    // Everything the program writes to its output, once it ends.
     public string readOutput()
     {
         this.wait();
@@ -31,7 +30,7 @@ public class ChildProcess
         return this.process.written(this.output);
     }
 
-    // Everything the program writes to its error output, once it ends, as .NET's StandardError.ReadToEnd.
+    // Everything the program writes to its error output, once it ends.
     public string readError()
     {
         this.wait();
@@ -39,8 +38,8 @@ public class ChildProcess
         return this.process.written(this.errorOutput);
     }
 
-    // Closes the input, waits for the program to end and gives its exit code, as Rust's Child::wait, -1 for a program
-    // a signal ended, as `Process.run` gives it.
+    // Closes the input, waits for the program to end and gives its exit code, -1 for a program a signal ended, as
+    // `Process.run` gives it.
     public int wait()
     {
         if (this.exitCode is int code) {
@@ -53,8 +52,7 @@ public class ChildProcess
         return code;
     }
 
-    // Ends the program at once, with SIGKILL, as .NET's Process.Kill and Rust's Child::kill. A program that was waited
-    // for already is left as it is.
+    // Ends the program at once, with SIGKILL. A program that was waited for already is left as it is.
     public void kill()
     {
         this.process.kill(this.handle);

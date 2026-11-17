@@ -147,12 +147,11 @@ public static class ClassMembers
             ClassMembers.words(declared[4]).contains("static")
         );
 
-    // Whether the property or field `name` that `declaring` declares holds a value on `receiver`, as Kotlin's
-    // `::prop.isInitialized` reads a `lateinit` and PHP's `ReflectionProperty::isInitialized` reads it: false for a
-    // `late` one no code has set, and for one of a lazy object `createLazy` made that has not loaded and
-    // `setBeforeLoad` did not write, which the read does not load, as PHP's `ReflectionProperty::isLazy` reads it, since
-    // PHP's `isInitialized` loads the object. A computed property always holds one. There is no reset, as Kotlin has
-    // none: a `late` member is set once.
+    // Whether the property or field `name` that `declaring` declares holds a value on `receiver`, as PHP's
+    // `ReflectionProperty::isInitialized` reads it: false for a `late` one no code has set, and for one of a lazy object
+    // `createLazy` made that has not loaded and `setBeforeLoad` did not write, which the read does not load, as PHP's
+    // `ReflectionProperty::isLazy` reads it, since PHP's `isInitialized` loads the object. A computed property always
+    // holds one. There is no reset, since a `late` member is set once.
     internal static bool isInitialized(Class<Object> declaring, string name, Object receiver)
     {
         const property = new ReflectionProperty(declaring, name);
@@ -163,7 +162,7 @@ public static class ClassMembers
     }
 
     // Whether the declaration of the property or field `name` that `declaring` declares gives it an initial value,
-    // constant or not, as C#'s and Kotlin's reflection read a declared initializer.
+    // constant or not.
     internal static bool hasDefaultValue(Class<Object> declaring, string name)
         => Internal.hiddenMethod(declaring, name + "#initial") != null
             || (ClassMembers.stored(declaring, name) is ReflectionProperty property && property.hasDefaultValue());
@@ -230,10 +229,9 @@ public static class ClassMembers
     // members, and filters no attributes.
     internal static Class<T>? declared<T>(Class<T> type) => type is Class<Object> ? type : null;
 
-    // The members of the class value of any type, a class's and `int`'s alike, which take the type apart, spec section 25,
-    // as C#'s `System.Type` does. A member of one kind of type gives `[]` for a type of any other kind, or throws
-    // `OutOfRangeException` where it gives one value. Each reads the type without its `?`, but `isNullable()` and
-    // `nonNullable()`.
+    // The members of the class value of any type, a class's and `int`'s alike, which take the type apart, spec section 25.
+    // A member of one kind of type gives `[]` for a type of any other kind, or throws `OutOfRangeException` where it
+    // gives one value. Each reads the type without its `?`, but `isNullable()` and `nonNullable()`.
     extension(Class<Any?> type)
     {
         // The type's full name as PHP# writes it, spec section 25: `App.Orders.Counted`, and `List<string>` for a type
@@ -260,31 +258,29 @@ public static class ClassMembers
         // Whether the type takes null: `int?`, `Box<Tone>?` and a union that holds null.
         public bool isNullable() => Internal.isNullable(type);
 
-        // The type without null, as C#'s `Nullable.GetUnderlyingType`: `typeof(int)` for `int?`.
+        // The type without null: `typeof(int)` for `int?`.
         public Class<Any?> nonNullable() => ClassMembers.classValue(Internal.nonNullable(type));
 
         // The type arguments of a class or a built-in type, each whole: `[typeof(string), typeof(Box<int>?)]` for
         // `Map<string, Box<int>?>`.
         public List<Class<Any?>> typeArguments() => Internal.typeArguments(type).map(ClassMembers.classValue);
 
-        // The generic type without its type arguments, as C#'s `GetGenericTypeDefinition`: `typeof(List)` for
+        // The generic type without its type arguments: `typeof(List)` for
         // `List<int>`, and null for a type that declares no type parameter.
         public Class<Any?>? genericDefinition()
             => Internal.genericDefinition(type) is string definition ? ClassMembers.classValue(definition) : null;
 
-        // The type parameters a generic type declares, each of the kind TypeParameter, as C#'s `GetGenericArguments` on
-        // a definition: `[TItem]` for `typeof(Crate)`.
+        // The type parameters a generic type declares, each of the kind TypeParameter: `[TItem]` for `typeof(Crate)`.
         public List<Class<Any?>> typeParameters() => Internal.typeParameters(type).map(ClassMembers.classValue);
 
-        // A type parameter's bound, as C#'s `GetGenericParameterConstraints`: `Any?` where none is written.
+        // A type parameter's bound: `Any?` where none is written.
         public Class<Any?> bound() => ClassMembers.part(type, TypeKind.TypeParameter, "`bound` reads a type parameter, and");
 
         // A union's members. Null is never one, and `isNullable()` holds it.
         public List<Class<Any?>> unionMembers()
             => type.kind() == TypeKind.Union ? Internal.typeParts(type).map(ClassMembers.classValue) : [];
 
-        // An intersection's members, `[typeof(Shippable), typeof(Billable)]` for `Shippable & Billable`, as
-        // TypeScript's `IntersectionType.types` gives them.
+        // An intersection's members, `[typeof(Shippable), typeof(Billable)]` for `Shippable & Billable`.
         public List<Class<Any?>> intersectionMembers()
             => type.kind() == TypeKind.Intersection ? Internal.typeParts(type).map(ClassMembers.classValue) : [];
 
@@ -294,7 +290,7 @@ public static class ClassMembers
                 element => new TupleElement(element[0], ClassMembers.classValue(element[1]))
             );
 
-        // A function type's parameter types, as C#'s delegate `Invoke` signature gives them.
+        // A function type's parameter types.
         public List<Class<Any?>> parameterTypes()
             => type.kind() == TypeKind.Function ? Internal.typeParts(type).slice(1).map(ClassMembers.classValue) : [];
 
@@ -302,7 +298,7 @@ public static class ClassMembers
         public Class<Any?> returnType()
             => ClassMembers.part(type, TypeKind.Function, "`returnType` reads a function type, and");
 
-        // The generic type with `arguments`, as C#'s `MakeGenericType`: `typeof(List).makeGenericType([typeof(Order)])`
+        // The generic type with `arguments`: `typeof(List).makeGenericType([typeof(Order)])`
         // is `typeof(List<Order>)`. Throws InvalidArgumentException on another count of arguments than the type has
         // type parameters, and on an argument outside its parameter's bound.
         public Class<Any?> makeGenericType(List<Class<Any?>> arguments)
@@ -313,7 +309,7 @@ public static class ClassMembers
     {
         // The properties of the class, auto-properties, ones with accessors and computed ones, and no field, its own
         // first and then those it inherits, in the order they are declared, at every visibility, its statics included,
-        // as .NET's `GetProperties()` gives them, spec section 25.
+        // spec section 25.
         public List<Property> properties()
             => ClassMembers.declared(type) == null
                 ? []
@@ -323,8 +319,7 @@ public static class ClassMembers
 
         // What the class's objects store, as an ORM or a serializer reads it, spec section 25: each field and the storage
         // of each auto-property that is neither `virtual` nor `abstract`, its own first and then those it inherits, in
-        // the order they are declared, at every visibility, its statics included, as .NET's `GetFields()` reaches an
-        // auto-property's backing field.
+        // the order they are declared, at every visibility, its statics included.
         public List<Field> fields()
             => ClassMembers.declared(type) == null
                 ? []
@@ -339,8 +334,7 @@ public static class ClassMembers
                 ? []
                 : Internal.methods(type).map(rows => ClassMembers.method(type, rows));
 
-        // The class's constructor, its own or the one it inherits, as C#'s `GetConstructors()` gives PHP's one, or null
-        // for a class that has none.
+        // The class's constructor, its own or the one it inherits, or null for a class that has none.
         public Constructor? constructor()
         {
             if (ClassMembers.declared(type) == null) {
@@ -358,7 +352,7 @@ public static class ClassMembers
         }
 
         // A new object of the class, with the class value's type arguments, created by its constructor with
-        // `arguments`, as C#'s `Activator.CreateInstance` creates one. The calling code reaches the constructor as a
+        // `arguments`. The calling code reaches the constructor as a
         // direct `new` would. Throws InvalidArgumentException for an abstract class, an interface or an enum, and for
         // arguments the constructor's parameters don't take.
         public T createInstance(List<Any?> arguments) => Internal.createInstance(type, arguments);
@@ -375,38 +369,35 @@ public static class ClassMembers
         // class with `new (typeof(Self).withTag(row.type) ?? throw …)(…)`.
         public Class<T>? withTag(string tag) => Internal.withTag(type, tag) is string variant ? variant as Class<T> : null;
 
-        // The class the class extends, with the type arguments it gives it, as C#'s `Type.BaseType`, or null.
+        // The class the class extends, with the type arguments it gives it, or null.
         public Class<Any?>? baseType()
             => ClassMembers.declared(type) != null && Internal.baseType(type) is string base
                 ? ClassMembers.classValue(base)
                 : null;
 
-        // The interfaces the class implements, its own and those it inherits, each with the type arguments it gives it,
-        // as C#'s `GetInterfaces()`.
+        // The interfaces the class implements, its own and those it inherits, each with the type arguments it gives it.
         public List<Class<Any?>> interfaces()
             => ClassMembers.declared(type) == null ? [] : Internal.interfaces(type).map(ClassMembers.classValue);
 
-        // Whether the class is abstract, an interface included, as C#'s `IsAbstract`.
+        // Whether the class is abstract, an interface included.
         public bool isAbstract() => ClassMembers.declared(type) != null && Internal.classFacts(type)[0];
 
         public bool isInterface() => ClassMembers.declared(type) != null && Internal.classFacts(type)[1];
 
-        // Whether the class is a struct, spec section 10, as C#'s `IsValueType`.
+        // Whether the class is a struct, spec section 10.
         public bool isStruct() => ClassMembers.declared(type) != null && Internal.classFacts(type)[2];
 
         public bool isEnum() => ClassMembers.declared(type) != null && Internal.classFacts(type)[3];
 
-        // The type an enum's cases are backed by, `int` or `string`, as C#'s `Enum.GetUnderlyingType`, or null for a pure
-        // enum and any other class.
+        // The type an enum's cases are backed by, `int` or `string`, or null for a pure enum and any other class.
         public Class<Any?>? enumBackingType()
             => ClassMembers.declared(type) != null && Internal.enumBackingType(type) is string backing
                 ? ClassMembers.classValue(backing)
                 : null;
 
         // The constants of the class, its own first and then those it inherits, in the order they are declared, at
-        // every visibility, without an enum's cases, which `enumCases()` gives, spec section 25, as .NET's
-        // `GetFields()` gives a class's literal fields. The engine gives each as the class that declares it, its name
-        // and its type.
+        // every visibility, without an enum's cases, which `enumCases()` gives, spec section 25. The engine gives each
+        // as the class that declares it, its name and its type.
         public List<Constant> constants()
             => ClassMembers.declared(type) == null
                 ? []
@@ -418,7 +409,7 @@ public static class ClassMembers
                     )
                 );
 
-        // An enum's cases, in the order they are declared, as C# reads an enum's fields.
+        // An enum's cases, in the order they are declared.
         public List<EnumCase> enumCases()
             => ClassMembers.declared(type) == null
                 ? []
