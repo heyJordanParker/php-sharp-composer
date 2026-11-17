@@ -28,7 +28,7 @@ public struct TimeZone
     private static bool isName(string name)
         => TimeZone.databaseNames.contains(name) || global.preg_match("/\\A[+-](?:(?:0[0-9]|1[0-7]):[0-5][0-9]|18:00)\\z/", name) == 1;
 
-    // The offset of a zone whose clocks never change, as jiff's TimeZone::to_fixed_offset gives it: "+03:00", "UTC" and
+    // The offset of a zone whose clocks never change: "+03:00", "UTC" and
     // "Etc/GMT-3" each have one, and a zone the database gives any change of offset, as "Europe/Sofia", has none. PHP's
     // rules list each change, and none for a zone an offset names, which they give as false.
     public Duration? fixedOffset
