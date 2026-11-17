@@ -3,6 +3,7 @@ namespace Sharp;
 import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
 import Sharp.Internal.ComparedByOrder;
+import Sharp.Internal.SearchesElements;
 
 extern Internal.addKey;
 extern Internal.filterElements;
@@ -19,6 +20,7 @@ public static class SetMembers
 
         public bool isNotEmpty() => Internal.size(set) != 0;
 
+        [SearchesElements]
         public bool contains([ComparedByEquality] T value) => Internal.containsKey(set, value);
 
         public List<T> toList() => Internal.keys(set);
@@ -61,6 +63,7 @@ public static class SetMembers
     {
         public bool add([ComparedByEquality] T value) => Internal.addKey(set, value);
 
+        [SearchesElements]
         public bool remove([ComparedByEquality] T value) => Internal.removeKey(set, value);
 
         public void clear() => Internal.clear(set);

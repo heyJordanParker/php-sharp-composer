@@ -3,6 +3,7 @@ namespace Sharp;
 import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
 import Sharp.Internal.ComparedByOrder;
+import Sharp.Internal.SearchesElements;
 
 extern Internal.add;
 extern Internal.insert;
@@ -45,8 +46,10 @@ public static class ListMembers
 
         public T? getOrNull(int index) => Internal.get(items, index);
 
+        [SearchesElements]
         public bool contains([ComparedByEquality] T value) => Internal.contains(items, value);
 
+        [SearchesElements]
         public int? indexOf([ComparedByEquality] T value) => Internal.indexOf(items, value);
 
         public T last() => global.array_last(Internal.nonEmpty(items));
@@ -209,6 +212,7 @@ public static class ListMembers
         // does.
         public T set(int index, T value) => Internal.set(list, index, value);
 
+        [SearchesElements]
         public bool remove([ComparedByEquality] T value) => Internal.remove(list, value);
 
         public T removeAt(int index) => Internal.removeAt(list, index);
