@@ -46,7 +46,8 @@ public class Property
 
     // The `get` accessor of a property that runs one, as PHP's `ReflectionProperty::getHook` gives it, named
     // `$name::get` as PHP names a property hook, or null for a plain stored property, which is how code tells a property
-    // with accessors apart. Its `invoke` reads the property, as `get` does.
+    // with accessors apart. Its `invoke` reads the property, as `get` does, and its `createDelegate` gives a function
+    // that reads it.
     public Method? getter() => this.accessor(0);
 
     // The `set` accessor of a property that runs one, named `$name::set`, or null. Its `invoke` writes its one argument

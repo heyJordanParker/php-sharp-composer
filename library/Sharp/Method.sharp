@@ -3,6 +3,8 @@ namespace Sharp;
 import ReflectionAttribute;
 import Sharp.Internal.CreatesAttributes;
 
+extern Internal.createDelegate;
+
 // A method a class declares, as `Class<T>.methods()` gives it, spec section 25: the class that declares it, its name,
 // its modifiers, its visibility, its result type as declared, `void` for a `void` method, and its parameters. A method
 // is virtual when a subclass may replace it: a PHP# one that is `virtual`, `abstract` or an `override` not `final`, and
@@ -39,6 +41,17 @@ public class Method
     // code, so it may have every effect, spec section 29.
     public Any? invoke(Object? receiver, List<Any?> arguments)
         => Internal.invoke(receiver, this.declaringClass, this.name, arguments, this.readOn);
+
+    // A value of the function type `TFunction` that calls the method, as `Function<Relation(Order) uses Database>`: an
+    // instance method takes its receiver as the type's first parameter, and a static one takes none and runs on the
+    // class it was read from. The calling code reaches the method as a direct call would. The method's parameters,
+    // result and effects must fit the type, as a function's must to be assigned to it, spec section 21, or it throws
+    // ValueError naming the one that doesn't. The method's effects are those its body has, spec section 29, so a call of
+    // the value has only those `TFunction` lists, and making it is pure. A plain PHP method has those its `extern` lines
+    // declare, and may have every effect without one. A call on a receiver whose override has an effect the type
+    // doesn't list throws ValueError.
+    public TFunction createDelegate<TFunction>()
+        => Internal.createDelegate(this.readOn, this.declaringClass, this.name, typeof(TFunction));
 
     // The attributes of the method of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
