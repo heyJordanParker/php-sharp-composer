@@ -6,10 +6,10 @@ import Sharp.Internal.RunsInitialValues;
 extern Internal.readField;
 extern Internal.writeField;
 
-// The storage of a field a class declares, or of an auto-property that is neither `virtual` nor `abstract`, as
-// `Class<T>.fields()` gives it, spec section 25: the class that declares it, its name, its visibility, its type as
-// declared and whether it is static. A field is storage, spec section 6, so reading and writing one runs no code a
-// project wrote. The engine creates it.
+// The storage of a field a class declares, of an auto-property that is neither `virtual` nor `abstract`, or of a plain
+// PHP property that declares no hook, as `Class<T>.fields()` gives it, spec section 25: the class that declares it, its
+// name, its visibility, its type as declared and whether it is static. A field is storage, spec section 6, so reading
+// and writing one runs no code a project wrote. The engine creates it.
 public class Field
 {
     internal Field(
@@ -27,15 +27,18 @@ public class Field
     public int hash() => global.crc32(this.declaringClass.name() + "::$" + this.name);
 
     // The value the storage holds on `receiver`, and a static's, which takes null. The calling code reaches it as a
-    // direct read of the field or the property would. It runs no accessor, so a read is pure, spec section 29, and on a
-    // lazy object that has not loaded, or a static whose class's initial values have not run, it throws Error rather
-    // than run them. An instance field given null throws InvalidArgumentException.
+    // direct read of the field or the property would. It runs no accessor, so a read is pure, spec section 29: a
+    // receiver whose class gives the property an accessor, as a PHP 8.4 subclass may by declaring it again, a lazy
+    // object that has not loaded, and a static whose class's initial values have not run throw Error rather than run
+    // that code. An instance field given null throws InvalidArgumentException.
     public Any? get(Object? receiver) => Internal.readField(receiver, this.declaringClass, this.name);
 
     // Writes `value` into the storage on `receiver`, or into a static's, which takes null. The calling code reaches it
     // as a direct write of the field, or the property's `set` or `init`, would, and `value` is checked against its type
-    // there. An `init` property's storage takes a write only while it holds no value. It runs no accessor, so a write
-    // is pure, and throws Error where `get` does.
+    // there. An `init` property's storage takes a write only while it holds no value. A lazy object `createLazy` made
+    // that has not loaded takes the write without loading, so a read of the storage never loads it either, as PHP
+    // 8.4's `setRawValueWithoutLazyInitialization` writes and as Doctrine gives a ghost its identifier before it loads.
+    // It runs no accessor, so a write is pure, and it throws Error where `get` does, save on that lazy object.
     public void set(Object? receiver, Any? value) => Internal.writeField(receiver, this.declaringClass, this.name, value);
 
     // Whether the storage holds a value on `receiver`, as `Property.isInitialized` reads it.

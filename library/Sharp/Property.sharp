@@ -60,14 +60,6 @@ public class Property
             ? ClassMembers.method(this.readOn, rows)
             : null;
 
-    // Writes `value` into the property on `receiver`, a lazy object `createLazy` made, without loading it, so a read of
-    // the property never loads it either, as PHP 8.4's `setRawValueWithoutLazyInitialization` writes, and as Doctrine
-    // gives a ghost its identifier before it loads. The calling code reaches the property as a direct write would, as
-    // `set` does, its `set` accessor included. On an object that is not lazy, or one already loaded, it writes as `set`
-    // does.
-    public void setBeforeLoad(Object receiver, Any? value)
-        => Internal.write(receiver, this.declaringClass, this.name, value, true);
-
     // Whether the declaration gives the property an initial value, constant or not, as `ClassMembers.hasDefaultValue`
     // reads it.
     public bool hasDefaultValue => ClassMembers.hasDefaultValue(this.declaringClass, this.name);

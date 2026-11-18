@@ -100,7 +100,8 @@ public static class ClassMembers
 
     // A property or a field of `readOn` as the engine gives it: the class that declares it, its name, its type, its
     // access modifier and its words, each after a space: what writes it, "set" or "init" and the access modifier that
-    // reaches it, none for a get-only property, then its modifiers, and last "field" for a field.
+    // reaches it, none for a get-only property, then its modifiers, and last "field" for a field and "plain" for a plain
+    // PHP property.
     private static Property property(Class<Any?> readOn, List<string> declared)
     {
         const words = ClassMembers.words(declared[4]);
@@ -124,8 +125,10 @@ public static class ClassMembers
     // Whether a member `readOn` gives as `property` reads it is a field.
     private static bool isField(List<string> declared) => ClassMembers.words(declared[4]).contains("field");
 
-    // Whether a member `readOn` gives as `property` reads it is storage a `Field` reads, spec section 25: a field, or an
-    // auto-property that is neither `virtual` nor `abstract`, spec section 6.1, which runs no accessor.
+    // Whether a member `readOn` gives as `property` reads it is storage a `Field` reads, spec section 25: a field, an
+    // auto-property that is neither `virtual` nor `abstract`, spec section 6.1, or a plain PHP property that declares no
+    // hook, whatever a subclass may do, since a `Field` refuses a receiver whose class gives it one. None runs an
+    // accessor.
     private static bool isStorage(Class<Any?> readOn, List<string> declared)
     {
         if (ClassMembers.isField(declared)) {
@@ -134,7 +137,10 @@ public static class ClassMembers
         const words = ClassMembers.words(declared[4]);
         const accessors = Internal.accessors(readOn, declared[1]);
 
-        return !words.contains("virtual") && !words.contains("abstract") && accessors[0] == null && accessors[1] == null;
+        return (words.contains("plain") || !words.contains("virtual"))
+            && !words.contains("abstract")
+            && accessors[0] == null
+            && accessors[1] == null;
     }
 
     // The storage of a member as the engine gives it, see `property`.
@@ -149,7 +155,7 @@ public static class ClassMembers
 
     // Whether the property or field `name` that `declaring` declares holds a value on `receiver`, as PHP's
     // `ReflectionProperty::isInitialized` reads it: false for a `late` one no code has set, and for one of a lazy object
-    // `createLazy` made that has not loaded and `setBeforeLoad` did not write, which the read does not load, as PHP's
+    // `createLazy` made that has not loaded and `Field.set` did not write, which the read does not load, as PHP's
     // `ReflectionProperty::isLazy` reads it, since PHP's `isInitialized` loads the object. A computed property always
     // holds one. There is no reset, since a `late` member is set once.
     internal static bool isInitialized(Class<Object> declaring, string name, Object receiver)
@@ -317,9 +323,10 @@ public static class ClassMembers
                     .filter(declared => !ClassMembers.isField(declared))
                     .map(declared => ClassMembers.property(type, declared));
 
-        // What the class's objects store, as an ORM or a serializer reads it, spec section 25: each field and the storage
-        // of each auto-property that is neither `virtual` nor `abstract`, its own first and then those it inherits, in
-        // the order they are declared, at every visibility, its statics included.
+        // What the class's objects store, as an ORM or a serializer reads it, spec section 25: each field, the storage
+        // of each auto-property that is neither `virtual` nor `abstract`, and each plain PHP property that declares no
+        // hook, its own first and then those it inherits, in the order they are declared, at every visibility, its
+        // statics included.
         public List<Field> fields()
             => ClassMembers.declared(type) == null
                 ? []
@@ -359,7 +366,7 @@ public static class ClassMembers
 
         // A new lazy object of the class, with the class value's type arguments, created empty with no constructor run,
         // as PHP 8.4's `ReflectionClass::newLazyGhost` creates one: `initialize` runs on it at its first property read or
-        // write, as Doctrine loads an entity, and a property `Property.setBeforeLoad` wrote reads without it. Throws
+        // write, as Doctrine loads an entity, and storage `Field.set` wrote reads without it. Throws
         // InvalidArgumentException for an abstract class, an interface or an enum, and for a class that extends one of
         // PHP's own.
         public T createLazy(Function<void(T)> initialize) => Internal.createLazy(type, initialize);
