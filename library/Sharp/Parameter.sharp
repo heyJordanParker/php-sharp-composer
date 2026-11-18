@@ -3,6 +3,7 @@ namespace Sharp;
 import ReflectionAttribute;
 import ReflectionParameter;
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.RunsDefaults;
 
 // A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, its type as declared, whether
 // it is optional, which it is when a call may leave it out, whether it is variadic, and its default value. The engine
@@ -28,7 +29,9 @@ public class Parameter
 
     // The value a call that leaves the parameter out gives it. It is evaluated on each read, so a `new` in the default
     // creates a new object each time. A parameter with no default value, a required or a variadic one, throws
-    // `OutOfRangeException`, as `List.first()` does when nothing matches.
+    // `OutOfRangeException`, as `List.first()` does when nothing matches. A read has the effects of the defaults it can
+    // run, spec section 29.
+    [RunsDefaults]
     public Any? defaultValue()
     {
         const parameter = this.reflected();

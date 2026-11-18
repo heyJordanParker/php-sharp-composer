@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.RunsInitialValues;
 
 extern Internal.accessors;
 
@@ -73,7 +74,8 @@ public class Property
 
     // The initial value the declaration gives the property, as `ClassMembers.defaultValue` gives it: one that is not
     // constant runs on each read, so `= new Draft()` gives a new Draft each time, and a property with none throws
-    // `OutOfRangeException`.
+    // `OutOfRangeException`. A read has the effects of the initial values it can run, spec section 29.
+    [RunsInitialValues]
     public Any? defaultValue() => ClassMembers.defaultValue(this.declaringClass, this.name);
 
     // The attributes of the property of the class `TAttribute` or of a class that extends or implements it, as

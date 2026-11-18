@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.RunsInitialValues;
 
 extern Internal.readField;
 extern Internal.writeField;
@@ -44,7 +45,8 @@ public class Field
     public bool hasDefaultValue => ClassMembers.hasDefaultValue(this.declaringClass, this.name);
 
     // The initial value the declaration gives the storage, as `Property.defaultValue()` gives it: one that is not
-    // constant runs on each read, so it may have every effect.
+    // constant runs on each read, so a read has the effects of the initial values it can run, spec section 29.
+    [RunsInitialValues]
     public Any? defaultValue() => ClassMembers.defaultValue(this.declaringClass, this.name);
 
     // The attributes of the field, or of its property, of the class `TAttribute` or of a class that extends or
