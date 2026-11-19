@@ -4,6 +4,7 @@ import ReflectionAttribute;
 import Sharp.Internal.CreatesAttributes;
 
 extern Internal.createDelegate;
+extern Internal.createInvoker;
 
 // A method a class declares, as `Class<T>.methods()` gives it, spec section 25: the class that declares it, its name,
 // its modifiers, its visibility, its result type as declared, `void` for a `void` method, and its parameters. A method
@@ -34,14 +35,6 @@ public class Method
     // The method's parameters, in order.
     public List<Parameter> parameters() => this.declared;
 
-    // The result of the method called on `receiver` with `arguments`. The calling code reaches the method as a direct
-    // call would, and each argument is checked against its parameter's type there. A method that isn't private runs the
-    // receiver's override. A static method takes a null receiver, and runs on the class it was read from, as
-    // `ValueEntity.make()` does, and an instance method given null throws InvalidArgumentException. The call may run any
-    // code, so it may have every effect, spec section 29.
-    public Any? invoke(Object? receiver, List<Any?> arguments)
-        => Internal.invoke(receiver, this.declaringClass, this.name, arguments, this.readOn);
-
     // A value of the function type `TFunction` that calls the method, as `Function<Relation(Order) uses Database>`: an
     // instance method takes its receiver as the type's first parameter, and a static one takes none and runs on the
     // class it was read from. The calling code reaches the method as a direct call would. The method's parameters,
@@ -52,6 +45,17 @@ public class Method
     // doesn't list throws ValueError.
     public TFunction createDelegate<TFunction>()
         => Internal.createDelegate(this.readOn, this.declaringClass, this.name, typeof(TFunction));
+
+    // A value of the function type `TFunction` that calls the method with a list of arguments, as
+    // `Function<Any?(Object, List<Any?>) uses Database>`: an instance method takes its receiver, then the `List<Any?>`,
+    // and a static one takes the list alone and runs on the class it was read from. It fits `TFunction` as
+    // `createDelegate` does, but for its parameters, so a call of the value has only the effects `TFunction` lists, and
+    // making it is pure. A call checks each value of the list against the parameter at its place, as a direct call does,
+    // and throws TypeError naming the one it doesn't fit. A parameter the list leaves out takes its default when that
+    // runs no code, as `Parameter.defaultValue()` reads it, and the call throws ValueError for one that runs code and
+    // ArgumentCountError for a required one or a value past the last parameter.
+    public TFunction createInvoker<TFunction>()
+        => Internal.createInvoker(this.readOn, this.declaringClass, this.name, typeof(TFunction));
 
     // The attributes of the method of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
