@@ -2364,7 +2364,6 @@ extern ReflectionFunction.__construct;
 extern ReflectionMethod.__construct;
 extern ReflectionParameter.__construct;
 extern ReflectionParameter.getAttributes;
-extern ReflectionParameter.isDefaultValueAvailable;
 extern ReflectionProperty.__construct;
 extern ReflectionProperty.getAttributes;
 extern ReflectionProperty.getDefaultValue;

@@ -58,7 +58,8 @@ public static class ClassMembers
     private static List<string> words(string text) => global.explode(" ", text);
 
     // The parameters of a method or a constructor as the engine gives them, after the row of the method itself: each
-    // parameter's name, type, "optional" or "" and "variadic" or "", in order.
+    // parameter's name, type, "optional" or "", "variadic" or "" and "constant" or "", in order, "constant" for a
+    // default that runs no code.
     private static List<Parameter> parameters(List<List<string>> rows)
     {
         List<Parameter> parameters = [];
@@ -70,7 +71,8 @@ public static class ClassMembers
                 parameter[0],
                 ClassMembers.classValue(parameter[1]),
                 parameter[2] == "optional",
-                parameter[3] == "variadic"
+                parameter[3] == "variadic",
+                parameter[4] == "constant"
             ));
         }
 

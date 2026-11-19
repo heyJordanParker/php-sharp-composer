@@ -3,11 +3,12 @@ namespace Sharp;
 import ReflectionAttribute;
 import ReflectionParameter;
 import Sharp.Internal.CreatesAttributes;
-import Sharp.Internal.RunsDefaults;
+
+extern Internal.defaultValue;
 
 // A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, its type as declared, whether
-// it is optional, which it is when a call may leave it out, whether it is variadic, and its default value. The engine
-// creates it.
+// it is optional, which it is when a call may leave it out, whether it is variadic, whether it has a default that runs
+// no code, and its default value. The engine creates it.
 public class Parameter
 {
     internal Parameter(
@@ -17,7 +18,8 @@ public class Parameter
         public string name { get; },
         public Class<Any?> type { get; },
         public bool isOptional { get; },
-        public bool isVariadic { get; }
+        public bool isVariadic { get; },
+        public bool hasConstantDefault { get; }
     ) { }
 
     // Two values are one parameter when they are the same position of one method, so a `Map<Parameter, V>` keys by the
@@ -27,24 +29,11 @@ public class Parameter
 
     public int hash() => global.crc32(`${this.declaringClass.name()}::${this.method}#${this.position}`);
 
-    // The value a call that leaves the parameter out gives it. It is evaluated on each read, so a `new` in the default
-    // creates a new object each time. A parameter with no default value, a required or a variadic one, throws
-    // `OutOfRangeException`, as `List.first()` does when nothing matches. A read has the effects of the defaults it can
-    // run, spec section 29.
-    [RunsDefaults]
-    public Any? defaultValue()
-    {
-        const parameter = this.reflected();
-        if (!parameter.isDefaultValueAvailable())
-        {
-            throw new OutOfRangeException(
-                "`defaultValue` reads a parameter that has a default, and `" + this.name + "` of `" + this.method
-                    + "` has none."
-            );
-        }
-
-        return parameter.getDefaultValue();
-    }
+    // The value a call that leaves the parameter out gives it, when `hasConstantDefault` holds. A default that runs
+    // code, a `new`, a call or a lambda, throws `ValueError` and runs none of it, so a read is pure, spec section 29, and
+    // a call that leaves the argument out runs the default under its own effects. A parameter with no default value, a
+    // required or a variadic one, throws `OutOfRangeException`, as `List.first()` does when nothing matches.
+    public Any? defaultValue() => Internal.defaultValue(this.declaringClass, this.method, this.position);
 
     // The attributes of the parameter of the class `TAttribute` or of a class that extends or implements it, as
     // `Class<T>.attributes()` gives a class's.
