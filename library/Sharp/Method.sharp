@@ -3,8 +3,8 @@ namespace Sharp;
 import ReflectionAttribute;
 import Sharp.Internal.CreatesAttributes;
 
-extern Internal.createDelegate;
-extern Internal.createInvoker;
+extern Internal.createDelegate uses none;
+extern Internal.createInvoker uses none;
 
 // A method a class declares, as `Class<T>.methods()` gives it, spec section 25: the class that declares it, its name,
 // its modifiers, its visibility, its result type as declared, `void` for a `void` method, and its parameters. A method

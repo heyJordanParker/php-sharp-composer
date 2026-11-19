@@ -2,7 +2,7 @@ namespace Sharp.Encoding;
 
 import Sharp.Internal;
 
-extern Internal.equals;
+extern Internal.equals uses none;
 
 // The value JSON text holds, as `Json.parse` gives it, spec section 24: `null`, a `bool`, an `int`, a `float`, a
 // `string`, a `List` or a `Map<string, …>` of them. Two compare by structure at every depth, so decoded settings or

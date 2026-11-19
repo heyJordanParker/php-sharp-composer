@@ -4,7 +4,7 @@ import ReflectionAttribute;
 import ReflectionClassConstant;
 import Sharp.Internal.CreatesAttributes;
 
-extern Internal.constant;
+extern Internal.constant uses none;
 
 // A constant a class declares, as `Class<T>.constants()` gives it, spec section 25: the class that declares it, its
 // name and its type as declared. The engine creates it.

@@ -3,8 +3,8 @@ namespace Sharp;
 import Sharp.Internal.CreatesAttributes;
 import Sharp.Internal.RunsInitialValues;
 
-extern Internal.readField;
-extern Internal.writeField;
+extern Internal.readField uses none;
+extern Internal.writeField uses none;
 
 // The storage of a field a class declares, of an auto-property that is neither `virtual` nor `abstract`, or of a plain
 // PHP property that declares no hook, as `Class<T>.fields()` gives it, spec section 25: the class that declares it, its

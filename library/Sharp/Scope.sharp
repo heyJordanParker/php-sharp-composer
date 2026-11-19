@@ -2,7 +2,7 @@ namespace Sharp;
 
 import Sharp.Internal;
 
-extern Internal.runScoped;
+extern Internal.runScoped uses none;
 
 public static class Scope
 {

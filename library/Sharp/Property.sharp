@@ -3,7 +3,9 @@ namespace Sharp;
 import Sharp.Internal.CreatesAttributes;
 import Sharp.Internal.RunsInitialValues;
 
-extern Internal.accessors;
+extern Internal.accessors uses none;
+extern Internal.read uses any;
+extern Internal.write uses any;
 
 // A property a class declares, as `Class<T>.properties()` gives it, spec section 25: the class that declares
 // it, its name, its visibility, its type as declared, the visibility that reaches its `set` or `init`, null for a

@@ -2,7 +2,7 @@ namespace Sharp.Collections;
 
 import Sharp.Internal;
 
-extern Internal.compare;
+extern Internal.compare uses none;
 
 // A map that keeps its keys in order, with every member a `Map` has.
 // It orders by the key's `operator <=>`, as `<` orders two keys, or by the comparison its constructor takes, which

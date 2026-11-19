@@ -11,28 +11,28 @@ import ReflectionProperty;
 import Sharp.Internal;
 import Sharp.Internal.CreatesAttributes;
 
-extern Internal.methods;
-extern Internal.properties;
-extern Internal.constructor;
-extern Internal.hiddenMethod;
-extern Internal.createInstance;
-extern Internal.createLazy;
-extern Internal.typeArguments;
-extern Internal.typeKind;
-extern Internal.isNullable;
-extern Internal.nonNullable;
-extern Internal.typeParts;
-extern Internal.tupleNames;
-extern Internal.genericDefinition;
-extern Internal.typeParameters;
-extern Internal.baseType;
-extern Internal.interfaces;
-extern Internal.classFacts;
-extern Internal.enumBackingType;
-extern Internal.enumCases;
-extern Internal.constants;
-extern Internal.makeGenericType;
-extern Internal.withTag;
+extern Internal.methods uses none;
+extern Internal.properties uses none;
+extern Internal.constructor uses none;
+extern Internal.hiddenMethod uses none;
+extern Internal.createInstance uses none;
+extern Internal.createLazy uses none;
+extern Internal.typeArguments uses none;
+extern Internal.typeKind uses none;
+extern Internal.isNullable uses none;
+extern Internal.nonNullable uses none;
+extern Internal.typeParts uses none;
+extern Internal.tupleNames uses none;
+extern Internal.genericDefinition uses none;
+extern Internal.typeParameters uses none;
+extern Internal.baseType uses none;
+extern Internal.interfaces uses none;
+extern Internal.classFacts uses none;
+extern Internal.enumBackingType uses none;
+extern Internal.enumCases uses none;
+extern Internal.constants uses none;
+extern Internal.makeGenericType uses none;
+extern Internal.withTag uses none;
 
 public static class ClassMembers
 {
@@ -183,7 +183,7 @@ public static class ClassMembers
     {
         const initial = Internal.hiddenMethod(declaring, name + "#initial");
         if (initial != null) {
-            return initial();
+            return new ReflectionFunction(initial).invoke();
         }
         if (ClassMembers.stored(declaring, name) is ReflectionProperty property && property.hasDefaultValue()) {
             return property.getDefaultValue();

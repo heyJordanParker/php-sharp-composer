@@ -5,8 +5,8 @@ import Sharp.Internal.ComparedByEquality;
 import Sharp.Internal.ComparedByOrder;
 import Sharp.Internal.SearchesElements;
 
-extern Internal.addKey;
-extern Internal.filterElements;
+extern Internal.addKey uses none;
+extern Internal.filterElements uses none;
 
 // The members of a `Set`, spec section 12. A member that changes the set takes it by `ref`, spec section 26. A `Set`'s
 // elements are its table's keys, which the functions a `Map` shares find, remove and list.

@@ -4,15 +4,15 @@ import Sharp.Internal;
 import Sharp.Internal.ComparedByEquality;
 import Sharp.Internal.ComparedByOrder;
 
-extern Internal.size;
-extern Internal.containsKey;
-extern Internal.removeKey;
-extern Internal.put;
-extern Internal.keys;
-extern Internal.values;
-extern Internal.pairs;
-extern Internal.filterEntries;
-extern Internal.getOrPut;
+extern Internal.size uses none;
+extern Internal.containsKey uses none;
+extern Internal.removeKey uses none;
+extern Internal.put uses none;
+extern Internal.keys uses none;
+extern Internal.values uses none;
+extern Internal.pairs uses none;
+extern Internal.filterEntries uses none;
+extern Internal.getOrPut uses none;
 
 // The members of a `Map`, spec section 12. A member that changes the map takes it by `ref`, spec section 26.
 public static class MapMembers
