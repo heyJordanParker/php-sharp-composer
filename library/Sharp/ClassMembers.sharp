@@ -222,6 +222,18 @@ public static class ClassMembers
             ? ClassMembers.classValue(Internal.typeParts(type)[0])
             : throw new OutOfRangeException(message + " " + type.name() + " is none.");
 
+    // The class values of the plain PHP traits the class or trait `type` uses, each followed by the traits it uses in
+    // turn.
+    private static List<Class<Object>> usedTraits(Class<Object> type)
+    {
+        const used = global.class_uses(type);
+        if (used == false) {
+            throw new ValueError("The engine gave a class name that names no class.");
+        }
+
+        return global.array_values(used).flatMap(trait => [trait, ...ClassMembers.usedTraits(trait)]);
+    }
+
     // `type` when it is a `Class<Object>`, the class value of a class, an interface or an enum, spec section 25, and null
     // for the class value of a type that is no class, as the root bound `Object`, `int` or `List<int>`, which PHP declares
     // no class for. Each member that hands a class value to PHP's reflection reads it through this, so such a type has no
@@ -371,6 +383,13 @@ public static class ClassMembers
         // The interfaces the class implements, its own and those it inherits, each with the type arguments it gives it.
         public List<Class<Any?>> interfaces()
             => ClassMembers.declared(type) == null ? [] : Internal.interfaces(type).map(ClassMembers.classValue);
+
+        // The plain PHP traits the class uses, spec section 22: its own, each followed by the traits it uses, then those
+        // of the classes it extends, each once, as `is` tests them.
+        public List<Class<Any?>> traits()
+            => ClassMembers.declared(type) is Class<Object> declared
+                ? [...ClassMembers.usedTraits(declared), ...(type.baseType()?.traits() ?? [])].distinct()
+                : [];
 
         // Whether the class is abstract, an interface included.
         public bool isAbstract() => ClassMembers.declared(type) != null && Internal.classFacts(type)[0];
