@@ -3,13 +3,13 @@ namespace Sharp.Security;
 // A hash of bytes, in lowercase hex, so text is hashed as `text.toBytes()`.
 public static class Hash
 {
-    public static string of(string algorithm, Bytes data) => global.hash(algorithm, data.data);
+    public static string of(string algorithm, Bytes data) => global.hash(algorithm, data);
 
-    public static string md5(Bytes data) => global.md5(data.data);
+    public static string md5(Bytes data) => global.md5(data);
 
-    public static string sha1(Bytes data) => global.sha1(data.data);
+    public static string sha1(Bytes data) => global.sha1(data);
 
-    public static int crc32(Bytes data) => global.crc32(data.data);
+    public static int crc32(Bytes data) => global.crc32(data);
 
     public static bool equals(string known, string given) => global.hash_equals(known, given);
 }
