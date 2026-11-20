@@ -2,8 +2,8 @@ namespace Sharp.IO;
 
 import ZipArchive as PhpZipArchive;
 
-// A ZIP archive on disk: its entries are listed, read as text, added from text or from a file, and extracted to a
-// folder. The changes reach the file when `close()` runs. Each member reads or writes files, so code that calls one
+// A ZIP archive on disk: its entries are listed, read as text or as `Bytes`, added from either or from a file, and
+// extracted to a folder. The changes reach the file when `close()` runs. Each member reads or writes files, so code that calls one
 // has the effect `Files`. A failure throws `RuntimeException` with the archive's path and libzip's reason.
 public class ZipArchive
 {
@@ -35,24 +35,18 @@ public class ZipArchive
         return names;
     }
 
-    // The text of the entry `name`, null when the archive has none, as Files.read gives null for a missing file.
-    public string? read(string name)
-    {
-        if (this.archive.locateName(name) is not int) {
-            this.archive.clearError();
-            return null;
-        }
+    // The text of the entry `name`, each byte sequence that is not UTF-8 read as U+FFFD, spec section 18, null when
+    // the archive has none, as Files.read gives null for a missing file.
+    public string? read(string name) => this.entry(name, "ZipArchive.read")?.toText();
 
-        return this.archive.getFromName(name) is string contents ? contents : throw this.failure(`ZipArchive.read: "${name}" in "${this.path}" cannot be read`);
-    }
+    // The bytes of the entry `name`, every one kept, null when the archive has none.
+    public Bytes? readBytes(string name) => this.entry(name, "ZipArchive.readBytes");
 
     // Adds the entry `name` holding `contents`, in place of an entry of that name, as Files.write replaces a file.
-    public void write(string name, string contents)
-    {
-        if (!this.archive.addFromString(name, contents)) {
-            throw this.failure(`ZipArchive.write: "${name}" cannot be added to "${this.path}"`);
-        }
-    }
+    public void write(string name, string contents) => this.add(name, contents, "ZipArchive.write");
+
+    // Adds the entry `name` holding the bytes, in place of an entry of that name.
+    public void writeBytes(string name, Bytes contents) => this.add(name, contents.data, "ZipArchive.writeBytes");
 
     // Adds the entry `name` holding the file at `file`, read now, in place of an entry of that name.
     public void addFile(string file, string name)
@@ -80,6 +74,26 @@ public class ZipArchive
     {
         if (!this.archive.close()) {
             throw this.failure(`ZipArchive.close: "${this.path}" cannot be written`);
+        }
+    }
+
+    // The bytes of the entry `name` for `member`, or null when the archive has none.
+    private Bytes? entry(string name, string member)
+    {
+        if (this.archive.locateName(name) is not int) {
+            this.archive.clearError();
+            return null;
+        }
+
+        return this.archive.getFromName(name) is string contents
+            ? Bytes.held(contents)
+            : throw this.failure(`${member}: "${name}" in "${this.path}" cannot be read`);
+    }
+
+    private void add(string name, string contents, string member)
+    {
+        if (!this.archive.addFromString(name, contents)) {
+            throw this.failure(`${member}: "${name}" cannot be added to "${this.path}"`);
         }
     }
 

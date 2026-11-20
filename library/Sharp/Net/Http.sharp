@@ -23,8 +23,8 @@ public foreign class Http
         global.curl_setopt(handle, global.CURLOPT_HTTPHEADER, headers);
         global.curl_setopt(handle, global.CURLOPT_RETURNTRANSFER, true);
         global.curl_setopt(handle, global.CURLOPT_HEADER, true);
-        if (request.body != "") {
-            global.curl_setopt(handle, global.CURLOPT_POSTFIELDS, request.body);
+        if (request.body is Bytes body) {
+            global.curl_setopt(handle, global.CURLOPT_POSTFIELDS, body.data);
         }
         if (request.timeout is Duration timeout) {
             global.curl_setopt(handle, global.CURLOPT_TIMEOUT_MS, timeout.nanoseconds / 1_000_000);
@@ -39,7 +39,7 @@ public foreign class Http
             throw new RuntimeException(`Http.send: ${request.url} gave no status`);
         }
 
-        return new HttpResponse(code, Http.headers(global.substr(response, 0, size)), global.substr(response, size));
+        return new HttpResponse(code, Http.headers(global.substr(response, 0, size)), Bytes.held(global.substr(response, size)));
     }
 
     // The header lines of a response, each name lowercased, with every value it was sent with.

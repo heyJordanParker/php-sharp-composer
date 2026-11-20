@@ -4,8 +4,8 @@ import PDO;
 import PDOStatement;
 import Sharp.Time.Duration;
 
-// A key-value store in a SQLite file. Values are strings, which also cover bytes, so a structured value goes through
-// `Json`. A failing store throws `PDOException`, a `RuntimeException`.
+// A key-value store in a SQLite file. Values are `Bytes`, spec section 18, so text is kept as `text.toBytes()` and
+// a structured value goes through `Json`. A failing store throws `PDOException`, a `RuntimeException`.
 public foreign class Cache
 {
     private PDO store;
@@ -22,17 +22,17 @@ public foreign class Cache
     }
 
     // null on a miss or an expired entry.
-    public string? get(string key)
+    public Bytes? get(string key)
     {
         const found = this.run("Cache.get", key, "SELECT value FROM cache WHERE key = ? AND (expires IS NULL OR expires > ?)", [global.time()]);
 
-        return found.fetchColumn() is string value ? value : null;
+        return found.fetchColumn() is string value ? Bytes.held(value) : null;
     }
 
-    public void set(string key, string value, Duration? expiresAfter = null)
+    public void set(string key, Bytes value, Duration? expiresAfter = null)
     {
         const expires = expiresAfter is Duration after ? global.time() + after.seconds : null;
-        this.run("Cache.set", key, "REPLACE INTO cache (key, value, expires) VALUES (?, ?, ?)", [value, expires]);
+        this.run("Cache.set", key, "REPLACE INTO cache (key, value, expires) VALUES (?, ?, ?)", [value.data, expires]);
     }
 
     // A missing key is not an error.
@@ -42,9 +42,9 @@ public foreign class Cache
     }
 
     // The cached value, or else the one `create` gives, which the cache keeps. Each call has the effects of `create`.
-    public string getOrCreate(string key, Function<string()> create, Duration? expiresAfter = null)
+    public Bytes getOrCreate(string key, Function<Bytes()> create, Duration? expiresAfter = null)
     {
-        if (this.get(key) is string value) {
+        if (this.get(key) is Bytes value) {
             return value;
         }
         const created = create();

@@ -2,15 +2,15 @@ namespace Sharp.Net;
 
 import Sharp.Time.Duration;
 
-// A request `Http.send` sends. A line break in a header's name or value would start a header of its own, so it is
-// refused.
+// A request `Http.send` sends, with its body as `Bytes`, spec section 18, or none. A line break in a header's name or
+// value would start a header of its own, so it is refused.
 public struct HttpRequest
 {
     public HttpRequest(
         public HttpMethod method { get; },
         public string url { get; },
         public Map<string, string> headers { get; } = [:],
-        public string body { get; } = "",
+        public Bytes? body { get; } = null,
         public Duration? timeout { get; } = null,
     )
     {
