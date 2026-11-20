@@ -44,7 +44,7 @@ public class Property
     public void set(Object? receiver, Any? value) => Internal.write(receiver, this.declaringClass, this.name, value);
 
     // Whether the property holds a value on `receiver`, as `ClassMembers.isInitialized` reads it: false for a `late`
-    // property no code has set, and for one of a lazy object that has not loaded, which the read does not load.
+    // property no code has set.
     public bool isInitialized(Object receiver) => ClassMembers.isInitialized(this.declaringClass, this.name, receiver);
 
     // The `get` accessor of a property that runs one, as PHP's `ReflectionProperty::getHook` gives it, named

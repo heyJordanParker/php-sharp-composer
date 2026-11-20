@@ -16,7 +16,6 @@ extern Internal.properties uses none;
 extern Internal.constructor uses none;
 extern Internal.hiddenMethod uses none;
 extern Internal.createInstance uses none;
-extern Internal.createLazy uses none;
 extern Internal.typeArguments uses none;
 extern Internal.typeKind uses none;
 extern Internal.isNullable uses none;
@@ -156,18 +155,10 @@ public static class ClassMembers
         );
 
     // Whether the property or field `name` that `declaring` declares holds a value on `receiver`, as PHP's
-    // `ReflectionProperty::isInitialized` reads it: false for a `late` one no code has set, and for one of a lazy object
-    // `createLazy` made that has not loaded and `Field.set` did not write, which the read does not load, as PHP's
-    // `ReflectionProperty::isLazy` reads it, since PHP's `isInitialized` loads the object. A computed property always
+    // `ReflectionProperty::isInitialized` reads it: false for a `late` one no code has set. A computed property always
     // holds one. There is no reset, since a `late` member is set once.
     internal static bool isInitialized(Class<Object> declaring, string name, Object receiver)
-    {
-        const property = new ReflectionProperty(declaring, name);
-
-        return new ReflectionClass(receiver).isUninitializedLazyObject(receiver)
-            ? !property.isLazy(receiver)
-            : property.isInitialized(receiver);
-    }
+        => new ReflectionProperty(declaring, name).isInitialized(receiver);
 
     // Whether the declaration of the property or field `name` that `declaring` declares gives it an initial value,
     // constant or not.
@@ -365,13 +356,6 @@ public static class ClassMembers
         // direct `new` would. Throws InvalidArgumentException for an abstract class, an interface or an enum, and for
         // arguments the constructor's parameters don't take.
         public T createInstance(List<Any?> arguments) => Internal.createInstance(type, arguments);
-
-        // A new lazy object of the class, with the class value's type arguments, created empty with no constructor run,
-        // as PHP 8.4's `ReflectionClass::newLazyGhost` creates one: `initialize` runs on it at its first property read or
-        // write, as Doctrine loads an entity, and storage `Field.set` wrote reads without it. Throws
-        // InvalidArgumentException for an abstract class, an interface or an enum, and for a class that extends one of
-        // PHP's own.
-        public T createLazy(Function<void(T)> initialize) => Internal.createLazy(type, initialize);
 
         // The variant of the family the class is whose `[Key]` is `tag`, spec section 10, or null for a name it has no
         // variant of, and for a class that is no family. It is pure, so a single-table-inheritance base builds the row's
