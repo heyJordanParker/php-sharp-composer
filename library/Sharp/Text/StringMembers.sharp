@@ -167,21 +167,8 @@ public static class StringMembers
             => text.characters().map(
                 (string character) => global.mb_ord(character, "UTF-8") as int ?? throw new ValueError("`codePoints` reads UTF-8 text, and the text is not."));
 
-        // The text read as its bytes, spec section 18, as `length()`, `substring()` and `codePoints()` read it as
-        // characters: binary data, as `Ip.toBinary` gives, and the bytes another system counts or signs.
-        public int byteLength() => global.strlen(text);
-
-        public string byteSubstring(int start, int? end = null)
-        {
-            const stop = end ?? text.byteLength();
-            if (start < 0 || stop < start || stop > text.byteLength()) {
-                throw new OutOfRangeException("`byteSubstring` takes a range inside the bytes, and the range is outside it.");
-            }
-            return global.substr(text, start, stop - start);
-        }
-
-        // Each byte as an `int` from 0 to 255.
-        public List<int> bytes() => global.str_split(text).map((string byte) => global.ord(byte));
+        // The text's UTF-8 bytes, spec section 18, as `length()`, `substring()` and `codePoints()` read it as characters.
+        public Bytes toBytes() => Bytes.held(text);
 
         // PHP reads a blank line as `[null]`, the one row whose field is no string.
         public List<string> parseCsv() => global.str_getcsv(text, ",", "\"", "") as List<string> ?? [""];

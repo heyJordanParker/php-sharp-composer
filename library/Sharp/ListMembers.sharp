@@ -237,8 +237,8 @@ public static class ListMembers
 
         public int min() => global.min(Internal.nonEmpty(numbers));
 
-        // The text of the bytes, each an `int` from 0 to 255, as `Int.toByteString()` gives one byte's.
-        public string toByteString() => global.implode("", numbers.map((int byte) => byte.toByteString()));
+        // The `Bytes` of the values, each an `int` from 0 to 255, spec section 18.
+        public Bytes toBytes() => Bytes.of(numbers);
     }
 
     extension(List<string> fields)

@@ -1,11 +1,11 @@
 namespace Sharp.Security;
 
-// A keyed hash that signs data, in lowercase hex.
+// A keyed hash that signs bytes, in lowercase hex.
 public static class Hmac
 {
-    public static string of(string algorithm, string data, string key) => global.hash_hmac(algorithm, data, key);
+    public static string of(string algorithm, Bytes data, Bytes key) => global.hash_hmac(algorithm, data.data, key.data);
 
     // Whether `signature` is the HMAC of `data`, compared in constant time, as a webhook's signature is checked.
-    public static bool verify(string algorithm, string data, string key, string signature)
+    public static bool verify(string algorithm, Bytes data, Bytes key, string signature)
         => global.hash_equals(Hmac.of(algorithm, data, key), signature);
 }

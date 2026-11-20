@@ -2,8 +2,8 @@ namespace Sharp.Encoding;
 
 public static class Hex
 {
-    public static string encode(string data) => global.bin2hex(data);
+    public static string encode(Bytes data) => global.bin2hex(data.data);
 
-    public static string decode(string text)
-        => global.hex2bin(text) is string data ? data : throw new ValueError("Hex.decode: the text is not hexadecimal with an even length");
+    public static Bytes decode(string text)
+        => global.hex2bin(text) is string data ? Bytes.held(data) : throw new ValueError("Hex.decode: the text is not hexadecimal with an even length");
 }

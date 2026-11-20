@@ -2,9 +2,9 @@ namespace Sharp.Encoding;
 
 public static class Compression
 {
-    public static string compress(string data)
-        => global.gzcompress(data) is string compressed ? compressed : throw new ValueError("Compression.compress: zlib could not compress the data");
+    public static Bytes compress(Bytes data)
+        => global.gzcompress(data.data) is string compressed ? Bytes.held(compressed) : throw new ValueError("Compression.compress: zlib could not compress the data");
 
-    public static string uncompress(string data)
-        => global.gzuncompress(data) is string text ? text : throw new ValueError("Compression.uncompress: the data is not zlib-compressed");
+    public static Bytes uncompress(Bytes data)
+        => global.gzuncompress(data.data) is string uncompressed ? Bytes.held(uncompressed) : throw new ValueError("Compression.uncompress: the data is not zlib-compressed");
 }

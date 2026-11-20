@@ -1,0 +1,66 @@
+namespace Sharp;
+
+import Sharp.Internal;
+
+extern Internal.text uses none;
+
+// Binary data, spec section 18: the bytes another system gives, counts or signs, as an address, a hash or a file that
+// is not text. A `string` is always valid UTF-8, so bytes that may not be are `Bytes`. Two are `==` when they hold the
+// same bytes. It stores as standard base64 text, through `parse` and `toString()`, as .NET's JSON stores a `byte[]`.
+public struct Bytes
+{
+    // The bytes as PHP's string holds them. The engine fills it for a plain PHP string that crosses into a `Bytes`
+    // place, and the standard library hands it to PHP's functions.
+    private Bytes(internal string data { get; }) { }
+
+    // The bytes standard base64 `text` writes.
+    public static Bytes parse(string text)
+        => global.base64_decode(text, true) is string data ? new Bytes(data) : throw new ValueError("Bytes.parse: the text is not valid base64");
+
+    // The bytes of `values`, each an int from 0 to 255.
+    internal static Bytes of(List<int> values)
+    {
+        if (values.any(value => value < 0 || value > 255)) {
+            throw new ValueError("`toBytes` needs bytes from 0 to 255, and a value is outside them.");
+        }
+
+        return new Bytes(global.pack("C*", ...values));
+    }
+
+    // The bytes a plain PHP function gave, kept as they are.
+    internal static Bytes held(string data) => new Bytes(data);
+
+    public int length() => global.strlen(this.data);
+
+    // The bytes from `start` up to `end`, the length by default. A range outside the bytes throws.
+    public Bytes slice(int start, int? end = null)
+    {
+        const stop = end ?? global.strlen(this.data);
+        if (start < 0 || stop < start || stop > global.strlen(this.data)) {
+            throw new OutOfRangeException("`slice` takes a range inside the bytes, and the range is outside it.");
+        }
+
+        return new Bytes(global.substr(this.data, start, stop - start));
+    }
+
+    // Each byte as an int from 0 to 255.
+    public List<int> toList()
+    {
+        const values = global.unpack("C*", this.data);
+        if (values == false) {
+            throw new ValueError("Bytes.toList: PHP's unpack could not read the bytes");
+        }
+
+        return global.array_values(values);
+    }
+
+    // The bytes read as UTF-8, each byte sequence that is not UTF-8 replaced by U+FFFD.
+    public string toText() => Internal.text(this.data);
+
+    public static bool operator ==(Bytes a, Bytes b) => a.data == b.data;
+
+    public int hash() => global.crc32(this.data);
+
+    // The bytes as standard base64, which `parse` reads.
+    public string toString() => global.base64_encode(this.data);
+}

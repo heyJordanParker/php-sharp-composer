@@ -26,13 +26,13 @@ public foreign class Random
     // 0.0 ≤ n < 1.0.
     public float nextFloat() => this.randomizer.nextFloat();
 
-    public string nextBytes(int length)
+    public Bytes nextBytes(int length)
     {
         if (length < 1) {
             throw new ValueError(`Random.nextBytes: the length ${length} is less than 1`);
         }
 
-        return this.randomizer.getBytes(length);
+        return Bytes.held(this.randomizer.getBytes(length));
     }
 
     // A new list in random order.

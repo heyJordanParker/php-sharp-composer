@@ -43,13 +43,13 @@ public static class Int
     }
 
     // The int the 8 bytes write in `order`.
-    public static int fromBytes(string bytes, ByteOrder order = ByteOrder.Big)
+    public static int fromBytes(Bytes bytes, ByteOrder order = ByteOrder.Big)
     {
-        if (global.strlen(bytes) != 8) {
-            throw new ValueError(`Int.fromBytes: an int is 8 bytes, and the text holds ${global.strlen(bytes)}`);
+        if (bytes.length() != 8) {
+            throw new ValueError(`Int.fromBytes: an int is 8 bytes, and the bytes hold ${bytes.length()}`);
         }
 
-        return global.unpack(order.value, bytes) is [int value] ? value : throw new ValueError("Int.fromBytes: the bytes write no int");
+        return global.unpack(order.value, bytes.data) is [int value] ? value : throw new ValueError("Int.fromBytes: the bytes write no int");
     }
 
     private static void checkRadix(int radix, string member)
@@ -106,12 +106,8 @@ public static class Int
         public string toHex()
             => value == Int.MIN ? "-8000000000000000" : value < 0 ? "-" + global.dechex(-value) : global.dechex(value);
 
-        // The string of the one byte `value`, from 0 to 255.
-        public string toByteString()
-            => value >= 0 && value <= 255 ? global.chr(value) : throw new ValueError("`toByteString` needs a byte from 0 to 255, and the value is outside it.");
-
         // The 8 bytes of `value` in `order`, a negative one in two's complement.
-        public string toBytes(ByteOrder order = ByteOrder.Big) => global.pack(order.value, value);
+        public Bytes toBytes(ByteOrder order = ByteOrder.Big) => Bytes.held(global.pack(order.value, value));
 
         // The character of the code point `value`.
         public string toCharacter()
