@@ -59,6 +59,9 @@ public struct Bytes
 
     public static bool operator ==(Bytes a, Bytes b) => a.data == b.data;
 
+    // The bytes of `a` followed by those of `b`, the one way to join two `Bytes`.
+    public static Bytes operator +(Bytes a, Bytes b) => new Bytes(a.data + b.data);
+
     public int hash() => global.crc32(this.data);
 
     // The bytes as standard base64, which `parse` reads.
