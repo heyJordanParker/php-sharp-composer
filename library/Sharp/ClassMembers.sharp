@@ -32,6 +32,7 @@ extern Internal.enumCases uses none;
 extern Internal.constants uses none;
 extern Internal.makeGenericType uses none;
 extern Internal.withTag uses none;
+extern Internal.tag uses none;
 
 public static class ClassMembers
 {
@@ -373,6 +374,11 @@ public static class ClassMembers
         // variant of, and for a class that is no family. It is pure, so a single-table-inheritance base builds the row's
         // class with `new (typeof(Self).withTag(row.type) ?? throw …)(…)`.
         public Class<T>? withTag(string tag) => Internal.withTag(type, tag) is string variant ? variant as Class<T> : null;
+
+        // The name the family of the class stores for it, spec section 10: its `[Key]`, or its value as a backed
+        // machine's case. Null for a class that is no variant of a family. It reads what `withTag` reads, so
+        // `typeof(F).withTag(c.tag() ?? …)` is `c` for every variant `c` of `F`.
+        public string? tag() => Internal.tag(type);
 
         // The class the class extends, with the type arguments it gives it, or null.
         public Class<Any?>? baseType()
