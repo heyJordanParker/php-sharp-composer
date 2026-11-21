@@ -58,10 +58,18 @@ public struct Date
     // ISO-8601, as "2026-10-22".
     public string toString()
     {
-        const year = this.year < 0 ? global.sprintf("-%04d", -this.year) : this.year > 9999 ? `+${this.year}` : global.sprintf("%04d", this.year);
+        const year = this.year < 0 ? "-" + Date.padded(-this.year, 4) : this.year > 9999 ? "+" + (string) this.year : Date.padded(this.year, 4);
 
-        return global.sprintf("%s-%02d-%02d", year, this.month, this.day);
+        return year + "-" + Date.padded(this.month, 2) + "-" + Date.padded(this.day, 2);
     }
+
+    // `value`, 0 or more, in decimal with zeros before it to `width` digits, as "%02d" writes 7 as "07". A law reads it,
+    // since it calls no plain PHP.
+    internal static string padded(int value, int width)
+        => width <= 1 ? (string) value : value >= Date.tenTo(width - 1) ? (string) value : "0" + Date.padded(value, width - 1);
+
+    // 10 to the power `power`, 0 or more.
+    private static int tenTo(int power) => power <= 0 ? 1 : 10 * Date.tenTo(power - 1);
 
     public static Date parse(string text)
         => Date.tryParse(text) ?? throw new ValueError(`\`Date.parse\` reads an ISO-8601 day, such as "2026-10-22", and "${text}" is not.`);

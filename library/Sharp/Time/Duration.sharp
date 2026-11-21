@@ -85,9 +85,8 @@ public struct Duration
         if (nanoseconds == 0) {
             return "";
         }
-        const digits = global.sprintf("%09d", nanoseconds);
 
-        return "." + (nanoseconds % 1_000_000 == 0 ? global.substr(digits, 0, 3) : nanoseconds % 1_000 == 0 ? global.substr(digits, 0, 6) : digits);
+        return "." + (nanoseconds % 1_000_000 == 0 ? Date.padded(nanoseconds / 1_000_000, 3) : nanoseconds % 1_000 == 0 ? Date.padded(nanoseconds / 1_000, 6) : Date.padded(nanoseconds, 9));
     }
 
     internal static int fractionNanoseconds(string digits) => digits == "" ? 0 : Int.parse(global.str_pad(digits, 9, "0"));
