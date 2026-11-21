@@ -1,0 +1,22 @@
+namespace Sharp.Security;
+
+import Sharp.Internal;
+
+extern Internal.hashValue uses none;
+extern Internal.verifyHash uses none;
+
+// The Argon2id hash of a value's stored form, spec section 24, which gives no value back: `verify` checks one.
+// It stores as `{"hashed":"<PHC string>"}`.
+public struct Hashed<T>
+{
+    private string hash { get; }
+
+    public Hashed(T value)
+    {
+        this.hash = Internal.hashValue(value);
+    }
+
+    public bool verify(T value) => Internal.verifyHash(this.hash, value);
+
+    public string toString() => "**********";
+}
