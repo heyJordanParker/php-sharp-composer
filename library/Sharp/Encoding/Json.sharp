@@ -6,7 +6,6 @@ import Sharp.Internal.ParsesTypeArgument;
 
 extern Internal.jsonEncode uses none;
 extern Internal.jsonDecode uses none;
-extern Internal.parseAs uses none;
 
 public static class Json
 {

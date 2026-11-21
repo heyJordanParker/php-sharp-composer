@@ -33,6 +33,7 @@ extern Internal.constants uses none;
 extern Internal.makeGenericType uses none;
 extern Internal.withTag uses none;
 extern Internal.tag uses none;
+extern Internal.parseAs uses none;
 
 public static class ClassMembers
 {
