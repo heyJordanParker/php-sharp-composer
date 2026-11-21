@@ -380,6 +380,11 @@ public static class ClassMembers
         // `typeof(F).withTag(c.tag() ?? …)` is `c` for every variant `c` of `F`.
         public string? tag() => Internal.tag(type);
 
+        // A `T` built from `value`, a stored value already read into lists, maps and scalars, as a field `parse` reads
+        // it, spec section 10: the read `Json.decode` makes once it has read the text. It throws one `InvalidFields`
+        // that lists every bad part.
+        public T decode(Any? value) => Internal.parseAs(type, value, false);
+
         // The class the class extends, with the type arguments it gives it, or null.
         public Class<Any?>? baseType()
             => ClassMembers.declared(type) != null && Internal.baseType(type) is string base
