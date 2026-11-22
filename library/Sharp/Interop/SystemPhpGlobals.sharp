@@ -1,0 +1,30 @@
+namespace Sharp.Interop;
+
+import Sharp.Internal;
+
+extern Internal.readGlobal uses PhpGlobals;
+extern Internal.writeGlobal uses PhpGlobals;
+extern Internal.includeGlobal uses PhpGlobals;
+
+// PHP's own global scope.
+public effect class SystemPhpGlobals : PhpGlobals
+{
+    public override Any? get(string name) => Internal.readGlobal(name);
+
+    public override void set(string name, Any? value)
+    {
+        Internal.writeGlobal(name, value);
+    }
+
+    public override Any? read(Superglobal which, string key) => Internal.readGlobal(which.value, key);
+
+    public override void write(Superglobal which, string key, Any? value)
+    {
+        Internal.writeGlobal(which.value, value, key);
+    }
+
+    public override void include(string path)
+    {
+        Internal.includeGlobal(path);
+    }
+}

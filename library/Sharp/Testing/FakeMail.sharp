@@ -1,0 +1,16 @@
+namespace Sharp.Testing;
+
+import Sharp.Net.Mail;
+import Sharp.Net.MailMessage;
+
+// Mail for tests: it keeps each message, and none leaves the machine.
+public class FakeMail : Mail
+{
+    // Each message, in call order.
+    public List<MailMessage> sent { get; private set; } = [];
+
+    public override void send(MailMessage message)
+    {
+        this.sent.add(message);
+    }
+}

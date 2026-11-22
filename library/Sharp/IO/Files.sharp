@@ -2,182 +2,67 @@ namespace Sharp.IO;
 
 import Sharp.Time.Instant;
 
-// Whole files and folders. A missing file is a returned null.
-public effect class Files
+// Whole files and folders. A missing file is a returned null. A module binds `SystemFiles`, the disk's, and a test
+// passes a `Sharp.Testing.FakeFiles`.
+public effect abstract class Files
 {
     // The file as text, each byte sequence that is not UTF-8 read as U+FFFD, spec section 18. null when the file
     // doesn't exist.
-    public string? read(string path) => Files.contents(path, "Files.read")?.toText();
+    public abstract string? read(string path);
 
     // The file's bytes, every one kept. null when the file doesn't exist.
-    public Bytes? readBytes(string path) => Files.contents(path, "Files.readBytes");
+    public abstract Bytes? readBytes(string path);
 
     // The lines without their endings, null when the file doesn't exist.
-    public List<string>? readLines(string path)
-    {
-        if (this.read(path) is not string contents) {
-            return null;
-        }
-
-        if (contents == "") {
-            return [];
-        }
-
-        return global.preg_split("/\\r\\n|\\n|\\r/", global.rtrim(contents, "\r\n")) is List<string> lines ? lines : [];
-    }
+    public abstract List<string>? readLines(string path);
 
     // The lines without their endings, read one at a time as a loop reaches them, so a file of any size streams
     // through. null when the file doesn't exist.
-    public Iterable<string>? readLinesLazily(string path)
-    {
-        Files.local(path, "Files.readLinesLazily");
-
-        return global.is_file(path) ? Files.lines(path) : null;
-    }
+    public abstract Iterable<string>? readLinesLazily(string path);
 
     // Replaces the file.
-    public void write(string path, string contents) => Files.put(path, contents, 0, "Files.write");
+    public abstract void write(string path, string contents);
 
     // Replaces the file with the bytes.
-    public void writeBytes(string path, Bytes contents) => Files.put(path, contents.data, 0, "Files.writeBytes");
+    public abstract void writeBytes(string path, Bytes contents);
 
     // Adds to the end of the file.
-    public void append(string path, string contents) => Files.put(path, contents, global.FILE_APPEND, "Files.append");
+    public abstract void append(string path, string contents);
 
-    public bool exists(string path) => global.is_file(path);
+    public abstract bool exists(string path);
 
-    public bool isDirectory(string path) => global.is_dir(path);
+    public abstract bool isDirectory(string path);
 
     // A missing file is not an error.
-    public void delete(string path)
-    {
-        if (global.is_file(path) && !global.unlink(path)) {
-            throw new RuntimeException(`Files.delete: "${path}" cannot be deleted`);
-        }
-    }
+    public abstract void delete(string path);
 
-    public void copy(string from, string to)
-    {
-        if (!global.copy(from, to)) {
-            throw new RuntimeException(`Files.copy: "${from}" cannot be copied to "${to}"`);
-        }
-    }
+    public abstract void copy(string from, string to);
 
-    public void move(string from, string to)
-    {
-        if (!global.rename(from, to)) {
-            throw new RuntimeException(`Files.move: "${from}" cannot be moved to "${to}"`);
-        }
-    }
+    public abstract void move(string from, string to);
 
-    // Entry names without . and .., null when the folder doesn't exist.
-    public List<string>? list(string directory)
-    {
-        if (!global.is_dir(directory)) {
-            return null;
-        }
-        if (global.scandir(directory) is not List<string> entries) {
-            throw new RuntimeException(`Files.list: "${directory}" cannot be read`);
-        }
-
-        return entries.filter(entry => entry != "." && entry != "..");
-    }
+    // Entry names without . and .., in name order, null when the folder doesn't exist.
+    public abstract List<string>? list(string directory);
 
     // Creates the parents too. An existing folder is not an error.
-    public void createDirectory(string path)
-    {
-        if (!global.is_dir(path) && !global.mkdir(path, 0o777, true)) {
-            throw new RuntimeException(`Files.createDirectory: "${path}" cannot be created`);
-        }
-    }
+    public abstract void createDirectory(string path);
 
-    public void deleteDirectory(string path)
-    {
-        if (!global.rmdir(path)) {
-            throw new RuntimeException(`Files.deleteDirectory: "${path}" cannot be deleted`);
-        }
-    }
+    // An empty folder.
+    public abstract void deleteDirectory(string path);
 
     // Bytes, null when the file is missing.
-    public int? size(string path) => global.is_file(path) && global.filesize(path) is int size ? size : null;
+    public abstract int? size(string path);
 
     // The time the file last changed, null when the file is missing.
-    public Instant? lastModified(string path) => global.file_exists(path) && global.filemtime(path) is int time ? new Instant(time) : null;
+    public abstract Instant? lastModified(string path);
 
     // A new empty file's path.
-    public string temporaryFile()
-        => global.tempnam(global.sys_get_temp_dir(), "sharp") is string path ? path : throw new RuntimeException("Files.temporaryFile: no temporary file can be created");
+    public abstract string temporaryFile();
 
     // The folder temporary files go in.
-    public string temporaryDirectory() => global.sys_get_temp_dir();
+    public abstract string temporaryDirectory();
 
     // The full path of each file and folder below the folder, a folder before its contents and each folder's entries
     // in name order, read as a loop reaches them. A link to a folder is given and not followed.
     // null when the folder doesn't exist.
-    public Iterable<string>? walk(string directory)
-    {
-        Files.local(directory, "Files.walk");
-
-        return global.is_dir(directory) ? Files.entries(global.rtrim(directory, "/")) : null;
-    }
-
-    private static Iterable<string> lines(string path)
-    {
-        const handle = global.fopen(path, "r");
-        if (handle is bool) {
-            throw new RuntimeException(`Files.readLinesLazily: "${path}" cannot be read`);
-        }
-        try {
-            while (global.fgets(handle) is string line) {
-                yield Bytes.held(global.rtrim(line, "\r\n")).toText();
-            }
-        } finally {
-            global.fclose(handle);
-        }
-    }
-
-    private static Iterable<string> entries(string directory)
-    {
-        if (global.scandir(directory) is not List<string> names) {
-            throw new RuntimeException(`Files.walk: "${directory}" cannot be read`);
-        }
-        for (const name of names) {
-            if (name != "." && name != "..") {
-                const path = `${directory}/${name}`;
-                yield path;
-                if (global.is_dir(path) && !global.is_link(path)) {
-                    yield ...Files.entries(path);
-                }
-            }
-        }
-    }
-
-    // The bytes of the file at `path` for `member`, or null when the file doesn't exist.
-    private static Bytes? contents(string path, string member)
-    {
-        Files.local(path, member);
-        if (!global.is_file(path)) {
-            return null;
-        }
-
-        return global.file_get_contents(path) is string contents
-            ? Bytes.held(contents)
-            : throw new RuntimeException(`${member}: "${path}" cannot be read`);
-    }
-
-    private static void put(string path, string contents, int flags, string member)
-    {
-        Files.local(path, member);
-        if (global.file_put_contents(path, contents, flags) == false) {
-            throw new RuntimeException(`${member}: "${path}" cannot be written`);
-        }
-    }
-
-    // A path names a file on this disk, never a URL that PHP's stream wrappers would fetch.
-    private static void local(string path, string member)
-    {
-        if (global.preg_match("~^[a-z][a-z0-9+.-]*://~i", path) == 1) {
-            throw new ValueError(`${member}: "${path}" is a URL, and Files reads only files`);
-        }
-    }
+    public abstract Iterable<string>? walk(string directory);
 }

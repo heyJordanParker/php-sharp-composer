@@ -2,25 +2,34 @@ namespace Sharp;
 
 import Sharp.IO.Console;
 import Sharp.IO.Files;
+import Sharp.IO.SystemConsole;
+import Sharp.IO.SystemFiles;
 import Sharp.Interop.PhpGlobals;
+import Sharp.Interop.SystemPhpGlobals;
 import Sharp.Net.Dns;
 import Sharp.Net.Http;
 import Sharp.Net.Mail;
+import Sharp.Net.SystemDns;
+import Sharp.Net.SystemHttp;
+import Sharp.Net.SystemMail;
 import Sharp.System.Environment;
 import Sharp.System.Process;
+import Sharp.System.SystemEnvironment;
+import Sharp.System.SystemProcess;
 import Sharp.Time.Clock;
+import Sharp.Time.SystemClock;
 
 module
 {
-    singleton Environment = Environment;
-    singleton Clock = Clock;
-    singleton Random = new Random();
-    singleton Console = Console;
-    singleton Process = Process;
-    singleton Files = Files;
-    singleton Http = Http;
-    singleton Mail = Mail;
-    singleton Dns = Dns;
-    singleton PhpGlobals = PhpGlobals;
+    singleton Environment = SystemEnvironment;
+    singleton Clock = SystemClock;
+    singleton Random = SystemRandom;
+    singleton Console = SystemConsole;
+    singleton Process = SystemProcess;
+    singleton Files = SystemFiles;
+    singleton Http = SystemHttp;
+    singleton Mail = SystemMail;
+    singleton Dns = SystemDns;
+    singleton PhpGlobals = SystemPhpGlobals;
     singleton Dispatcher = ImmediateDispatcher;
 }

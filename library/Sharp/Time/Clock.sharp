@@ -1,48 +1,15 @@
 namespace Sharp.Time;
 
-import DateTimeImmutable;
-import Sharp.Time.DateTimeInterfaceMembers;
-
-// The clock.
-public effect class Clock
+// The clock. A module binds `SystemClock`, the machine's, and a test passes a `Sharp.Testing.FakeClock`.
+public effect abstract class Clock
 {
-    // The instant a fixed clock reads, and null for the real clock.
-    private Instant? fixedAt = null;
+    public abstract Instant now();
 
-    // A clock for tests whose `now()` is always `at`. It measures no time, and `sleep` returns at once. A test module
-    // binds it where the app's module binds the real one.
-    public Clock.fixed(Instant at) : this()
-    {
-        this.fixedAt = at;
-    }
-
-    public Instant now() => this.fixedAt ?? new DateTimeImmutable("now").toInstant();
-
-    // Monotonic nanoseconds, only for measuring. A fixed clock's timestamp is always 0.
-    public int timestamp()
-        => this.fixedAt != null
-            ? 0
-            : global.hrtime(true) is int nanoseconds ? nanoseconds : throw new RuntimeException("Clock.timestamp: the monotonic clock cannot be read");
+    // Monotonic nanoseconds, only for measuring.
+    public abstract int timestamp();
 
     // The time since a `timestamp()`.
-    public Duration elapsedSince(int start)
-    {
-        const elapsed = this.timestamp() - start;
-        if (elapsed < 0) {
-            throw new ValueError("Clock.elapsedSince: the start is later than now");
-        }
+    public abstract Duration elapsedSince(int start);
 
-        return new Duration(elapsed);
-    }
-
-    public void sleep(Duration duration)
-    {
-        if (duration.nanoseconds < 0) {
-            throw new ValueError("Clock.sleep: the duration is negative");
-        }
-        const microseconds = duration.nanoseconds / 1_000;
-        if (microseconds > 0 && this.fixedAt == null) {
-            global.usleep(microseconds);
-        }
-    }
+    public abstract void sleep(Duration duration);
 }

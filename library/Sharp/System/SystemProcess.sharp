@@ -1,0 +1,120 @@
+namespace Sharp.System;
+
+import Sharp.Time.Duration;
+
+// This process, and real programs. A program runs from an argument list, so no shell reads it. Its output goes to
+// temporary files, so a program that writes a lot never waits on a full pipe.
+public effect class SystemProcess : Process
+{
+    public override never exit(int code)
+    {
+        if (code < 0 || code > 254) {
+            throw new ValueError(`Process.exit: the code ${code} is not from 0 to 254`);
+        }
+        global.exit(code);
+    }
+
+    public override int id() => global.getmypid() is int id ? id : throw new RuntimeException("Process.id: the process id cannot be read");
+
+    public override ProcessResult run(string program, List<string> arguments = [], Duration? timeout = null)
+    {
+        const output = global.tmpfile();
+        const errorOutput = global.tmpfile();
+        if (output is bool || errorOutput is bool) {
+            throw new RuntimeException("Process.run: no temporary file can be created");
+        }
+        Map<int, Any> pipes = [:];
+        const process = global.proc_open([program, ...arguments], [0: ["file", "/dev/null", "r"], 1: output, 2: errorOutput], pipes);
+        if (process is bool) {
+            throw new RuntimeException(`Process.run: ${program} cannot start`);
+        }
+        const deadline = timeout is Duration limit ? SystemProcess.timestamp() + limit.nanoseconds : null;
+        const exitCode = this.waitFor(process, deadline) ?? throw new RuntimeException(`Process.run: ${program} ran past its timeout`);
+
+        return new ProcessResult(exitCode, this.written(output), this.written(errorOutput));
+    }
+
+    public override ChildProcess start(string program, List<string> arguments = [])
+    {
+        const output = global.tmpfile();
+        const errorOutput = global.tmpfile();
+        if (output is bool || errorOutput is bool) {
+            throw new RuntimeException("Process.start: no temporary file can be created");
+        }
+        Map<int, Any> pipes = [:];
+        const process = global.proc_open([program, ...arguments], [0: ["pipe", "r"], 1: output, 2: errorOutput], pipes);
+        if (process is bool) {
+            throw new RuntimeException(`Process.start: ${program} cannot start`);
+        }
+
+        return new ChildProcess(this, process, pipes.get(0), output, errorOutput);
+    }
+
+    // Writes all of `text` to the pipe `input`, or throws once it is closed.
+    internal void write(Any? input, string text)
+    {
+        if (!global.is_resource(input)) {
+            throw new RuntimeException("ChildProcess.writeInput: the input is closed");
+        }
+        let rest = text;
+        while (rest != "") {
+            const written = global.fwrite(input, rest);
+            if (written is not int count || count == 0) {
+                throw new RuntimeException("ChildProcess.writeInput: the program closed its input");
+            }
+            rest = global.substr(rest, count);
+        }
+    }
+
+    // Closes the pipe `input`, unless it is closed already.
+    internal void close(Any? input)
+    {
+        if (global.is_resource(input)) {
+            global.fclose(input);
+        }
+    }
+
+    // Ends the program with SIGKILL, unless it was waited for already.
+    internal void kill(Any process)
+    {
+        if (global.is_resource(process)) {
+            global.proc_terminate(process, 9);
+        }
+    }
+
+    // Waits for the program to end, and gives its exit code, -1 for a program a signal ended, as PHP reports it. Past
+    // `deadline`, a `SystemProcess.timestamp()`, it ends the program and gives null.
+    internal int? waitFor(Any process, int? deadline = null)
+    {
+        if (!global.is_resource(process)) {
+            throw new RuntimeException("Process: the program was waited for already");
+        }
+        // PHP reports the exit code once, to the first status read after the program ends, so the loop keeps that read.
+        let status = global.proc_get_status(process);
+        while (status.get("running") == true) {
+            if (deadline is int end && SystemProcess.timestamp() > end) {
+                global.proc_terminate(process);
+                global.proc_close(process);
+                return null;
+            }
+            global.usleep(1_000);
+            status = global.proc_get_status(process);
+        }
+        global.proc_close(process);
+
+        return status.get("exitcode") is int code ? code : -1;
+    }
+
+    // All a program wrote to the temporary file `file`.
+    internal string written(Any file)
+    {
+        if (!global.is_resource(file)) {
+            throw new RuntimeException("Process: the program's output is closed");
+        }
+        global.rewind(file);
+
+        return global.stream_get_contents(file) is string text ? text : "";
+    }
+
+    private static int timestamp() => global.hrtime(true) is int nanoseconds ? nanoseconds : 0;
+}

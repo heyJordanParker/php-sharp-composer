@@ -1,0 +1,49 @@
+namespace Sharp.Testing;
+
+import Sharp.System.Environment;
+
+// An environment for tests over `arguments`, `variables` and `directory`, so the process's own stay as they are. It
+// runs on one processor of the machine `localhost`.
+public class FakeEnvironment : Environment
+{
+    private List<string> commandLine;
+
+    private Map<string, string> values;
+
+    private string directory;
+
+    public FakeEnvironment(List<string> arguments = [], Map<string, string> variables = [:], string directory = "/")
+    {
+        this.commandLine = arguments;
+        this.values = variables;
+        this.directory = directory;
+    }
+
+    public override List<string> arguments => this.commandLine;
+
+    public override string? variable(string name) => this.values.get(name);
+
+    public override Map<string, string> variables() => this.values;
+
+    public override void setVariable(string name, string value)
+    {
+        if (name == "" || global.str_contains(name, "=")) {
+            throw new ValueError(`FakeEnvironment.setVariable: the name "${name}" holds "=" or is empty`);
+        }
+        this.values[name] = value;
+    }
+
+    public override string currentDirectory() => this.directory;
+
+    public override void changeDirectory(string path)
+    {
+        this.directory = path;
+    }
+
+    public override string require(string name)
+        => this.values.get(name) ?? throw new ValueError(`FakeEnvironment.require: the environment variable "${name}" is not set`);
+
+    public override int processorCount() => 1;
+
+    public override string machineName() => "localhost";
+}

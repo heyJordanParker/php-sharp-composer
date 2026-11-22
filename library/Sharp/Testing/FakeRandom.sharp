@@ -1,0 +1,40 @@
+namespace Sharp.Testing;
+
+import Random.Engine.Mt19937;
+import Random.Randomizer;
+import Sharp.Random;
+
+// Random values for tests, from the seed, so each run gives the same ones.
+public class FakeRandom : Random
+{
+    private Randomizer randomizer;
+
+    public FakeRandom(int seed)
+    {
+        this.randomizer = new Randomizer(new Mt19937(seed));
+    }
+
+    public override int nextInt(int min, int max)
+    {
+        if (max < min) {
+            throw new ValueError(`FakeRandom.nextInt: max ${max} is less than min ${min}`);
+        }
+
+        return max == min ? min : this.randomizer.getInt(min, max - 1);
+    }
+
+    public override float nextFloat() => this.randomizer.nextFloat();
+
+    public override Bytes nextBytes(int length)
+    {
+        if (length < 1) {
+            throw new ValueError(`FakeRandom.nextBytes: the length ${length} is less than 1`);
+        }
+
+        return Bytes.held(this.randomizer.getBytes(length));
+    }
+
+    public override List<T> shuffle<T>(List<T> items) => this.randomizer.shuffleArray(items);
+
+    public override T? pick<T>(List<T> items) => items.count() == 0 ? null : items[this.randomizer.getInt(0, items.count() - 1)];
+}

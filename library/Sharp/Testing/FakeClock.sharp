@@ -1,0 +1,49 @@
+namespace Sharp.Testing;
+
+import Sharp.Time.Clock;
+import Sharp.Time.Duration;
+import Sharp.Time.Instant;
+
+// A clock for tests that reads `at` until the test or a `sleep` moves it. `sleep` returns at once.
+public class FakeClock : Clock
+{
+    public Instant at { get; private set; }
+
+    // Each duration a `sleep` was given, in call order.
+    public List<Duration> slept { get; private set; } = [];
+
+    public FakeClock(Instant at)
+    {
+        this.at = at;
+    }
+
+    // Moves the clock on by `by`.
+    public void advance(Duration by)
+    {
+        this.at = this.at.plus(by);
+    }
+
+    public override Instant now() => this.at;
+
+    // Nanoseconds since the Unix epoch, so an `elapsedSince` measures what `advance` and `sleep` moved.
+    public override int timestamp() => this.at.epochSeconds * 1_000_000_000 + this.at.nanosecond;
+
+    public override Duration elapsedSince(int start)
+    {
+        const elapsed = this.timestamp() - start;
+        if (elapsed < 0) {
+            throw new ValueError("FakeClock.elapsedSince: the start is later than now");
+        }
+
+        return new Duration(elapsed);
+    }
+
+    public override void sleep(Duration duration)
+    {
+        if (duration.nanoseconds < 0) {
+            throw new ValueError("FakeClock.sleep: the duration is negative");
+        }
+        this.slept.add(duration);
+        this.advance(duration);
+    }
+}

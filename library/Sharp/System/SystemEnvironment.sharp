@@ -1,0 +1,45 @@
+namespace Sharp.System;
+
+import Sharp.Internal;
+
+extern Internal.processorCount uses Environment;
+
+// The process's own arguments and environment, and the machine it runs on.
+public effect class SystemEnvironment : Environment
+{
+    public override List<string> arguments => SystemEnvironment.commandLine();
+
+    public override string? variable(string name) => global.getenv(name) is string value ? value : null;
+
+    public override Map<string, string> variables() => global.getenv();
+
+    public override void setVariable(string name, string value)
+    {
+        if (name == "" || global.str_contains(name, "=")) {
+            throw new ValueError(`Environment.setVariable: the name "${name}" holds "=" or is empty`);
+        }
+        if (!global.putenv(`${name}=${value}`)) {
+            throw new RuntimeException(`Environment.setVariable: the variable "${name}" cannot be set`);
+        }
+    }
+
+    public override string currentDirectory()
+        => global.getcwd() is string directory ? directory : throw new RuntimeException("Environment.currentDirectory: the current directory cannot be read");
+
+    public override void changeDirectory(string path)
+    {
+        if (!global.chdir(path)) {
+            throw new RuntimeException(`Environment.changeDirectory: the directory "${path}" cannot be entered`);
+        }
+    }
+
+    public override string require(string name)
+        => global.getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
+
+    public override int processorCount() => Internal.processorCount();
+
+    public override string machineName()
+        => global.gethostname() is string name ? name : throw new RuntimeException("Environment.machineName: the host name cannot be read");
+
+    private static extern List<string> commandLine();
+}

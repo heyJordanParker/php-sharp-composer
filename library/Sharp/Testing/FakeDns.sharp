@@ -1,0 +1,24 @@
+namespace Sharp.Testing;
+
+import Sharp.Net.Dns;
+import Sharp.Net.IpAddress;
+
+// A resolver for tests: each lookup gets the next of `answers`, and nothing reaches a DNS server.
+public class FakeDns : Dns
+{
+    // Each host looked up, in call order.
+    public List<string> asked { get; private set; } = [];
+
+    public FakeDns(private List<List<IpAddress>> answers) { }
+
+    public override List<IpAddress> addresses(string host)
+    {
+        const answered = this.asked.count();
+        if (answered >= this.answers.count()) {
+            throw new LogicException(`FakeDns.addresses: no answer is left for "${host}"`);
+        }
+        this.asked.add(host);
+
+        return this.answers[answered];
+    }
+}

@@ -2,12 +2,12 @@ namespace Sharp.System;
 
 // A program `Process.start` started, which runs while the code goes on. Its input is a pipe, and its output and its
 // error output go to temporary files, so a program that writes a lot never waits on a reader. Each member runs through
-// the `Process` that started it, so code that holds one has the effect `Process`.
+// the `SystemProcess` that started it, so code that holds one has the effect `Process`.
 public class ChildProcess
 {
     private int? exitCode = null;
 
-    internal ChildProcess(private Process process, private Any handle, private Any? input, private Any output, private Any errorOutput) { }
+    internal ChildProcess(private SystemProcess process, private Any handle, private Any? input, private Any output, private Any errorOutput) { }
 
     // Writes `text` to the program's input, and waits while the pipe is full. Once the input is closed, it throws
     // `RuntimeException`.

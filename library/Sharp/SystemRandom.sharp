@@ -1,0 +1,38 @@
+namespace Sharp;
+
+import Random.Randomizer;
+
+// Secure random values, through PHP's Randomizer.
+public effect class SystemRandom : Random
+{
+    private Randomizer randomizer;
+
+    public SystemRandom()
+    {
+        this.randomizer = new Randomizer();
+    }
+
+    public override int nextInt(int min, int max)
+    {
+        if (max < min) {
+            throw new ValueError(`Random.nextInt: max ${max} is less than min ${min}`);
+        }
+
+        return max == min ? min : this.randomizer.getInt(min, max - 1);
+    }
+
+    public override float nextFloat() => this.randomizer.nextFloat();
+
+    public override Bytes nextBytes(int length)
+    {
+        if (length < 1) {
+            throw new ValueError(`Random.nextBytes: the length ${length} is less than 1`);
+        }
+
+        return Bytes.held(this.randomizer.getBytes(length));
+    }
+
+    public override List<T> shuffle<T>(List<T> items) => this.randomizer.shuffleArray(items);
+
+    public override T? pick<T>(List<T> items) => items.count() == 0 ? null : items[this.randomizer.getInt(0, items.count() - 1)];
+}

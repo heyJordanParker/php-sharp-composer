@@ -1,0 +1,65 @@
+namespace Sharp.Testing;
+
+import Sharp.Data.Database;
+
+// A database for tests: each statement gets the next of `results`, the rows it gives or, for `execute`, the rows it
+// changes, and no SQL runs.
+public class FakeDatabase : Database
+{
+    // Each statement, in call order, as its SQL followed by its parameters. A transaction's calls are "BEGIN",
+    // "COMMIT" and "ROLLBACK".
+    public List<List<Any?>> ran { get; private set; } = [];
+
+    private int answered = 0;
+
+    public FakeDatabase(private List<List<Map<string, Any?>>> results = []) { }
+
+    public override List<Map<string, Any?>> query(string sql, List<Any?> parameters = []) => this.rows("query", sql, parameters);
+
+    public override Map<string, Any?>? queryFirst(string sql, List<Any?> parameters = [])
+    {
+        const rows = this.rows("queryFirst", sql, parameters);
+
+        return rows.count() == 0 ? null : rows[0];
+    }
+
+    public override Any? scalar(string sql, List<Any?> parameters = [])
+    {
+        const rows = this.rows("scalar", sql, parameters);
+        if (rows.count() == 0) {
+            return null;
+        }
+        const columns = rows[0].values();
+
+        return columns.count() == 0 ? null : columns[0];
+    }
+
+    public override int execute(string sql, List<Any?> parameters = []) => this.rows("execute", sql, parameters).count();
+
+    public override void beginTransaction()
+    {
+        this.ran.add(["BEGIN"]);
+    }
+
+    public override void commit()
+    {
+        this.ran.add(["COMMIT"]);
+    }
+
+    public override void rollback()
+    {
+        this.ran.add(["ROLLBACK"]);
+    }
+
+    // The next result, for the statement `sql` with `parameters` that `member` runs.
+    private List<Map<string, Any?>> rows(string member, string sql, List<Any?> parameters)
+    {
+        if (this.answered >= this.results.count()) {
+            throw new LogicException(`FakeDatabase.${member}: no result is left for "${sql}"`);
+        }
+        this.ran.add([sql, ...parameters]);
+        this.answered += 1;
+
+        return this.results[this.answered - 1];
+    }
+}

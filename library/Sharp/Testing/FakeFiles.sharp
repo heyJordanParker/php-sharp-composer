@@ -1,0 +1,142 @@
+namespace Sharp.Testing;
+
+import Sharp.IO.Files;
+import Sharp.Time.Instant;
+
+// Files for tests over `files`, each path to its text, and `directories`, so nothing on disk is read or written. A
+// folder is one of `directories`, or one that holds a file or a folder. Each file and folder last changed at the Unix
+// epoch.
+public class FakeFiles : Files
+{
+    public Map<string, string> files { get; private set; }
+
+    public List<string> directories { get; private set; }
+
+    private int temporaryFiles = 0;
+
+    public FakeFiles(Map<string, string> files = [:], List<string> directories = [])
+    {
+        this.files = files;
+        this.directories = directories;
+    }
+
+    public override string? read(string path) => this.files.get(path);
+
+    public override Bytes? readBytes(string path) => this.files.get(path) is string contents ? Bytes.held(contents) : null;
+
+    public override List<string>? readLines(string path)
+    {
+        if (this.read(path) is not string contents) {
+            return null;
+        }
+
+        if (contents == "") {
+            return [];
+        }
+
+        return global.preg_split("/\\r\\n|\\n|\\r/", global.rtrim(contents, "\r\n")) is List<string> lines ? lines : [];
+    }
+
+    public override Iterable<string>? readLinesLazily(string path) => this.readLines(path);
+
+    public override void write(string path, string contents)
+    {
+        this.files[path] = contents;
+    }
+
+    public override void writeBytes(string path, Bytes contents)
+    {
+        this.files[path] = contents.data;
+    }
+
+    public override void append(string path, string contents)
+    {
+        this.files[path] = (this.files.get(path) ?? "") + contents;
+    }
+
+    public override bool exists(string path) => this.files.has(path);
+
+    public override bool isDirectory(string path)
+    {
+        const folder = global.rtrim(path, "/");
+
+        return this.directories.contains(folder) || [...this.directories, ...this.files.keys()].any(entry => entry.startsWith(`${folder}/`));
+    }
+
+    public override void delete(string path)
+    {
+        this.files.remove(path);
+    }
+
+    public override void copy(string from, string to)
+    {
+        this.files[to] = this.files.get(from) ?? throw new RuntimeException(`FakeFiles.copy: "${from}" cannot be copied to "${to}"`);
+    }
+
+    public override void move(string from, string to)
+    {
+        this.files[to] = this.files.get(from) ?? throw new RuntimeException(`FakeFiles.move: "${from}" cannot be moved to "${to}"`);
+        this.files.remove(from);
+    }
+
+    public override List<string>? list(string directory)
+    {
+        if (!this.isDirectory(directory)) {
+            return null;
+        }
+        const prefix = `${global.rtrim(directory, "/")}/`;
+
+        return [...this.directories, ...this.files.keys()]
+            .filter(entry => entry.startsWith(prefix))
+            .map(entry => entry.substring(prefix.length()).split("/")[0])
+            .distinct()
+            .sortedWith((a, b) => a <=> b);
+    }
+
+    public override void createDirectory(string path)
+    {
+        if (!this.isDirectory(path)) {
+            this.directories.add(global.rtrim(path, "/"));
+        }
+    }
+
+    public override void deleteDirectory(string path)
+    {
+        if (!this.isDirectory(path) || (this.list(path)?.count() ?? 0) > 0) {
+            throw new RuntimeException(`FakeFiles.deleteDirectory: "${path}" cannot be deleted`);
+        }
+        this.directories.remove(global.rtrim(path, "/"));
+    }
+
+    public override int? size(string path) => this.files.get(path) is string contents ? global.strlen(contents) : null;
+
+    public override Instant? lastModified(string path) => this.files.has(path) || this.isDirectory(path) ? new Instant(0) : null;
+
+    public override string temporaryFile()
+    {
+        this.temporaryFiles += 1;
+        const path = `${this.temporaryDirectory()}/sharp${this.temporaryFiles}`;
+        this.files[path] = "";
+
+        return path;
+    }
+
+    public override string temporaryDirectory() => "/tmp";
+
+    public override Iterable<string>? walk(string directory) => this.isDirectory(directory) ? this.below(global.rtrim(directory, "/")) : null;
+
+    // Each path below `folder`, a folder before its contents and each folder's entries in name order.
+    private List<string> below(string folder)
+    {
+        List<string> paths = [];
+        for (const name of this.list(folder) ?? []) {
+            const path = `${folder}/${name}`;
+            paths.add(path);
+            for (const inner of this.below(path)) {
+                paths.add(inner);
+            }
+        }
+
+        return paths;
+    }
+}

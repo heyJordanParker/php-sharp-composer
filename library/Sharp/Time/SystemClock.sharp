@@ -1,0 +1,34 @@
+namespace Sharp.Time;
+
+import DateTimeImmutable;
+import Sharp.Time.DateTimeInterfaceMembers;
+
+// The machine's clock.
+public effect class SystemClock : Clock
+{
+    public override Instant now() => new DateTimeImmutable("now").toInstant();
+
+    public override int timestamp()
+        => global.hrtime(true) is int nanoseconds ? nanoseconds : throw new RuntimeException("Clock.timestamp: the monotonic clock cannot be read");
+
+    public override Duration elapsedSince(int start)
+    {
+        const elapsed = this.timestamp() - start;
+        if (elapsed < 0) {
+            throw new ValueError("Clock.elapsedSince: the start is later than now");
+        }
+
+        return new Duration(elapsed);
+    }
+
+    public override void sleep(Duration duration)
+    {
+        if (duration.nanoseconds < 0) {
+            throw new ValueError("Clock.sleep: the duration is negative");
+        }
+        const microseconds = duration.nanoseconds / 1_000;
+        if (microseconds > 0) {
+            global.usleep(microseconds);
+        }
+    }
+}

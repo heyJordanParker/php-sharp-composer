@@ -1,0 +1,42 @@
+namespace Sharp.IO;
+
+import SplFileObject;
+
+// The process's streams, through PHP's `php://` streams, which every host has, a web server's included, where standard
+// output is the response.
+public effect class SystemConsole : Console
+{
+    // Standard input, opened by the first read, so each read takes the next line of the one stream.
+    private SplFileObject? input = null;
+
+    public override void write(string text)
+    {
+        SystemConsole.put("php://output", text, "write", "standard output");
+    }
+
+    public override void writeLine(string text)
+    {
+        this.write(text + "\n");
+    }
+
+    public override void writeError(string text)
+    {
+        SystemConsole.put("php://stderr", text, "writeError", "standard error");
+    }
+
+    public override string? readLine()
+    {
+        const input = this.input ??= new SplFileObject("php://stdin", "r");
+        // A line holds its line ending, so only the end of the input reads as "".
+        const line = input.fgets();
+
+        return line == "" ? null : global.rtrim(line, "\r\n");
+    }
+
+    private static void put(string stream, string text, string member, string name)
+    {
+        if (global.file_put_contents(stream, text) != global.strlen(text)) {
+            throw new RuntimeException(`Console.${member}: ${name} is closed`);
+        }
+    }
+}

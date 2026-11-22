@@ -1,21 +1,9 @@
 namespace Sharp.Net;
 
-import Sharp.Internal;
-
-extern Internal.resolve uses Dns;
-
-// The addresses a host name resolves to, through the system resolver, which reads the hosts file before it asks a DNS
-// server.
-public effect class Dns
+// The addresses a host name resolves to. A module binds `SystemDns`, the system resolver, and a test passes a
+// `Sharp.Testing.FakeDns`.
+public effect abstract class Dns
 {
-    // Each IPv4 and IPv6 address of the host, once, in the order the system resolver gives them. A host the resolver
-    // can't find throws `RuntimeException`.
-    public List<IpAddress> addresses(string host)
-    {
-        if (global.filter_var(host, global.FILTER_VALIDATE_DOMAIN, global.FILTER_FLAG_HOSTNAME) is not string) {
-            throw new ValueError(`Dns.addresses: "${host}" is not a valid host name`);
-        }
-
-        return Internal.resolve(host).map((string address) => IpAddress.parse(address));
-    }
+    // Each IPv4 and IPv6 address of the host, once. A host that can't be found throws `RuntimeException`.
+    public abstract List<IpAddress> addresses(string host);
 }

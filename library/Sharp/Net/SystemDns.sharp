@@ -1,0 +1,19 @@
+namespace Sharp.Net;
+
+import Sharp.Internal;
+
+extern Internal.resolve uses Dns;
+
+// The system resolver, which reads the hosts file before it asks a DNS server.
+public effect class SystemDns : Dns
+{
+    // In the order the system resolver gives them.
+    public override List<IpAddress> addresses(string host)
+    {
+        if (global.filter_var(host, global.FILTER_VALIDATE_DOMAIN, global.FILTER_FLAG_HOSTNAME) is not string) {
+            throw new ValueError(`Dns.addresses: "${host}" is not a valid host name`);
+        }
+
+        return Internal.resolve(host).map((string address) => IpAddress.parse(address));
+    }
+}

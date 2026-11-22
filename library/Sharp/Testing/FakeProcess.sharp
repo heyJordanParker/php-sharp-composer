@@ -1,0 +1,41 @@
+namespace Sharp.Testing;
+
+import Sharp.System.ChildProcess;
+import Sharp.System.Process;
+import Sharp.System.ProcessResult;
+import Sharp.Time.Duration;
+
+// Programs for tests: each `run` gets the next of `results`, and no program starts. An `exit` throws, so the test goes
+// on, and a `start` throws, since a running program needs a real one.
+public class FakeProcess : Process
+{
+    // Each program run, in call order, as the program followed by its arguments.
+    public List<List<string>> ran { get; private set; } = [];
+
+    // Each code an `exit` was given, in call order.
+    public List<int> exited { get; private set; } = [];
+
+    public FakeProcess(private List<ProcessResult> results = []) { }
+
+    public override never exit(int code)
+    {
+        this.exited.add(code);
+        throw new LogicException(`FakeProcess.exit: the run exited with code ${code}`);
+    }
+
+    public override int id() => 1;
+
+    public override ProcessResult run(string program, List<string> arguments = [], Duration? timeout = null)
+    {
+        const answered = this.ran.count();
+        if (answered >= this.results.count()) {
+            throw new LogicException(`FakeProcess.run: no result is left for ${program}`);
+        }
+        this.ran.add([program, ...arguments]);
+
+        return this.results[answered];
+    }
+
+    public override ChildProcess start(string program, List<string> arguments = [])
+        => throw new LogicException(`FakeProcess.start: ${program} needs a real process, so a test runs it through SystemProcess`);
+}

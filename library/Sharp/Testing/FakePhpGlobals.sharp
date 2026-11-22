@@ -1,0 +1,42 @@
+namespace Sharp.Testing;
+
+import Sharp.Interop.PhpGlobals;
+import Sharp.Interop.Superglobal;
+
+// PHP's globals for tests, over `globals` and `superglobals`, so PHP's own stay as they are. An `include` runs no file.
+public class FakePhpGlobals : PhpGlobals
+{
+    public Map<string, Any?> globals { get; private set; }
+
+    public Map<Superglobal, Map<string, Any?>> superglobals { get; private set; }
+
+    // Each path an `include` was given, in call order.
+    public List<string> included { get; private set; } = [];
+
+    public FakePhpGlobals(Map<string, Any?> globals = [:], Map<Superglobal, Map<string, Any?>> superglobals = [:])
+    {
+        this.globals = globals;
+        this.superglobals = superglobals;
+    }
+
+    public override Any? get(string name) => this.globals.get(name);
+
+    public override void set(string name, Any? value)
+    {
+        this.globals[name] = value;
+    }
+
+    public override Any? read(Superglobal which, string key) => this.superglobals.get(which)?.get(key);
+
+    public override void write(Superglobal which, string key, Any? value)
+    {
+        const values = this.superglobals.get(which) ?? [:];
+        values[key] = value;
+        this.superglobals[which] = values;
+    }
+
+    public override void include(string path)
+    {
+        this.included.add(path);
+    }
+}

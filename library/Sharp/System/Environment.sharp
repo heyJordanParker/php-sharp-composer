@@ -1,52 +1,27 @@
 namespace Sharp.System;
 
-import Sharp.Internal;
-
-extern Internal.processorCount uses Environment;
-
-public effect class Environment
+// The process's arguments, environment variables, folder and machine. A module binds `SystemEnvironment`, the real
+// ones, and a test passes a `Sharp.Testing.FakeEnvironment`.
+public effect abstract class Environment
 {
-    public List<string> arguments { get; }
+    public abstract List<string> arguments { get; }
 
-    public Environment()
-    {
-        this.arguments = Environment.commandLine();
-    }
+    public abstract string? variable(string name);
 
-    public string? variable(string name) => global.getenv(name) is string value ? value : null;
-
-    public Map<string, string> variables() => global.getenv();
+    public abstract Map<string, string> variables();
 
     // Sets the variable for this process and the programs it starts.
-    public void setVariable(string name, string value)
-    {
-        if (name == "" || global.str_contains(name, "=")) {
-            throw new ValueError(`Environment.setVariable: the name "${name}" holds "=" or is empty`);
-        }
-        if (!global.putenv(`${name}=${value}`)) {
-            throw new RuntimeException(`Environment.setVariable: the variable "${name}" cannot be set`);
-        }
-    }
+    public abstract void setVariable(string name, string value);
 
-    public string currentDirectory()
-        => global.getcwd() is string directory ? directory : throw new RuntimeException("Environment.currentDirectory: the current directory cannot be read");
+    public abstract string currentDirectory();
 
-    public void changeDirectory(string path)
-    {
-        if (!global.chdir(path)) {
-            throw new RuntimeException(`Environment.changeDirectory: the directory "${path}" cannot be entered`);
-        }
-    }
+    public abstract void changeDirectory(string path);
 
-    public string require(string name)
-        => global.getenv(name) is string value ? value : throw new ValueError(`Environment.require: the environment variable "${name}" is not set`);
+    public abstract string require(string name);
 
     // How many processors the machine has online, at least 1.
-    public int processorCount() => Internal.processorCount();
+    public abstract int processorCount();
 
     // The machine's host name.
-    public string machineName()
-        => global.gethostname() is string name ? name : throw new RuntimeException("Environment.machineName: the host name cannot be read");
-
-    private static extern List<string> commandLine();
+    public abstract string machineName();
 }

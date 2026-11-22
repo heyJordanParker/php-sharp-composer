@@ -1,0 +1,41 @@
+namespace Sharp.Testing;
+
+import Sharp.Data.Cache;
+import Sharp.Time.Duration;
+
+// A cache for tests over `entries`, which no entry leaves by expiring, so a test reads what it set.
+public class FakeCache : Cache
+{
+    public Map<string, Bytes> entries { get; private set; }
+
+    public FakeCache(Map<string, Bytes> entries = [:])
+    {
+        this.entries = entries;
+    }
+
+    public override Bytes? get(string key) => this.entries.get(FakeCache.key(key, "get"));
+
+    public override void set(string key, Bytes value, Duration? expiresAfter = null)
+    {
+        this.entries[FakeCache.key(key, "set")] = value;
+    }
+
+    public override void remove(string key)
+    {
+        this.entries.remove(FakeCache.key(key, "remove"));
+    }
+
+    public override Bytes getOrCreate(string key, Function<Bytes()> create, Duration? expiresAfter = null)
+    {
+        if (this.get(key) is Bytes value) {
+            return value;
+        }
+        const created = create();
+        this.set(key, created, expiresAfter);
+
+        return created;
+    }
+
+    // `key`, which `member` was given, unless it is empty.
+    private static string key(string key, string member) => key != "" ? key : throw new ValueError(`FakeCache.${member}: the key is empty`);
+}

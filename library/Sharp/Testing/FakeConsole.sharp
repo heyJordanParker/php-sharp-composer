@@ -1,0 +1,43 @@
+namespace Sharp.Testing;
+
+import Sharp.IO.Console;
+
+// A console for tests: each `readLine` gets the next of `input`, then null as at the end of standard input, and every
+// write is kept.
+public class FakeConsole : Console
+{
+    // Each text written to standard output, in call order, a `writeLine`'s with its newline.
+    public List<string> written { get; private set; } = [];
+
+    // Each text written to standard error, in call order.
+    public List<string> writtenErrors { get; private set; } = [];
+
+    private int read = 0;
+
+    public FakeConsole(private List<string> input = []) { }
+
+    public override void write(string text)
+    {
+        this.written.add(text);
+    }
+
+    public override void writeLine(string text)
+    {
+        this.write(text + "\n");
+    }
+
+    public override void writeError(string text)
+    {
+        this.writtenErrors.add(text);
+    }
+
+    public override string? readLine()
+    {
+        if (this.read >= this.input.count()) {
+            return null;
+        }
+        this.read += 1;
+
+        return this.input[this.read - 1];
+    }
+}

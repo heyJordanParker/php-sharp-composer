@@ -1,0 +1,28 @@
+namespace Sharp.Testing;
+
+import Sharp.Net.Http;
+import Sharp.Net.HttpMethod;
+import Sharp.Net.HttpRequest;
+import Sharp.Net.HttpResponse;
+
+// HTTP for tests: each request gets the next of `responses`, and nothing reaches the network.
+public class FakeHttp : Http
+{
+    // Each request, in call order.
+    public List<HttpRequest> sent { get; private set; } = [];
+
+    public FakeHttp(private List<HttpResponse> responses) { }
+
+    public override HttpResponse get(string url) => this.send(new HttpRequest(HttpMethod.Get, url));
+
+    public override HttpResponse send(HttpRequest request)
+    {
+        const answered = this.sent.count();
+        if (answered >= this.responses.count()) {
+            throw new LogicException(`FakeHttp.send: no response is left for ${request.method.value} ${request.url}`);
+        }
+        this.sent.add(request);
+
+        return this.responses[answered];
+    }
+}
