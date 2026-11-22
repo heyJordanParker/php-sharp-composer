@@ -34,6 +34,7 @@ extern Internal.makeGenericType uses none;
 extern Internal.withTag uses none;
 extern Internal.tag uses none;
 extern Internal.parseAs uses none;
+extern Internal.storedValue uses none;
 
 public static class ClassMembers
 {
@@ -385,6 +386,11 @@ public static class ClassMembers
         // it, spec section 10: the read `Json.decode` makes once it has read the text. It throws one `InvalidFields`
         // that lists every bad part.
         public T decode(Any? value) => Internal.parseAs(type, value, false);
+
+        // The stored form of `value` that `decode` reads back, lists, maps and scalars, spec section 10: what
+        // `Json.encode` writes as text, each field `parse` reads under its key at any visibility, so a storage layer in
+        // another namespace reads a class's `internal` ones. It throws the `JsonException` `Json.encode` throws.
+        public Any? encode(T value) => Internal.storedValue(value);
 
         // The class the class extends, with the type arguments it gives it, or null.
         public Class<Any?>? baseType()
