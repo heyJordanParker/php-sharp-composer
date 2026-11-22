@@ -3,7 +3,7 @@ namespace Sharp.IO;
 import Sharp.Time.Instant;
 
 // Whole files and folders. A missing file is a returned null.
-public foreign class Files
+public effect class Files
 {
     // The file as text, each byte sequence that is not UTF-8 read as U+FFFD, spec section 18. null when the file
     // doesn't exist.

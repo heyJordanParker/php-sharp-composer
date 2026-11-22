@@ -4,7 +4,7 @@ import Sharp.Internal;
 
 extern Internal.processorCount uses Environment;
 
-public foreign class Environment
+public effect class Environment
 {
     public List<string> arguments { get; }
 

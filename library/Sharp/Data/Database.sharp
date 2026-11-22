@@ -5,7 +5,7 @@ import PDOStatement;
 
 // A SQL database, through PDO. A row is a `Map<string, Any?>`, which a struct's `parse` turns into a typed value. A
 // failing statement throws `PDOException`, a `RuntimeException`.
-public foreign class Database
+public effect class Database
 {
     private PDO connection;
 

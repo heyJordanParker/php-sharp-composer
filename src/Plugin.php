@@ -115,7 +115,7 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
     {
         $code = (string) file_get_contents($file->getPathname());
         $name = $file->getBasename('.sharp');
-        $typeLine = '{^(?:\[.*\]\s*)*(?:(?:public|private|protected|internal|abstract|final|sealed|static|readonly|foreign)\s+)*(class|interface|enum|struct|event)\s+' . preg_quote($name) . '\b}m';
+        $typeLine = '{^(?:\[.*\]\s*)*(?:(?:public|private|protected|internal|abstract|final|sealed|static|readonly|effect)\s+)*(class|interface|enum|struct|event)\s+' . preg_quote($name) . '\b}m';
         if (preg_match($typeLine, $code, $type) !== 1) {
             return [];
         }

@@ -6,7 +6,7 @@ extern Internal.resolve uses Dns;
 
 // The addresses a host name resolves to, through the system resolver, which reads the hosts file before it asks a DNS
 // server.
-public foreign class Dns
+public effect class Dns
 {
     // Each IPv4 and IPv6 address of the host, once, in the order the system resolver gives them. A host the resolver
     // can't find throws `RuntimeException`.

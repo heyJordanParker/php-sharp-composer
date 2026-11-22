@@ -3,7 +3,7 @@ namespace Sharp.Net;
 import Sharp.Time.Duration;
 
 // HTTP requests, through curl. A 404 or a 500 is a returned response.
-public foreign class Http
+public effect class Http
 {
     // A GET.
     public HttpResponse get(string url) => this.send(new HttpRequest(HttpMethod.Get, url));

@@ -6,7 +6,7 @@ import Sharp.Time.Duration;
 
 // A key-value store in a SQLite file. Values are `Bytes`, spec section 18, so text is kept as `text.toBytes()` and
 // a structured value goes through `Json`. A failing store throws `PDOException`, a `RuntimeException`.
-public foreign class Cache
+public effect class Cache
 {
     private PDO store;
 

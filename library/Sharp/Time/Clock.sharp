@@ -4,7 +4,7 @@ import DateTimeImmutable;
 import Sharp.Time.DateTimeInterfaceMembers;
 
 // The clock.
-public foreign class Clock
+public effect class Clock
 {
     // The instant a fixed clock reads, and null for the real clock.
     private Instant? fixedAt = null;

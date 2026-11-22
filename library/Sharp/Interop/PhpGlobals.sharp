@@ -8,7 +8,7 @@ extern Internal.includeGlobal uses PhpGlobals;
 
 // PHP's global variables and superglobals, for plain PHP that keeps its state there, as a legacy page or a WordPress
 // plugin does. PHP# has no `global` and no superglobals, so code that reaches them takes this class and has its effect.
-public foreign class PhpGlobals
+public effect class PhpGlobals
 {
     // The global variable `name`, as PHP's `$GLOBALS[name]` reads it, or null when it is not set.
     public Any? get(string name) => Internal.readGlobal(name);
