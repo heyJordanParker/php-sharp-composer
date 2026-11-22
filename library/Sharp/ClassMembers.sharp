@@ -120,6 +120,7 @@ public static class ClassMembers
             writer == null ? null : ClassMembers.visibility(words[writer + 1]),
             words.contains("init"),
             words.contains("static"),
+            words.contains("extern"),
             words.contains("virtual"),
             words.contains("abstract"),
             words.contains("override")

@@ -10,7 +10,8 @@ extern Internal.write uses any;
 // A property a class declares, as `Class<T>.properties()` gives it, spec section 25: the class that declares
 // it, its name, its visibility, its type as declared, the visibility that reaches its `set` or `init`, null for a
 // get-only one, whether it has an `init`, and its modifiers. A property is virtual when a subclass may replace it, as
-// `Method.isVirtual` says. The engine creates it, for the class value it was read from.
+// `Method.isVirtual` says, and extern when the class declares it `extern`, the plain PHP parent's `__get` and `__set`
+// serving it, spec section 14.3. The engine creates it, for the class value it was read from.
 public class Property
 {
     internal Property(
@@ -22,6 +23,7 @@ public class Property
         public Visibility? setVisibility { get; },
         public bool isInitOnly { get; },
         public bool isStatic { get; },
+        public bool isExtern { get; },
         public bool isVirtual { get; },
         public bool isAbstract { get; },
         public bool isOverride { get; }
