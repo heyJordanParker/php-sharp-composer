@@ -6,8 +6,8 @@ import Sharp.Data.Database;
 // changes, and no SQL runs.
 public class FakeDatabase : Database
 {
-    // Each statement, in call order, as its SQL followed by its parameters. A transaction's calls are "BEGIN",
-    // "COMMIT" and "ROLLBACK".
+    // Each statement, in call order, as its SQL followed by its parameters. A `transaction` adds "BEGIN", then
+    // "COMMIT" or "ROLLBACK".
     public List<List<Any?>> ran { get; private set; } = [];
 
     private int answered = 0;
@@ -36,20 +36,23 @@ public class FakeDatabase : Database
 
     public override int execute(string sql, List<Any?> parameters = []) => this.rows("execute", sql, parameters).count();
 
-    public override void beginTransaction()
+    protected override void begin()
     {
         this.ran.add(["BEGIN"]);
     }
 
-    public override void commit()
+    protected override void commit()
     {
         this.ran.add(["COMMIT"]);
     }
 
-    public override void rollback()
+    protected override void rollback()
     {
         this.ran.add(["ROLLBACK"]);
     }
+
+    // No other transaction runs on a fake, so none conflicts.
+    protected override bool conflicted(Throwable failure) => false;
 
     // The next result, for the statement `sql` with `parameters` that `member` runs.
     private List<Map<string, Any?>> rows(string member, string sql, List<Any?> parameters)

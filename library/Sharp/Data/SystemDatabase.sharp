@@ -1,6 +1,7 @@
 namespace Sharp.Data;
 
 import PDO;
+import PDOException;
 import PDOStatement;
 
 // A database through PDO. A failing statement throws `PDOException`, a `RuntimeException`.
@@ -37,20 +38,35 @@ public effect class SystemDatabase : Database
 
     public override int execute(string sql, List<Any?> parameters = []) => this.run("Database.execute", sql, parameters).rowCount();
 
-    public override void beginTransaction()
+    // MySQL sets the level of its next transaction, Postgres sets it as its transaction's first statement, and SQLite
+    // runs every transaction serializable.
+    protected override void begin()
     {
+        const driver = this.connection.getAttribute(PDO.ATTR_DRIVER_NAME);
+        if (driver == "mysql") {
+            this.connection.exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+        }
         this.connection.beginTransaction();
+        if (driver == "pgsql") {
+            this.connection.exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
+        }
     }
 
-    public override void commit()
+    protected override void commit()
     {
         this.connection.commit();
     }
 
-    public override void rollback()
+    protected override void rollback()
     {
         this.connection.rollBack();
     }
+
+    // A serialization failure or a deadlock, SQLSTATE 40001 or 40P01, which Postgres and MySQL give, or SQLite's
+    // SQLITE_BUSY, which it gives a writer another transaction's write blocks.
+    protected override bool conflicted(Throwable failure)
+        => failure is PDOException refused
+            && (refused.getCode() == "40001" || refused.getCode() == "40P01" || refused.errorInfo is Map<int|string, Any?> info && info.get(1) == 5);
 
     // The statement's next row, null after the last.
     private static Map<string, Any?>? next(PDOStatement statement)

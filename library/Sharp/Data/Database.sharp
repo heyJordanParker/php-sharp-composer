@@ -1,9 +1,20 @@
 namespace Sharp.Data;
 
+import Sharp.Internal;
+
+extern Internal.holdEmits uses none;
+extern Internal.releaseEmits uses Events;
+extern Internal.dropEmits uses none;
+
 // A SQL database. A row is a `Map<string, Any?>`, which a struct's `parse` turns into a typed value. A module binds
 // `SystemDatabase` to a connection, and a test passes a `Sharp.Testing.FakeDatabase`.
 public effect abstract class Database
 {
+    // How many times `transaction` runs a body that conflicts with another transaction before it throws.
+    public const int ATTEMPTS = 5;
+
+    private bool open = false;
+
     // Every row.
     public abstract List<Map<string, Any?>> query(string sql, List<Any?> parameters = []);
 
@@ -16,9 +27,52 @@ public effect abstract class Database
     // The number of rows a change affected.
     public abstract int execute(string sql, List<Any?> parameters = []);
 
-    public abstract void beginTransaction();
+    // Runs `body` in one serializable transaction, which commits when it returns and rolls back when it throws. When
+    // the database refuses the transaction because another one changed what it read, the whole body runs again, up to
+    // `ATTEMPTS` times. Each `emit` of the body reaches the app's dispatcher once the transaction commits, and never
+    // when it rolls back, and an exception a listener throws then leaves `transaction` with the transaction committed.
+    // A `transaction` inside a body runs in the open one.
+    public T transaction<T>(Function<T() uses Database, Events> body)
+    {
+        if (this.open) {
+            return body();
+        }
+        for (int attempt = 1; ; attempt += 1) {
+            this.begin();
+            this.open = true;
+            Internal.holdEmits();
+            try {
+                const result = body();
+                this.commit();
+                this.open = false;
+                Internal.releaseEmits();
 
-    public abstract void commit();
+                return result;
+            } catch (Throwable failure) {
+                if (!this.open) {
+                    throw failure;
+                }
+                this.open = false;
+                Internal.dropEmits();
+                this.rollback();
+                if (!this.conflicted(failure)) {
+                    throw failure;
+                }
+                if (attempt == Database.ATTEMPTS) {
+                    throw new RuntimeException(`Database.transaction: the transaction conflicted with another ${Database.ATTEMPTS} times, so it was not run again`, 0, failure);
+                }
+            }
+        }
+    }
 
-    public abstract void rollback();
+    // Begins a serializable transaction.
+    protected abstract void begin();
+
+    protected abstract void commit();
+
+    protected abstract void rollback();
+
+    // Whether the database refused the transaction because another one changed what it read, so running it again may
+    // succeed.
+    protected abstract bool conflicted(Throwable failure);
 }
