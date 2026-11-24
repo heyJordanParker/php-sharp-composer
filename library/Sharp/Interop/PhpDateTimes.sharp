@@ -1,0 +1,17 @@
+namespace Sharp.Interop;
+
+import DateTimeImmutable;
+import DateTimeZone;
+import Sharp.Interop.PhpDates;
+import Sharp.Time.DateTime;
+
+// A `DateTime` as a plain PHP date, for a plain PHP library that takes a `DateTimeInterface`, apart from `PhpDates`
+// since a class has one member of a name and `PhpDates` crosses an `Instant` by the same one. It reads no clock.
+public static class PhpDateTimes
+{
+    extension(DateTime value)
+    {
+        // A plain PHP date at the same instant, in the zone, to the microsecond, as an `Instant`'s gives one.
+        public DateTimeImmutable toPhpDateTime() => value.instant.toPhpDateTime().setTimezone(new DateTimeZone(value.zone.name));
+    }
+}

@@ -1,7 +1,7 @@
 namespace Sharp.Time;
 
 import DateTimeImmutable;
-import Sharp.Time.DateTimeInterfaceMembers;
+import Sharp.Interop.PhpDates;
 
 // The machine's clock.
 public effect class SystemClock : Clock

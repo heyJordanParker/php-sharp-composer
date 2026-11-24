@@ -1,4 +1,4 @@
-namespace Sharp.Encoding;
+namespace Sharp.Interop;
 
 // A value as the PHP code that writes it, as a plain PHP library's generated config file holds it.
 public static class PhpLiteral

@@ -1,7 +1,5 @@
 namespace Sharp.Time;
 
-import DateTimeImmutable;
-
 // An instant as the clocks of a time zone show it.
 public struct DateTime
 {
@@ -39,9 +37,6 @@ public struct DateTime
     public DateTime minus(Duration duration) => new DateTime(this.instant.minus(duration), this.zone);
 
     public DateTime inZone(TimeZone zone) => new DateTime(this.instant, zone);
-
-    // A plain PHP date at the same instant, in the zone, to the microsecond, as `Instant.toPhpDateTime` gives one.
-    public DateTimeImmutable toPhpDateTime() => this.instant.toPhpDateTime().setTimezone(this.zone.rules());
 
     // By the instant, then by the zone's name, so it gives 0 exactly when `==` is true.
     public static int operator <=>(DateTime a, DateTime b)

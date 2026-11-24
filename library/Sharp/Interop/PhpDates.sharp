@@ -1,10 +1,16 @@
-namespace Sharp.Time;
+namespace Sharp.Interop;
 
+import DateTimeImmutable;
 import DateTimeInterface;
+import DateTimeZone;
+import Sharp.Time.DateTime;
+import Sharp.Time.Instant;
+import Sharp.Time.TimeZone;
 
-// A plain PHP date, such as the Carbon a Laravel model gives, as an `Instant` or a `DateTime`.
-// `Instant.toPhpDateTime` and `DateTime.toPhpDateTime` cross back. None of them reads the clock.
-public static class DateTimeInterfaceMembers
+// A plain PHP date, such as the Carbon a Laravel model gives, as an `Instant` or a `DateTime`, and an `Instant` as a
+// plain PHP date, for a plain PHP library that takes a `DateTimeInterface`. `PhpDateTimes` crosses a `DateTime` back.
+// None of them reads the clock.
+public static class PhpDates
 {
     extension(DateTimeInterface value)
     {
@@ -26,5 +32,13 @@ public static class DateTimeInterfaceMembers
 
             return new DateTime(value.toInstant(), TimeZone.utc);
         }
+    }
+
+    extension(Instant value)
+    {
+        // A plain PHP date at the same instant, in UTC. A PHP date holds microseconds, so the nanoseconds below them are
+        // left out.
+        public DateTimeImmutable toPhpDateTime()
+            => DateTimeImmutable.createFromTimestamp(value.epochSeconds).setTimezone(new DateTimeZone("UTC")).setMicrosecond(value.nanosecond / 1_000);
     }
 }
