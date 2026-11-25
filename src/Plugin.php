@@ -20,7 +20,26 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {
-        return [ScriptEvents::POST_AUTOLOAD_DUMP => 'dumpClassMap'];
+        return [ScriptEvents::POST_AUTOLOAD_DUMP => [['installMago'], ['dumpClassMap']]];
+    }
+
+    /**
+     * Installs mago's binary for the installed heyjordanparker/mago-sharp, so its `vendor/bin/mago` runs mago with no
+     * PHP, as MagoBinary explains. A project without mago-sharp installs nothing.
+     */
+    public function installMago(Event $event): void
+    {
+        $composer = $event->getComposer();
+        $mago = $composer->getRepositoryManager()->getLocalRepository()->findPackage('heyjordanparker/mago-sharp', '*');
+        if ($mago === null) {
+            return;
+        }
+
+        MagoBinary::install(
+            ltrim($mago->getPrettyVersion(), 'v'),
+            (string) $composer->getInstallationManager()->getInstallPath($mago),
+            $event->getIO(),
+        );
     }
 
     public function dumpClassMap(Event $event): void
