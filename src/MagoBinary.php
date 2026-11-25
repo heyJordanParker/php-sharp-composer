@@ -20,36 +20,39 @@ use const FILE_IGNORE_NEW_LINES;
 use const STDERR;
 
 /**
- * Installs the mago binary of a heyjordanparker/mago-sharp release at the package's `composer/bin/mago`, the file its
- * `bin` names. The package ships that file as a shell script that prints the missing-binary message, so Composer links
- * `vendor/bin/mago` as its shell proxy, which `exec`s the file, and once this replaces it with the binary a start of
- * mago runs no PHP. The archive's SHA-256 is the one the package version pins in `composer/sha256sums.txt`.
+ * Installs the mago binary of a heyjordanparker/mago-sharp release at the package's `composer/bin/<triple>/mago`, for the
+ * target triple of the platform Composer runs on, and writes the release's version to `composer/bin/version`. The
+ * package's `composer/bin/mago`, the file its `bin` names, is a shell launcher that runs the binary of the platform it
+ * starts on, and downloads it with that version when it is missing, so one `vendor/` serves every platform it is mounted
+ * on and a start of mago runs no PHP. The archive's SHA-256 is the one the package version pins in
+ * `composer/sha256sums.txt`.
  *
  * @internal
  */
 final class MagoBinary
 {
     /**
-     * Installs the binary of release `version` in the package at `package`, while its `composer/bin/mago` is still the
-     * script the package ships, whose first bytes are `#!`.
+     * Writes release `version` to the package's `composer/bin/version`, and installs that release's binary for this
+     * platform in the package at `package` unless it is there.
      *
      * @throws RuntimeException If the platform has no release binary, or the download, checksum or extraction fails.
      */
     public static function install(string $version, string $package, IOInterface $io): void
     {
-        $binary = "{$package}/composer/bin/mago";
-        if (@file_get_contents($binary, false, null, 0, 2) !== '#!') {
+        $bin = "{$package}/composer/bin";
+        file_put_contents("{$bin}/version", "{$version}\n");
+        $triple = self::triple();
+        $binary = "{$bin}/{$triple}/mago";
+        if (is_file($binary)) {
             return;
         }
 
-        $architecture = self::architecture();
-        ['os' => $os, 'vendor' => $vendor, 'suffix' => $suffix] = self::platform($architecture);
-        $triple = $suffix === '' ? "{$architecture}-{$vendor}-{$os}" : "{$architecture}-{$vendor}-{$os}-{$suffix}";
         $name = "mago-{$version}-{$triple}";
         $checksum = self::archiveChecksum("{$package}/composer/sha256sums.txt", "{$name}.tar.gz");
-        $work = "{$package}/composer/bin/.install";
+        $work = "{$bin}/.install";
         $filesystem = new Filesystem();
         $filesystem->ensureDirectoryExists($work);
+        $filesystem->ensureDirectoryExists("{$bin}/{$triple}");
         try {
             $io->writeError("Downloading mago {$version} for {$triple}...");
             $archive = "{$work}/{$name}.tar.gz";
@@ -66,6 +69,20 @@ final class MagoBinary
         } finally {
             $filesystem->removeDirectory($work);
         }
+    }
+
+    /**
+     * The Rust target triple of this platform's release binary, libc suffix included, as `composer/bin/mago` maps
+     * `uname` to it.
+     *
+     * @throws RuntimeException If the platform has no release binary.
+     */
+    public static function triple(): string
+    {
+        $architecture = self::architecture();
+        ['os' => $os, 'vendor' => $vendor, 'suffix' => $suffix] = self::platform($architecture);
+
+        return $suffix === '' ? "{$architecture}-{$vendor}-{$os}" : "{$architecture}-{$vendor}-{$os}-{$suffix}";
     }
 
     /**
