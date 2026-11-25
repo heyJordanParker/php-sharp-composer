@@ -1,8 +1,11 @@
 namespace Sharp.Time;
 
 // A length of time in nanoseconds. `Clock`, `Process`, `Http` and `Cache` take it.
-public struct Duration
+public struct Duration : string
 {
+    // The ISO-8601 duration it is stored as, which `parse` reads back.
+    public string value => this.toString();
+
     public Duration(public int nanoseconds { get; }) { }
 
     public static Duration zero => new Duration(0);

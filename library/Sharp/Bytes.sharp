@@ -6,12 +6,15 @@ extern Internal.text uses none;
 
 // Binary data, spec section 18: the bytes another system gives, counts or signs, as an address, a hash or a file that
 // is not text. A `string` is always valid UTF-8, so bytes that may not be are `Bytes`. Two are `==` when they hold the
-// same bytes. It stores as standard base64 text, through `parse` and `toString()`, as .NET's JSON stores a `byte[]`.
-public struct Bytes
+// same bytes. It stores as standard base64 text, its `value`, which `parse` reads back, as .NET's JSON stores a
+// `byte[]`.
+public struct Bytes : string
 {
     // The bytes as PHP's string holds them. The engine fills it for a plain PHP string that crosses into a `Bytes`
     // place, and the standard library hands it to PHP's functions.
     private Bytes(internal string data { get; }) { }
+
+    public string value => this.toString();
 
     // The bytes standard base64 `text` writes.
     public static Bytes parse(string text)

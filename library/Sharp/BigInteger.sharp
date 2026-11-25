@@ -4,9 +4,12 @@ import BcMath.Number;
 
 // An integer of any size. `/` and `%` round toward 0, as an `int`'s do, so -7 / 2 is -3 and -7 % 2 is -1, and a
 // divisor of 0 throws `DivisionByZeroError`. It runs on PHP's BcMath\Number.
-public struct BigInteger
+public struct BigInteger : string
 {
     private BigInteger(private Number number { get; }) { }
+
+    // The decimal digits it is stored as, which `parse` reads back.
+    public string value => this.toString();
 
     public static BigInteger parse(string text)
         => BigInteger.tryParse(text) ?? throw new ValueError(`BigInteger.parse: "${text}" is not an integer, such as "-12"`);

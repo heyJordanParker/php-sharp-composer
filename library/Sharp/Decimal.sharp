@@ -7,9 +7,12 @@ import RoundingMode as PhpRoundingMode;
 // 0.1 + 0.2 is 0.3. A quotient can have no end, so `divide` names its scale and its rounding, and there is no `/`. Two
 // decimals are `==` when they are one number, so 1.5 and 1.50 are, and each keeps its scale. It runs on PHP's
 // BcMath\Number.
-public struct Decimal
+public struct Decimal : string
 {
     private Decimal(private Number number { get; }) { }
+
+    // The digits it is stored as, which `parse` reads back.
+    public string value => this.toString();
 
     public static Decimal parse(string text)
         => Decimal.tryParse(text) ?? throw new ValueError(`Decimal.parse: "${text}" is not a decimal number, such as "-12.50"`);

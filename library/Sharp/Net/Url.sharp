@@ -2,8 +2,11 @@ namespace Sharp.Net;
 
 // An absolute URL, split into its parts as RFC 3986 names them. Each part keeps its percent-encoding, and `decode`
 // reads one.
-public struct Url
+public struct Url : string
 {
+    // The URL it is stored as, which `parse` reads back.
+    public string value => this.toString();
+
     public Url(
         public string scheme { get; },
         public string host { get; },

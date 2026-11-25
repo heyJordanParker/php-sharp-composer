@@ -1,8 +1,11 @@
 namespace Sharp.Time;
 
 // An instant as the clocks of a time zone show it.
-public struct DateTime
+public struct DateTime : string
 {
+    // The ISO-8601 text with its zone that it is stored as, which `parse` reads back.
+    public string value => this.toString();
+
     public DateTime(public Instant instant { get; }, public TimeZone zone { get; }) { }
 
     public Duration offset => this.zone.offsetAt(this.instant);

@@ -2,9 +2,12 @@ namespace Sharp.Net;
 
 // An IPv4 or IPv6 address. It holds the address's bytes, so two texts of one address, as `::1` and
 // `0:0:0:0:0:0:0:1`, give `==` addresses.
-public struct IpAddress
+public struct IpAddress : string
 {
     private IpAddress(private Bytes bytes { get; }) { }
+
+    // The address it is stored as, which `parse` reads back.
+    public string value => this.toString();
 
     public static IpAddress parse(string text)
         => IpAddress.tryParse(text) ?? throw new ValueError(`IpAddress.parse: "${text}" is not an IPv4 or IPv6 address`);

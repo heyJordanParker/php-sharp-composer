@@ -1,8 +1,11 @@
 namespace Sharp.Time;
 
 // A point on the time line, in seconds and nanoseconds since 1970-01-01T00:00:00Z.
-public struct Instant
+public struct Instant : string
 {
+    // The ISO-8601 text it is stored as, which `parse` reads back.
+    public string value => this.toString();
+
     public Instant(public int epochSeconds { get; }, public int nanosecond { get; } = 0)
     {
         if (nanosecond < 0 || nanosecond > 999_999_999) {

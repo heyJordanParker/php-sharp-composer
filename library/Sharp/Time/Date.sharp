@@ -1,8 +1,11 @@
 namespace Sharp.Time;
 
 // A day of the proleptic Gregorian calendar, with no time and no time zone.
-public struct Date
+public struct Date : string
 {
+    // The ISO-8601 day it is stored as, which `parse` reads back.
+    public string value => this.toString();
+
     public Date(public int year { get; }, public int month { get; }, public int day { get; })
     {
         if (month < 1 || month > 12 || day < 1 || day > Date.daysInMonth(year, month)) {

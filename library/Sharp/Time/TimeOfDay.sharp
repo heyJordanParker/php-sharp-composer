@@ -1,8 +1,11 @@
 namespace Sharp.Time;
 
 // A time of day on a clock, with no date and no time zone.
-public struct TimeOfDay
+public struct TimeOfDay : string
 {
+    // The ISO-8601 time it is stored as, which `parse` reads back.
+    public string value => this.toString();
+
     public TimeOfDay(public int hour { get; }, public int minute { get; }, public int second { get; } = 0, public int nanosecond { get; } = 0)
     {
         if (hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59 || nanosecond < 0 || nanosecond > 999_999_999) {
