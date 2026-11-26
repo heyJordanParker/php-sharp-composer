@@ -1,10 +1,9 @@
 namespace Sharp;
 
-import ReflectionAttribute;
-import ReflectionParameter;
 import Sharp.Internal.CreatesAttributes;
 
 extern Internal.defaultValue uses none;
+extern Internal.attributes uses any;
 
 // A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, its type as declared, whether
 // it is optional, which it is when a call may leave it out, whether it is variadic, whether it has a default that runs
@@ -39,13 +38,5 @@ public class Parameter
     // `Class<T>.attributes()` gives a class's.
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => this.reflected()
-            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-            .map(attribute => attribute.newInstance());
-
-    // PHP's reflection of the parameter, through its method's, so a property accessor's `value` is reached as the
-    // accessor is.
-    private ReflectionParameter reflected()
-        => ClassMembers.reflectedMethod(this.declaringClass, this.method).getParameters()[this.position]
-            ?? throw new ValueError("The engine gave a parameter its method does not take.");
+        => Internal.attributes(this.declaringClass, "parameter", this.method, this.position, typeof(TAttribute));
 }

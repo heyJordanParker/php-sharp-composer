@@ -1,9 +1,8 @@
 namespace Sharp;
 
-import ReflectionAttribute;
-import ReflectionEnumUnitCase;
 import Sharp.Internal.CreatesAttributes;
-import UnitEnum;
+
+extern Internal.attributes uses any;
 
 // A case of an enum, as `Class<T>.enumCases()` gives it, spec section 25: its name, the case itself, and its backing
 // value, the int or the string, null for a pure enum's. The engine creates it.
@@ -24,9 +23,5 @@ public class EnumCase
     // `Class<T>.attributes()` gives a class's.
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => this.value is UnitEnum unit
-            ? new ReflectionEnumUnitCase(unit, this.name)
-                .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-                .map(attribute => attribute.newInstance())
-            : [];
+        => Internal.attributes(Class.of(this.value), "constant", this.name, 0, typeof(TAttribute));
 }

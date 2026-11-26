@@ -1,10 +1,9 @@
 namespace Sharp;
 
-import ReflectionAttribute;
-import ReflectionClassConstant;
 import Sharp.Internal.CreatesAttributes;
 
 extern Internal.constant uses none;
+extern Internal.attributes uses any;
 
 // A constant a class declares, as `Class<T>.constants()` gives it, spec section 25: the class that declares it, its
 // name and its type as declared. The engine creates it.
@@ -30,7 +29,5 @@ public class Constant
     // `Class<T>.attributes()` gives a class's.
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => new ReflectionClassConstant(this.declaringClass, this.name)
-            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-            .map(attribute => attribute.newInstance());
+        => Internal.attributes(this.declaringClass, "constant", this.name, 0, typeof(TAttribute));
 }

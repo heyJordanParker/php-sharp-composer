@@ -1,8 +1,8 @@
 namespace Sharp;
 
-import ReflectionAttribute;
-import ReflectionMethod;
 import Sharp.Internal.CreatesAttributes;
+
+extern Internal.attributes uses any;
 
 // The constructor of a class, as `Class<T>.constructor()` gives it, spec section 25: its visibility and its parameters,
 // apart from its methods. `Class<T>.createInstance()` runs it. The engine creates it.
@@ -26,7 +26,5 @@ public class Constructor
     // `Class<T>.attributes()` gives a class's.
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
-        => new ReflectionMethod(this.declaringClass, "__construct")
-            .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-            .map(attribute => attribute.newInstance());
+        => Internal.attributes(this.declaringClass, "method", "__construct", 0, typeof(TAttribute));
 }

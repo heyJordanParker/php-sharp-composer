@@ -1,12 +1,7 @@
 namespace Sharp;
 
-import BackedEnum;
-import PropertyHookType;
-import ReflectionAttribute;
 import ReflectionClass;
 import ReflectionFunction;
-import ReflectionFunctionAbstract;
-import ReflectionMethod;
 import ReflectionProperty;
 import Sharp.Internal;
 import Sharp.Internal.CreatesAttributes;
@@ -29,6 +24,7 @@ extern Internal.interfaces uses none;
 extern Internal.classFacts uses none;
 extern Internal.enumBackingType uses none;
 extern Internal.enumCases uses none;
+extern Internal.attributes uses any;
 extern Internal.constants uses none;
 extern Internal.makeGenericType uses none;
 extern Internal.withTag uses none;
@@ -195,29 +191,7 @@ public static class ClassMembers
     // that extends or implements it, as `Class<T>.attributes()` gives a class's. An `extern` property's are those of its
     // hidden static `name#extern`, since PHP declares no property of its name, spec section 14.3.
     internal static List<TAttribute> memberAttributes<TAttribute : Object>(Class<Object> declaring, string name)
-        => (ClassMembers.stored(declaring, name) ?? ClassMembers.stored(declaring, name + "#extern"))
-            ?.getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-            .map(attribute => attribute.newInstance())
-            ?? [];
-
-    // PHP's reflection of the method `name` that `declaring` declares, and of a property's accessor, named `$name::get` or
-    // `$name::set` as PHP 8.4 names a property hook: an instance property's through its property, which alone reaches the
-    // hook, and a static's through its hidden `name#get` or `name#set`, since PHP has no hooks on a static.
-    internal static ReflectionFunctionAbstract reflectedMethod(Class<Object> declaring, string name)
-    {
-        if (!global.str_starts_with(name, "$")) {
-            return new ReflectionMethod(declaring, name);
-        }
-        const parts = global.explode("::", global.substr(name, 1));
-        const accessor = Internal.hiddenMethod(declaring, parts[0] + "#" + parts[1]);
-        if (accessor != null) {
-            return new ReflectionFunction(accessor);
-        }
-        const kind = parts[1] == "get" ? PropertyHookType.Get : PropertyHookType.Set;
-
-        return new ReflectionProperty(declaring, parts[0]).getHook(kind)
-            ?? throw new ValueError("The engine gave an accessor its property does not run.");
-    }
+        => Internal.attributes(declaring, "property", name, 0, typeof(TAttribute));
 
     // PHP's reflection of the storage of the property or field `name` that `declaring` declares, or null for a static
     // whose class keeps none, as a computed one, see `properties()`.
@@ -449,14 +423,10 @@ public static class ClassMembers
         public List<EnumCase> enumCases()
             => ClassMembers.declared(type) == null
                 ? []
-                : Internal.enumCases(type).map(
-                    found => new EnumCase(found.name, found, found is BackedEnum backed ? backed.value : null)
-                );
+                : Internal.enumCases(type);
 
         [CreatesAttributes]
         public List<TAttribute> attributes<TAttribute : Object>()
-            => ClassMembers.declared(type) == null ? [] : new ReflectionClass(type)
-                .getAttributes(ClassMembers.declared(typeof(TAttribute)), ReflectionAttribute.IS_INSTANCEOF)
-                .map(attribute => attribute.newInstance());
+            => ClassMembers.declared(type) == null ? [] : Internal.attributes(type, "class", "", 0, typeof(TAttribute));
     }
 }
