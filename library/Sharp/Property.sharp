@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.NamesMember;
 import Sharp.Internal.RunsInitialValues;
 
 extern Internal.accessors uses none;
@@ -17,7 +18,7 @@ public class Property
     internal Property(
         private Class<Any?> readOn,
         public Class<Object> declaringClass { get; },
-        public string name { get; },
+        [NamesMember] public string name { get; },
         public Visibility visibility { get; },
         public Class<Any?> type { get; },
         public Visibility? setVisibility { get; },

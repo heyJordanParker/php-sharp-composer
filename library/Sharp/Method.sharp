@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.NamesMember;
 
 extern Internal.createDelegate uses none;
 extern Internal.createInvoker uses none;
@@ -14,7 +15,7 @@ public class Method
     internal Method(
         private Class<Any?> readOn,
         public Class<Object> declaringClass { get; },
-        public string name { get; },
+        [NamesMember] public string name { get; },
         public bool isStatic { get; },
         public bool isVirtual { get; },
         public bool isAbstract { get; },

@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.NamesMember;
 
 extern Internal.constant uses none;
 // A constant a class declares, as `Class<T>.constants()` gives it, spec section 25: the class that declares it, its
@@ -9,7 +10,7 @@ public class Constant
 {
     internal Constant(
         public Class<Object> declaringClass { get; },
-        public string name { get; },
+        [NamesMember] public string name { get; },
         public Class<Any?> type { get; }
     ) { }
 

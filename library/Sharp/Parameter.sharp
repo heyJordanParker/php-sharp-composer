@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.NamesMember;
 
 extern Internal.defaultValue uses none;
 // A parameter of a method, as `Method.parameters()` gives it, spec section 25: its name, its type as declared, whether
@@ -12,7 +13,7 @@ public class Parameter
         private Class<Object> declaringClass,
         private string method,
         private int position,
-        public string name { get; },
+        [NamesMember] public string name { get; },
         public Class<Any?> type { get; },
         public bool isOptional { get; },
         public bool isVariadic { get; },

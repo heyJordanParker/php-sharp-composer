@@ -1,6 +1,7 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.NamesMember;
 import Sharp.Internal.RunsInitialValues;
 
 extern Internal.readField uses none;
@@ -14,7 +15,7 @@ public class Field
 {
     internal Field(
         public Class<Object> declaringClass { get; },
-        public string name { get; },
+        [NamesMember] public string name { get; },
         public Visibility visibility { get; },
         public Class<Any?> type { get; },
         public bool isStatic { get; }

@@ -1,13 +1,14 @@
 namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
+import Sharp.Internal.NamesMember;
 
 // A case of an enum, as `Class<T>.enumCases()` gives it, spec section 25: its name, the case itself, and its backing
 // value, the int or the string, null for a pure enum's. The engine creates it.
 public class EnumCase
 {
     internal EnumCase(
-        public string name { get; },
+        [NamesMember] public string name { get; },
         public Object value { get; },
         public Any? backingValue { get; }
     ) { }
