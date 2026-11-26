@@ -423,7 +423,7 @@ public static class ClassMembers
         public List<EnumCase> enumCases()
             => ClassMembers.declared(type) == null
                 ? []
-                : Internal.enumCases(type);
+                : Internal.enumCases(type, typeof(EnumCase));
 
         [CreatesAttributes]
         public List<TAttribute> attributes<TAttribute : Object>()

@@ -2,8 +2,6 @@ namespace Sharp;
 
 import Sharp.Internal.CreatesAttributes;
 
-extern Internal.attributes uses any;
-
 // The constructor of a class, as `Class<T>.constructor()` gives it, spec section 25: its visibility and its parameters,
 // apart from its methods. `Class<T>.createInstance()` runs it. The engine creates it.
 public class Constructor
