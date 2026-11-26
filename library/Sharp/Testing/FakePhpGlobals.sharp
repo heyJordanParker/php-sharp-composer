@@ -30,7 +30,7 @@ public class FakePhpGlobals : PhpGlobals
 
     public override void write(Superglobal which, string key, Any? value)
     {
-        const values = this.superglobals.get(which) ?? [:];
+        let values = this.superglobals.get(which) ?? [:];
         values[key] = value;
         this.superglobals[which] = values;
     }
