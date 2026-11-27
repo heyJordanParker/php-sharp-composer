@@ -11,5 +11,8 @@ public static class Query
     // `parse(string)`, so `page=2` is the `int` 2. A list field reads PHP's repeated `tags[]=a&tags[]=b`. It throws one
     // `InvalidFields` that lists every bad field.
     [ParsesTypeArgument]
-    public static T decode<T>(string query) => Internal.parseAs(typeof(T), Url.parseQuery(query), true);
+    public static T decode<T>(string query) => Internal.parseAs(typeof(T), Query.read(query), true);
+
+    // The value query text holds, its read before `decode` builds `T`.
+    private static Map<int|string, Any?> read(string query) => Url.parseQuery(query);
 }
