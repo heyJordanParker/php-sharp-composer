@@ -25,6 +25,7 @@ extern Internal.classFacts uses none;
 extern Internal.enumBackingType uses none;
 extern Internal.enumCases uses none;
 extern Internal.attributes uses any;
+extern Internal.attributeData uses none;
 extern Internal.constants uses none;
 extern Internal.makeGenericType uses none;
 extern Internal.withTag uses none;
@@ -192,6 +193,10 @@ public static class ClassMembers
     // hidden static `name#extern`, since PHP declares no property of its name, spec section 14.3.
     internal static List<TAttribute> memberAttributes<TAttribute : Object>(Class<Object> declaring, string name)
         => Internal.attributes(declaring, "property", name, 0, typeof(TAttribute));
+
+    // The attributes `memberAttributes<TAttribute>()` gives, each as written, building none, spec section 25.
+    internal static List<AttributeData> memberAttributeData<TAttribute : Object>(Class<Object> declaring, string name)
+        => Internal.attributeData(declaring, "property", name, 0, typeof(TAttribute), typeof(AttributeData));
 
     // PHP's reflection of the storage of the property or field `name` that `declaring` declares, or null for a static
     // whose class keeps none, as a computed one, see `properties()`.
@@ -429,5 +434,11 @@ public static class ClassMembers
         [CreatesAttributes]
         public List<TAttribute> attributes<TAttribute : Object>()
             => ClassMembers.declared(type) == null ? [] : Internal.attributes(type, "class", "", 0, typeof(TAttribute));
+
+        // The attributes `attributes<TAttribute>()` gives, each as written, building none, spec section 25.
+        public List<AttributeData> attributeData<TAttribute : Object>()
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.attributeData(type, "class", "", 0, typeof(TAttribute), typeof(AttributeData));
     }
 }

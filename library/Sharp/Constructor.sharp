@@ -25,4 +25,15 @@ public class Constructor
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => Internal.attributes(this.declaringClass, "method", "__construct", 0, typeof(TAttribute));
+
+    // The attributes `attributes<TAttribute>()` gives, each as written, building none, spec section 25.
+    public List<AttributeData> attributeData<TAttribute : Object>()
+        => Internal.attributeData(
+            this.declaringClass,
+            "method",
+            "__construct",
+            0,
+            typeof(TAttribute),
+            typeof(AttributeData)
+        );
 }

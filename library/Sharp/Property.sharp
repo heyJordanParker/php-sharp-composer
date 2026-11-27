@@ -80,4 +80,8 @@ public class Property
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => ClassMembers.memberAttributes<TAttribute>(this.declaringClass, this.name);
+
+    // The attributes `attributes<TAttribute>()` gives, each as written, building none, spec section 25.
+    public List<AttributeData> attributeData<TAttribute : Object>()
+        => ClassMembers.memberAttributeData<TAttribute>(this.declaringClass, this.name);
 }

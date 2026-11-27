@@ -1,0 +1,12 @@
+namespace Sharp;
+
+// An attribute as written on a declaration, as each member's `attributeData<T>()` gives it, spec section 25: its class,
+// and the call of its constructor as `arguments`, one value for each parameter in parameter order, a named argument at
+// its parameter's place and a left-out parameter's default filled in, as C#'s `CustomAttributeData` stores them. Each
+// is the value as written, an enum case as the case and `typeof(System)` as the class value. Nothing builds the
+// attribute, so code can save it and build it later with `typeof(T).createInstance(arguments)`, which may have every
+// effect. The engine creates it.
+public final class AttributeData
+{
+    internal AttributeData(public Class<Object> type { get; }, public List<Any?> arguments { get; }) { }
+}
