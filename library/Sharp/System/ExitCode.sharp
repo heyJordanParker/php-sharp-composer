@@ -5,9 +5,9 @@ namespace Sharp.System;
 // ends it with.
 public struct ExitCode
 {
-    public static ExitCode SUCCESS => new ExitCode(0);
+    public static ExitCode success => new ExitCode(0);
 
-    public static ExitCode FAILURE => new ExitCode(1);
+    public static ExitCode failure => new ExitCode(1);
 
     // Throws `ValueError` for a code outside 0 to 255, which no process status holds.
     public ExitCode(public int code { get; })
