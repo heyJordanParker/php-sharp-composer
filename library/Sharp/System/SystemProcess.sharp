@@ -6,12 +6,9 @@ import Sharp.Time.Duration;
 // temporary files, so a program that writes a lot never waits on a full pipe.
 public effect class SystemProcess : Process
 {
-    public override never exit(int code)
+    public override never exit(ExitCode code)
     {
-        if (code < 0 || code > 254) {
-            throw new ValueError(`Process.exit: the code ${code} is not from 0 to 254`);
-        }
-        global.exit(code);
+        global.exit(code.code);
     }
 
     public override int id() => global.getmypid() is int id ? id : throw new RuntimeException("Process.id: the process id cannot be read");

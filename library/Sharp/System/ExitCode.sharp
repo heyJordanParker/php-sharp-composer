@@ -1,0 +1,19 @@
+namespace Sharp.System;
+
+// The status a program ends with, from 0 to 255, spec section 27: what `main` returns and `Process.exit` takes. As
+// Rust's `ExitCode` and its panic status, 0 is success, 1 a failure the program returns, and 101 a bug the engine
+// ends it with.
+public struct ExitCode
+{
+    public static ExitCode SUCCESS => new ExitCode(0);
+
+    public static ExitCode FAILURE => new ExitCode(1);
+
+    // Throws `ValueError` for a code outside 0 to 255, which no process status holds.
+    public ExitCode(public int code { get; })
+    {
+        if (code < 0 || code > 255) {
+            throw new ValueError(`ExitCode: the code ${code} is not from 0 to 255`);
+        }
+    }
+}

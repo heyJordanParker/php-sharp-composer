@@ -1,6 +1,7 @@
 namespace Sharp.Testing;
 
 import Sharp.System.ChildProcess;
+import Sharp.System.ExitCode;
 import Sharp.System.Process;
 import Sharp.System.ProcessResult;
 import Sharp.Time.Duration;
@@ -17,10 +18,10 @@ public class FakeProcess : Process
 
     public FakeProcess(private List<ProcessResult> results = []) { }
 
-    public override never exit(int code)
+    public override never exit(ExitCode code)
     {
-        this.exited.add(code);
-        throw new LogicException(`FakeProcess.exit: the run exited with code ${code}`);
+        this.exited.add(code.code);
+        throw new LogicException(`FakeProcess.exit: the run exited with code ${code.code}`);
     }
 
     public override int id() => 1;
