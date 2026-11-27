@@ -27,6 +27,7 @@ extern Internal.enumCases uses none;
 extern Internal.attributes uses any;
 extern Internal.constants uses none;
 extern Internal.makeGenericType uses none;
+extern Internal.isAssignable uses none;
 extern Internal.withTag uses none;
 extern Internal.tag uses none;
 extern Internal.parseAs uses none;
@@ -297,6 +298,11 @@ public static class ClassMembers
         // type parameters, and on an argument outside its parameter's bound.
         public Class<Any?> makeGenericType(List<Class<Any?>> arguments)
             => ClassMembers.classValue(Internal.makeGenericType(type, arguments));
+
+        // Whether a value of the type fits `other`, as `is` answers it for such a value, spec section 25:
+        // `typeof(CardPayment).isAssignableTo(typeof(Payment))` for a class that implements `Payment`, and
+        // `typeof(List<int>).isAssignableTo(typeof(Iterable<Any?>))`. Generic types, unions and nullable types included.
+        public bool isAssignableTo(Class<Any?> other) => Internal.isAssignable(type, other);
     }
 
     extension<T>(Class<T> type)
