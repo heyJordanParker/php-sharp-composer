@@ -10,7 +10,7 @@ extern Internal.methods uses none;
 extern Internal.properties uses none;
 extern Internal.constructor uses none;
 extern Internal.hiddenMethod uses none;
-extern Internal.createInstance uses none;
+extern Internal.createInstance uses any;
 extern Internal.typeArguments uses none;
 extern Internal.typeKind uses none;
 extern Internal.isNullable uses none;
@@ -349,7 +349,8 @@ public static class ClassMembers
         // A new object of the class, with the class value's type arguments, created by its constructor with
         // `arguments`. The calling code reaches the constructor as a
         // direct `new` would. Throws InvalidArgumentException for an abstract class, an interface or an enum, and for
-        // arguments the constructor's parameters don't take.
+        // arguments the constructor's parameters don't take. Its arguments are a runtime list, and the class value may
+        // hold any subclass, so it may have every effect, as `Property.get` may, spec section 29.
         public T createInstance(List<Any?> arguments) => Internal.createInstance(type, arguments);
 
         // The variant of the family the class is whose `[Key]` is `tag`, spec section 10, or null for a name it has no
