@@ -17,12 +17,13 @@ public static class Json
     [ParsesTypeArgument]
     public static Result<T, ParseError> parse<T>(string json)
     {
+        Any? value = null;
         try {
-            const value = Json.read(json);
-            return Internal.parseAs(typeof(T), value, false) as Result<T, ParseError> ?? throw new LogicException("The engine's parse gave no Result");
+            value = Json.read(json);
         } catch (JsonException failure) {
             return Result.Err(new ParseError(["": failure.getMessage()]));
         }
+        return Internal.parseAs(typeof(T), value, false);
     }
 
     // JSON text of the value. By default `/` stays `/`, each character outside ASCII stays itself and `1.0` stays

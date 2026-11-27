@@ -12,5 +12,5 @@ public static class Query
     // holds one `ParseError` that lists every bad field.
     [ParsesTypeArgument]
     public static Result<T, ParseError> parse<T>(string query)
-        => Internal.parseAs(typeof(T), Url.parseQuery(query), true) as Result<T, ParseError> ?? throw new LogicException("The engine's parse gave no Result");
+        => Internal.parseAs(typeof(T), Url.parseQuery(query), true);
 }

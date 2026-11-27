@@ -379,7 +379,7 @@ public static class ClassMembers
         // that lists every bad part. It has the effects of the reader it runs where the checker knows it, and may
         // have every effect where the class value may hold a class whose reader differs, spec section 29.
         public Result<T, ParseError> parse(Any? value)
-            => Internal.parseAs(type, value, false) as Result<T, ParseError> ?? throw new LogicException("The engine's parse gave no Result");
+            => Internal.parseAs(type, value, false);
 
         // The stored form of `value` that `decode` reads back, lists, maps and scalars, spec section 10: what
         // `Json.encode` writes as text, each field `parse` reads under its key at any visibility, so a storage layer in
