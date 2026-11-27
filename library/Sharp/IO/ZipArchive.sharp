@@ -16,14 +16,7 @@ public class ZipArchive : Disposable
     // A new archive at `path` with no entries, in place of any file there. It is written when it is disposed, an empty
     // one too.
     public static ZipArchive create(string path)
-    {
-        const created = ZipArchive.opened(path, PhpZipArchive.CREATE | PhpZipArchive.OVERWRITE, "ZipArchive.create");
-        if (!created.archive.setArchiveFlag(PhpZipArchive.AFL_CREATE_OR_KEEP_FILE_FOR_EMPTY_ARCHIVE, 1)) {
-            throw created.failure(`ZipArchive.create: "${path}" cannot be created`);
-        }
-
-        return created;
-    }
+        => ZipArchive.opened(path, PhpZipArchive.CREATE | PhpZipArchive.OVERWRITE, "ZipArchive.create");
 
     // The name of each entry, in the archive's order. A folder's entry ends in "/".
     public List<string> list()
@@ -107,6 +100,11 @@ public class ZipArchive : Disposable
         }
         if (result == false) {
             throw new RuntimeException(`${member}: "${path}" cannot be opened`);
+        }
+        // A created archive is written when it is disposed, an empty one too.
+        if ((flags & PhpZipArchive.CREATE) != 0
+            && !archive.setArchiveFlag(PhpZipArchive.AFL_CREATE_OR_KEEP_FILE_FOR_EMPTY_ARCHIVE, 1)) {
+            throw new RuntimeException(`${member}: "${path}" cannot be created: ${archive.getStatusString()}`);
         }
 
         return new ZipArchive(archive, path);
