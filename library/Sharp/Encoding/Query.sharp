@@ -12,5 +12,8 @@ public static class Query
     // holds one `ParseError` that lists every bad field.
     [ParsesTypeArgument]
     public static Result<T, ParseError> parse<T>(string query)
-        => Internal.parseAs(typeof(T), Url.parseQuery(query), true);
+        => Internal.parseAs(typeof(T), Query.read(query), true);
+
+    // The value query text holds, its read before `parse` builds `T`.
+    private static Map<int|string, Any?> read(string query) => Url.parseQuery(query);
 }
