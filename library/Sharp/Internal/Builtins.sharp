@@ -27,9 +27,9 @@
 namespace Sharp.Internal;
 
 import Error as PhpError;
-import ParseError as PhpParseError;
 import FFI.Exception as FFIException;
 import FFI.ParserException;
+import ParseError as PhpParseError;
 import Random.BrokenRandomEngineError;
 import Random.RandomError;
 import Random.RandomException;
