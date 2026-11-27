@@ -9,10 +9,10 @@ public struct IpAddress : string
     // The address it is stored as, which `parse` reads back.
     public string value => this.toString();
 
-    public static IpAddress parse(string text)
-        => IpAddress.tryParse(text) ?? throw new ValueError(`IpAddress.parse: "${text}" is not an IPv4 or IPv6 address`);
+    public static Result<IpAddress, ParseError> parse(string text)
+        => IpAddress.read(text) is IpAddress value ? Result.Ok(value) : Result.Err(new ParseError(["": `IpAddress.parse: "${text}" is not an IPv4 or IPv6 address`]));
 
-    public static IpAddress? tryParse(string text)
+    private static IpAddress? read(string text)
         => global.filter_var(text, global.FILTER_VALIDATE_IP) is string && global.inet_pton(text) is string bytes ? new IpAddress(Bytes.held(bytes)) : null;
 
     public IpFamily family => this.bytes.length() == 4 ? IpFamily.V4 : IpFamily.V6;

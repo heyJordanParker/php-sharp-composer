@@ -9,15 +9,21 @@ extern Internal.jsonDecode uses none;
 
 public static class Json
 {
-    // The value JSON text holds, an object as a `Map`, which compares by structure. It throws `JsonException` on text
-    // that is no JSON.
-    public static JsonValue parse(string json) => new JsonValue(Json.read(json));
-
     // The value of type `T` that JSON text holds, any type a field `parse` reads can hold, as `List<Payment>`: each
-    // struct, class, family and enum case in it built as a field of `T` reads it. It throws one `InvalidFields` that
-    // lists every bad part (spec section 10). A number or a bool must be one in the JSON, so `"2"` is no `int`.
+    // struct, class, family and enum case in it built as a field of `T` reads it. `Json.parse<JsonValue>` reads any
+    // JSON, an object as a `Map`, which compares by structure. An `Err` holds one `ParseError` that lists every bad
+    // part (spec section 10), or the text's own problem, at "", for text that is no JSON. A number or a bool must be
+    // one in the JSON, so `"2"` is no `int`.
     [ParsesTypeArgument]
-    public static T decode<T>(string json) => Internal.parseAs(typeof(T), Json.read(json), false);
+    public static Result<T, ParseError> parse<T>(string json)
+    {
+        try {
+            const value = Json.read(json);
+            return Internal.parseAs(typeof(T), value, false) as Result<T, ParseError> ?? throw new LogicException("The engine's parse gave no Result");
+        } catch (JsonException failure) {
+            return Result.Err(new ParseError(["": failure.getMessage()]));
+        }
+    }
 
     // JSON text of the value. By default `/` stays `/`, each character outside ASCII stays itself and `1.0` stays
     // `1.0`. `escapeSlashes` writes `/` as `\/`, `escapeUnicode` writes each character outside ASCII as `\u` and its

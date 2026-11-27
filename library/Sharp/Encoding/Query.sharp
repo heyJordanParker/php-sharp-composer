@@ -6,10 +6,11 @@ import Sharp.Net.Url;
 
 public static class Query
 {
-    // The value of type `T` that query text holds, as `Query.decode<Search>("q=shoes&page=2")` reads it, spec section
-    // 24: each field read as `Json.decode` reads it, but a number or a bool from its text, through its type's
-    // `parse(string)`, so `page=2` is the `int` 2. A list field reads PHP's repeated `tags[]=a&tags[]=b`. It throws one
-    // `InvalidFields` that lists every bad field.
+    // The value of type `T` that query text holds, as `Query.parse<Search>("q=shoes&page=2")` reads it, spec section
+    // 24: each field read as `Json.parse` reads it, but a number or a bool from its text, through its type's
+    // `parse(string)`, so `page=2` is the `int` 2. A list field reads PHP's repeated `tags[]=a&tags[]=b`. An `Err`
+    // holds one `ParseError` that lists every bad field.
     [ParsesTypeArgument]
-    public static T decode<T>(string query) => Internal.parseAs(typeof(T), Url.parseQuery(query), true);
+    public static Result<T, ParseError> parse<T>(string query)
+        => Internal.parseAs(typeof(T), Url.parseQuery(query), true) as Result<T, ParseError> ?? throw new LogicException("The engine's parse gave no Result");
 }

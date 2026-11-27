@@ -18,10 +18,10 @@ public struct Url : string
         public string? password { get; } = null,
     ) { }
 
-    public static Url parse(string text)
-        => Url.tryParse(text) ?? throw new ValueError(`\`Url.parse\` reads an absolute URL, such as "https://example.com/path", and "${text}" is not one.`);
+    public static Result<Url, ParseError> parse(string text)
+        => Url.read(text) is Url value ? Result.Ok(value) : Result.Err(new ParseError(["": `\`Url.parse\` reads an absolute URL, such as "https://example.com/path", and "${text}" is not one.`]));
 
-    public static Url? tryParse(string text)
+    private static Url? read(string text)
     {
         if (!Url.isValid(text) || global.parse_url(text) is not Map<string, int|string> parts) {
             return null;

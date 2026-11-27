@@ -15,7 +15,7 @@ public static class PhpDates
     extension(DateTimeInterface value)
     {
         // The instant, to the microsecond a PHP date holds.
-        public Instant toInstant() => new Instant(value.getTimestamp(), Int.parse(value.format("u")) * 1_000);
+        public Instant toInstant() => new Instant(value.getTimestamp(), Int.parse(value.format("u")).unwrap() * 1_000);
 
         // The instant in the value's zone, a fixed offset such as "+03:00" included, but "+00:00", which is UTC. An
         // abbreviation, such as "EEST", has no rules for its clocks, so it throws `ValueError`, except at offset 0.
