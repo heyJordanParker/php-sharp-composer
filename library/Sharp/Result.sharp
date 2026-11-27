@@ -4,4 +4,16 @@ public enum Result<T, TError : Error>
 {
     case Ok(T value);
     case Err(TError error);
+
+    // The Ok value, or null for an Err, as Rust's Result::ok.
+    public T? ok() => match (this) {
+        Result.Ok(T value) => value,
+        Result.Err(TError error) => null,
+    };
+
+    // The Ok value. An Err throws LogicException with the error's message, as Rust's Result::unwrap panics.
+    public T unwrap() => match (this) {
+        Result.Ok(T value) => value,
+        Result.Err(TError error) => throw new LogicException(error.message),
+    };
 }
