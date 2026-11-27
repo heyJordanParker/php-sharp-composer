@@ -62,11 +62,11 @@ public struct Duration : string
         return `${sign}PT${hourPart}${minutePart}${secondPart}`;
     }
 
-    public static Duration parse(string text)
-        => Duration.tryParse(text) ?? throw new ValueError(`\`Duration.parse\` reads ISO-8601, such as "PT1H30M", and "${text}" is not.`);
+    public static Result<Duration, ParseError> parse(string text)
+        => Duration.read(text) is Duration value ? Result.Ok(value) : Result.Err(new ParseError(["": `\`Duration.parse\` reads ISO-8601, such as "PT1H30M", and "${text}" is not.`]));
 
     // ISO-8601 days, hours, minutes and seconds. A day is 24 hours.
-    public static Duration? tryParse(string text)
+    private static Duration? read(string text)
     {
         Map<int|string, string> found = [:];
         const pattern = "/\\A(-?)P(?:([0-9]+)D)?(?:T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)(?:\\.([0-9]{1,9}))?S)?)?\\z/";
@@ -92,7 +92,7 @@ public struct Duration : string
         return "." + (nanoseconds % 1_000_000 == 0 ? Date.padded(nanoseconds / 1_000_000, 3) : nanoseconds % 1_000 == 0 ? Date.padded(nanoseconds / 1_000, 6) : Date.padded(nanoseconds, 9));
     }
 
-    internal static int fractionNanoseconds(string digits) => digits == "" ? 0 : Int.parse(global.str_pad(digits, 9, "0"));
+    internal static int fractionNanoseconds(string digits) => digits == "" ? 0 : Int.parse(global.str_pad(digits, 9, "0")).unwrap();
 
-    private static int number(Map<int|string, string> found, int group) => Int.tryParse(found[group] ?? "") ?? 0;
+    private static int number(Map<int|string, string> found, int group) => Int.parse(found[group] ?? "").ok() ?? 0;
 }

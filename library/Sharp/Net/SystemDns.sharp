@@ -14,6 +14,6 @@ public effect class SystemDns : Dns
             throw new ValueError(`Dns.addresses: "${host}" is not a valid host name`);
         }
 
-        return Internal.resolve(host).map((string address) => IpAddress.parse(address));
+        return Internal.resolve(host).map((string address) => IpAddress.parse(address).unwrap());
     }
 }

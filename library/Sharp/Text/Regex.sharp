@@ -8,15 +8,14 @@ public struct Regex
 {
     private Regex(private string pattern { get; }) { }
 
-    // A pattern that does not compile throws `ValueError` with PHP's reason, as "No ending matching delimiter ')'
-    // found".
-    public static Regex parse(string pattern)
-        => Regex.tryParse(pattern) ?? throw new ValueError(`Regex.parse: "${pattern}" does not compile: ${Regex.compileError()}`);
+    // A pattern that does not compile gives an `Err` with PHP's reason, as "No ending matching delimiter ')' found".
+    public static Result<Regex, ParseError> parse(string pattern)
+        => Regex.read(pattern) is Regex value ? Result.Ok(value) : Result.Err(new ParseError(["": `Regex.parse: "${pattern}" does not compile: ${Regex.compileError()}`]));
 
     // A pattern that does not compile gives null, and PHP's warning for it reaches no error handler.
-    public static Regex? tryParse(string pattern) => global.preg_match(pattern, "") is int ? new Regex(pattern) : null;
+    private static Regex? read(string pattern) => global.preg_match(pattern, "") is int ? new Regex(pattern) : null;
 
-    // PHP's reason for the pattern `tryParse` could not compile, from the warning its `preg_match` raised.
+    // PHP's reason for the pattern `read` could not compile, from the warning its `preg_match` raised.
     private static string compileError() => (Internal.silencedWarning() ?? "").removePrefix("preg_match(): ");
 
     public bool matches(string text)

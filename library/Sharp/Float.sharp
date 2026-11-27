@@ -2,22 +2,23 @@ namespace Sharp;
 
 public static class Float
 {
-    public static float parse(string text)
+    // The float `text` writes, or an `Err` that says why the text writes none.
+    public static Result<float, ParseError> parse(string text)
     {
-        const number = Float.tryParse(text);
-        if (number is float) {
-            return number;
+        if (Float.read(text) is float number) {
+            return Result.Ok(number);
         }
+        let problem = `Float.parse: "${text}" is not a float`;
         if (Float.isNumber(text)) {
-            throw new ArithmeticError(`Float.parse: "${text}" is out of range for a float`);
+            problem = `Float.parse: "${text}" is out of range for a float`;
+        } else if (Float.isNumber(global.trim(text))) {
+            problem = `Float.parse: "${text}" is not a float: remove its spaces with trim() first`;
         }
-        if (Float.isNumber(global.trim(text))) {
-            throw new ValueError(`Float.parse: "${text}" is not a float: remove its spaces with trim() first`);
-        }
-        throw new ValueError(`Float.parse: "${text}" is not a float`);
+        return Result.Err(new ParseError(["": problem]));
     }
 
-    public static float? tryParse(string text)
+    // The finite float `text` writes, or null.
+    private static float? read(string text)
     {
         const number = Float.isNumber(text) ? global.floatval(text) : null;
         return (number is float) && global.is_finite(number) ? number : null;

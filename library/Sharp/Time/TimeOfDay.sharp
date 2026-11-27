@@ -19,19 +19,19 @@ public struct TimeOfDay : string
     // ISO-8601, as "21:30:00", and "21:30:00.250" with a fraction of a second.
     public string toString() => `${global.sprintf("%02d:%02d:%02d", this.hour, this.minute, this.second)}${Duration.fractionOf(this.nanosecond)}`;
 
-    public static TimeOfDay parse(string text)
-        => TimeOfDay.tryParse(text) ?? throw new ValueError(`\`TimeOfDay.parse\` reads an ISO-8601 time of day, such as "21:30:00", and "${text}" is not.`);
+    public static Result<TimeOfDay, ParseError> parse(string text)
+        => TimeOfDay.read(text) is TimeOfDay value ? Result.Ok(value) : Result.Err(new ParseError(["": `\`TimeOfDay.parse\` reads an ISO-8601 time of day, such as "21:30:00", and "${text}" is not.`]));
 
     // "21:30", "21:30:00" or "21:30:00.250", as an HTML time input gives them.
-    public static TimeOfDay? tryParse(string text)
+    private static TimeOfDay? read(string text)
     {
         Map<int|string, string> found = [:];
         if (global.preg_match("/\\A([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\\.([0-9]{1,9}))?)?\\z/", text, found) != 1) {
             return null;
         }
-        const hour = Int.parse(found[1] ?? "");
-        const minute = Int.parse(found[2] ?? "");
-        const second = (found[3] ?? "") == "" ? 0 : Int.parse(found[3] ?? "");
+        const hour = Int.parse(found[1] ?? "").unwrap();
+        const minute = Int.parse(found[2] ?? "").unwrap();
+        const second = (found[3] ?? "") == "" ? 0 : Int.parse(found[3] ?? "").unwrap();
 
         return hour <= 23 && minute <= 59 && second <= 59 ? new TimeOfDay(hour, minute, second, Duration.fractionNanoseconds(found[4] ?? "")) : null;
     }
