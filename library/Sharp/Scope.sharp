@@ -6,5 +6,7 @@ extern Internal.runScoped uses none;
 
 public static class Scope
 {
+    // Runs body in a new scope, spec section 32. Each scoped service body builds lives until body returns or throws,
+    // and is then disposed if it is Disposable, newest first.
     public static T run<T>(Function<T()> body) => Internal.runScoped(body);
 }

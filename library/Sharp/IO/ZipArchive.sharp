@@ -3,26 +3,20 @@ namespace Sharp.IO;
 import ZipArchive as PhpZipArchive;
 
 // A ZIP archive on disk: its entries are listed, read as text or as `Bytes`, added from either or from a file, and
-// extracted to a folder. The changes reach the file when `close()` runs. Each member reads or writes files, so code that calls one
-// has the effect `Files`. A failure throws `RuntimeException` with the archive's path and libzip's reason.
-public class ZipArchive
+// extracted to a folder. It is `Disposable`, and the changes reach the file when its owner disposes it, as a `using`
+// local does at its block's end. Each member reads or writes files, so code that calls one has the effect `Files`. A
+// failure throws `RuntimeException` with the archive's path and libzip's reason.
+public class ZipArchive : Disposable
 {
     private ZipArchive(private PhpZipArchive archive, private string path) { }
 
     // The archive at `path`, to read and to add to.
     public static ZipArchive open(string path) => ZipArchive.opened(path, 0, "ZipArchive.open");
 
-    // A new archive at `path` with no entries, in place of any file there. It is written by `close()`, an empty one
-    // too.
+    // A new archive at `path` with no entries, in place of any file there. It is written when it is disposed, an empty
+    // one too.
     public static ZipArchive create(string path)
-    {
-        const created = ZipArchive.opened(path, PhpZipArchive.CREATE | PhpZipArchive.OVERWRITE, "ZipArchive.create");
-        if (!created.archive.setArchiveFlag(PhpZipArchive.AFL_CREATE_OR_KEEP_FILE_FOR_EMPTY_ARCHIVE, 1)) {
-            throw created.failure(`ZipArchive.create: "${path}" cannot be created`);
-        }
-
-        return created;
-    }
+        => ZipArchive.opened(path, PhpZipArchive.CREATE | PhpZipArchive.OVERWRITE, "ZipArchive.create");
 
     // The name of each entry, in the archive's order. A folder's entry ends in "/".
     public List<string> list()
@@ -70,10 +64,10 @@ public class ZipArchive
     }
 
     // Writes the changes to the file and closes the archive. A member called after it throws `ValueError`.
-    public void close()
+    public void dispose()
     {
         if (!this.archive.close()) {
-            throw this.failure(`ZipArchive.close: "${this.path}" cannot be written`);
+            throw this.failure(`ZipArchive.dispose: "${this.path}" cannot be written`);
         }
     }
 
@@ -106,6 +100,11 @@ public class ZipArchive
         }
         if (result == false) {
             throw new RuntimeException(`${member}: "${path}" cannot be opened`);
+        }
+        // A created archive is written when it is disposed, an empty one too.
+        if ((flags & PhpZipArchive.CREATE) != 0
+            && !archive.setArchiveFlag(PhpZipArchive.AFL_CREATE_OR_KEEP_FILE_FOR_EMPTY_ARCHIVE, 1)) {
+            throw new RuntimeException(`${member}: "${path}" cannot be created: ${archive.getStatusString()}`);
         }
 
         return new ZipArchive(archive, path);

@@ -25,12 +25,13 @@ extern Internal.classFacts uses none;
 extern Internal.enumBackingType uses none;
 extern Internal.enumCases uses none;
 extern Internal.attributes uses any;
+extern Internal.attributeData uses none;
 extern Internal.constants uses none;
 extern Internal.makeGenericType uses none;
 extern Internal.isAssignable uses none;
 extern Internal.withTag uses none;
 extern Internal.tag uses none;
-extern Internal.parseAs uses none;
+extern Internal.parseAs uses any;
 extern Internal.storedValue uses none;
 
 public static class ClassMembers
@@ -193,6 +194,10 @@ public static class ClassMembers
     // hidden static `name#extern`, since PHP declares no property of its name, spec section 14.3.
     internal static List<TAttribute> memberAttributes<TAttribute : Object>(Class<Object> declaring, string name)
         => Internal.attributes(declaring, "property", name, 0, typeof(TAttribute));
+
+    // The attributes `memberAttributes<TAttribute>()` gives, each as written, building none, spec section 25.
+    internal static List<AttributeData> memberAttributeData<TAttribute : Object>(Class<Object> declaring, string name)
+        => Internal.attributeData(declaring, "property", name, 0, typeof(TAttribute), typeof(AttributeData));
 
     // PHP's reflection of the storage of the property or field `name` that `declaring` declares, or null for a static
     // whose class keeps none, as a computed one, see `properties()`.
@@ -371,7 +376,8 @@ public static class ClassMembers
 
         // A `T` built from `value`, a stored value already read into lists, maps and scalars, as a field `parse` reads
         // it, spec section 10: the read `Json.decode` makes once it has read the text. It throws one `InvalidFields`
-        // that lists every bad part.
+        // that lists every bad part. It has the effects of the reader it runs where the checker knows it, and may
+        // have every effect where the class value may hold a class whose reader differs, spec section 29.
         public T decode(Any? value) => Internal.parseAs(type, value, false);
 
         // The stored form of `value` that `decode` reads back, lists, maps and scalars, spec section 10: what
@@ -435,5 +441,11 @@ public static class ClassMembers
         [CreatesAttributes]
         public List<TAttribute> attributes<TAttribute : Object>()
             => ClassMembers.declared(type) == null ? [] : Internal.attributes(type, "class", "", 0, typeof(TAttribute));
+
+        // The attributes `attributes<TAttribute>()` gives, each as written, building none, spec section 25.
+        public List<AttributeData> attributeData<TAttribute : Object>()
+            => ClassMembers.declared(type) == null
+                ? []
+                : Internal.attributeData(type, "class", "", 0, typeof(TAttribute), typeof(AttributeData));
     }
 }
