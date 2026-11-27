@@ -31,7 +31,7 @@ extern Internal.makeGenericType uses none;
 extern Internal.isAssignable uses none;
 extern Internal.withTag uses none;
 extern Internal.tag uses none;
-extern Internal.parseAs uses none;
+extern Internal.parseAs uses any;
 extern Internal.storedValue uses none;
 
 public static class ClassMembers
@@ -376,7 +376,8 @@ public static class ClassMembers
 
         // A `T` built from `value`, a stored value already read into lists, maps and scalars, as a field `parse` reads
         // it, spec section 10: the read `Json.decode` makes once it has read the text. It throws one `InvalidFields`
-        // that lists every bad part.
+        // that lists every bad part. It has the effects of the reader it runs where the checker knows it, and may
+        // have every effect where the class value may hold a class whose reader differs, spec section 29.
         public T decode(Any? value) => Internal.parseAs(type, value, false);
 
         // The stored form of `value` that `decode` reads back, lists, maps and scalars, spec section 10: what
