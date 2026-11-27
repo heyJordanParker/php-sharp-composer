@@ -1,0 +1,12 @@
+namespace Sharp;
+
+import Sharp.Internal.AcceptsAnyEffect;
+
+// A value that holds a resource, such as an open archive, a transaction or a listener. Its one owner releases it with
+// `dispose()`: a `using` local when its block ends, newest first, or the container when the value's scope ends.
+public interface Disposable
+{
+    // An implementation may have any effect, and a `using` local carries its value's.
+    [AcceptsAnyEffect]
+    void dispose();
+}
