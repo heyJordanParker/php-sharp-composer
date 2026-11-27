@@ -23,4 +23,8 @@ public class EnumCase
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => Internal.attributes(Class.of(this.value), "constant", this.name, 0, typeof(TAttribute));
+
+    // The attributes `attributes<TAttribute>()` gives, each as written, building none, spec section 25.
+    public List<AttributeData> attributeData<TAttribute : Object>()
+        => Internal.attributeData(Class.of(this.value), "constant", this.name, 0, typeof(TAttribute), typeof(AttributeData));
 }

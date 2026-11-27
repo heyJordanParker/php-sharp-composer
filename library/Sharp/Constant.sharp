@@ -29,4 +29,8 @@ public class Constant
     [CreatesAttributes]
     public List<TAttribute> attributes<TAttribute : Object>()
         => Internal.attributes(this.declaringClass, "constant", this.name, 0, typeof(TAttribute));
+
+    // The attributes `attributes<TAttribute>()` gives, each as written, building none, spec section 25.
+    public List<AttributeData> attributeData<TAttribute : Object>()
+        => Internal.attributeData(this.declaringClass, "constant", this.name, 0, typeof(TAttribute), typeof(AttributeData));
 }
