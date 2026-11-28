@@ -14,12 +14,12 @@ public struct Decimal : string
     // The digits it is stored as, which `parse` reads back.
     public string value => this.toString();
 
-    public static Decimal parse(string text)
-        => Decimal.tryParse(text) ?? throw new ValueError(`Decimal.parse: "${text}" is not a decimal number, such as "-12.50"`);
+    public static Result<Decimal, ParseError> parse(string text)
+        => Decimal.read(text) is Decimal value ? Result.Ok(value) : Result.Err(new ParseError(["": `Decimal.parse: "${text}" is not a decimal number, such as "-12.50"`]));
 
     // Digits with an optional sign and point, as "12", "-0.5" and "+3.25". The digits after the point give the scale,
     // so "1.50" has a scale of 2.
-    public static Decimal? tryParse(string text)
+    private static Decimal? read(string text)
         => global.preg_match("/\\A[+-]?[0-9]+(?:\\.[0-9]+)?\\z/", text) == 1 && global.is_numeric(text) ? new Decimal(new Number(text)) : null;
 
     public static Decimal of(int value) => new Decimal(new Number(value));

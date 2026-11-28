@@ -11,11 +11,11 @@ public struct BigInteger : string
     // The decimal digits it is stored as, which `parse` reads back.
     public string value => this.toString();
 
-    public static BigInteger parse(string text)
-        => BigInteger.tryParse(text) ?? throw new ValueError(`BigInteger.parse: "${text}" is not an integer, such as "-12"`);
+    public static Result<BigInteger, ParseError> parse(string text)
+        => BigInteger.read(text) is BigInteger value ? Result.Ok(value) : Result.Err(new ParseError(["": `BigInteger.parse: "${text}" is not an integer, such as "-12"`]));
 
     // Decimal digits with an optional sign, as "12", "-7" and "+9223372036854775808".
-    public static BigInteger? tryParse(string text)
+    private static BigInteger? read(string text)
         => global.preg_match("/\\A[+-]?[0-9]+\\z/", text) == 1 && global.is_numeric(text) ? new BigInteger(new Number(text)) : null;
 
     public static BigInteger of(int value) => new BigInteger(new Number(value));

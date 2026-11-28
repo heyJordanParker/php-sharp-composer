@@ -2,5 +2,10 @@ namespace Sharp;
 
 public static class Bool
 {
-    public static bool? tryParse(Any? value) => global.filter_var(value, global.FILTER_VALIDATE_BOOLEAN, global.FILTER_NULL_ON_FAILURE);
+    // The bool `value` writes, as PHP's `FILTER_VALIDATE_BOOLEAN` reads it: true for "1", "true", "on" and "yes", false
+    // for "0", "false", "off", "no" and "", in any case, or an `Err` for any other value.
+    public static Result<bool, ParseError> parse(Any? value)
+        => global.filter_var(value, global.FILTER_VALIDATE_BOOLEAN, global.FILTER_NULL_ON_FAILURE) is bool read
+            ? Result.Ok(read)
+            : Result.Err(new ParseError(["": "Bool.parse: the value is not a bool, such as \"true\" or \"false\""]));
 }

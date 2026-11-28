@@ -1,0 +1,22 @@
+namespace Sharp;
+
+// The failure of a `parse`, spec section 10: each bad part's problem under its path, as "customerId" or
+// "lines[0].sku", and "" for a whole value.
+public class ParseError : Error
+{
+    public ParseError(public Map<string, string> fields { get; }) { }
+
+    // Each problem after its path, the parts joined by "; ", as "customerId: expected int, got string 'abc'; plan_code: missing".
+    public string message
+    {
+        get
+        {
+            let message = "";
+            for (const [path, problem] of this.fields) {
+                const part = path == "" ? problem : `${path}: ${problem}`;
+                message = message == "" ? part : `${message}; ${part}`;
+            }
+            return message;
+        }
+    }
+}

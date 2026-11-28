@@ -6,8 +6,8 @@ extern Internal.text uses none;
 
 // Binary data, spec section 18: the bytes another system gives, counts or signs, as an address, a hash or a file that
 // is not text. A `string` is always valid UTF-8, so bytes that may not be are `Bytes`. Two are `==` when they hold the
-// same bytes. It stores as standard base64 text, its `value`, which `parse` reads back, as .NET's JSON stores a
-// `byte[]`.
+// same bytes. It stores as standard base64 text, its `value`, which the engine reads back through `parse`, as .NET's
+// JSON stores a `byte[]`. Code reads base64 with `Base64.decode`.
 public struct Bytes : string
 {
     // The bytes as PHP's string holds them. The engine fills it for a plain PHP string that crosses into a `Bytes`
@@ -16,9 +16,11 @@ public struct Bytes : string
 
     public string value => this.toString();
 
-    // The bytes standard base64 `text` writes.
-    public static Bytes parse(string text)
-        => global.base64_decode(text, true) is string data ? new Bytes(data) : throw new ValueError("Bytes.parse: the text is not valid base64");
+    // The bytes standard base64 `text` writes, as a stored `Bytes` reads back, spec section 10.
+    internal static Result<Bytes, ParseError> parse(string text)
+        => global.base64_decode(text, true) is string data
+            ? Result.Ok(new Bytes(data))
+            : Result.Err(new ParseError(["": "the text is not valid base64"]));
 
     // The bytes of `values`, each an int from 0 to 255.
     internal static Bytes of(List<int> values)

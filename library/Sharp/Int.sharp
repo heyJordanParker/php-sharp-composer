@@ -6,27 +6,27 @@ public static class Int
 
     public const int MIN = global.PHP_INT_MIN;
 
-    // The int `text` writes in `radix`, from 2 to 36, with the letters a to z, in either case, for the digits past 9.
-    public static int parse(string text, int radix = 10)
+    // The int `text` writes in `radix`, from 2 to 36, with the letters a to z, in either case, for the digits past 9,
+    // or an `Err` that says why the text writes none. A radix outside 2 to 36 throws ValueError.
+    public static Result<int, ParseError> parse(string text, int radix = 10)
     {
         Int.checkRadix(radix, "Int.parse");
-        const number = Int.tryParse(text, radix);
-        if (number is int) {
-            return number;
+        if (Int.read(text, radix) is int number) {
+            return Result.Ok(number);
         }
         const base = radix == 10 ? "" : ` in base ${radix}`;
+        let problem = `Int.parse: "${text}" is not an int${base}`;
         if (Int.digits(text, radix) is string) {
-            throw new ArithmeticError(`Int.parse: "${text}" is out of range for an int`);
+            problem = `Int.parse: "${text}" is out of range for an int`;
+        } else if (Int.digits(global.trim(text), radix) is string) {
+            problem = `Int.parse: "${text}" is not an int${base}: remove its spaces with trim() first`;
         }
-        if (Int.digits(global.trim(text), radix) is string) {
-            throw new ValueError(`Int.parse: "${text}" is not an int${base}: remove its spaces with trim() first`);
-        }
-        throw new ValueError(`Int.parse: "${text}" is not an int${base}`);
+        return Result.Err(new ParseError(["": problem]));
     }
 
-    public static int? tryParse(string text, int radix = 10)
+    // The int `text` writes in `radix`, or null.
+    private static int? read(string text, int radix)
     {
-        Int.checkRadix(radix, "Int.tryParse");
         if (Int.digits(text, radix) is not string digits) {
             return null;
         }
